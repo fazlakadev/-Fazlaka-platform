@@ -2,7 +2,7 @@
 
 import { useState, useRef, FormEvent, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { RefreshCw, Link as LinkIcon, Bold, Italic, List, ListOrdered, Quote, Heading1, Heading2, Heading3, Palette, Highlighter, Upload } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 import Select, { StylesConfig, OnChangeValue } from 'react-select';
 import Image from 'next/image';
 

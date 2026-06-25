@@ -6,7 +6,7 @@ import { verifyToken } from "@/lib/jwt"
 export async function getUserIdFromRequest(request: NextRequest): Promise<string | null> {
   // Try NextAuth session first
   try {
-    const session = await getServerSession(authOptions as any) as { user?: { id?: string } } | null
+    const session = await getServerSession(authOptions) as { user?: { id?: string } } | null
     if (session?.user?.id) return session.user.id
   } catch {}
 

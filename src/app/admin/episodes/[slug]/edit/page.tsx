@@ -2,7 +2,7 @@
 
 import { useState, useRef, FormEvent, useEffect, useCallback, useMemo } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { Upload, RefreshCw, Link as LinkIcon, Image as ImageIcon, Bold, Italic, List, ListOrdered, Quote, Heading1, Heading2, Heading3, Palette, Highlighter } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 import Select from 'react-select';
 import Image from 'next/image';
 
@@ -94,7 +94,7 @@ export default function EditEpisodePage() {
           const ids = ep.articles.map(a => a.id);
           sessionStorage.setItem('tempArticleIds', JSON.stringify(ids));
         }
-      } catch (err) {
+      } catch (_err) {
         setMessage({ type: 'error', text: 'Failed to load episode' });
       } finally {
         setIsFetching(false);
@@ -180,7 +180,7 @@ export default function EditEpisodePage() {
         setMessage({ type: 'success', text: 'Updated!' });
         setTimeout(() => router.push('/admin/episodes'), 2000);
       } else setMessage({ type: 'error', text: result.error || 'Failed' });
-    } catch (err) { setMessage({ type: 'error', text: 'Error' }); }
+    } catch (_err) { setMessage({ type: 'error', text: 'Error' }); }
     finally { setIsSubmitting(false); }
   };
 

@@ -3,7 +3,7 @@
 import { useState, useRef, FormEvent, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Upload, RefreshCw, Link as LinkIcon, Bold, Italic, List, ListOrdered, Quote, Heading1, Heading2, Heading3, Palette, Highlighter } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 import Select, { StylesConfig } from 'react-select';
 
 // Simple Text Editor (Shortened for brevity)
