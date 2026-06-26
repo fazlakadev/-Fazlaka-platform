@@ -16,6 +16,22 @@
         },
       ],
     },
+    async headers() {
+      return [
+        {
+          source: '/sw.js',
+          headers: [{ key: 'Service-Worker-Allowed', value: '/' }]
+        },
+        {
+          source: '/api/:path*',
+          headers: [
+            { key: 'Access-Control-Allow-Origin', value: '*' },
+            { key: 'Access-Control-Allow-Methods', value: 'GET,POST,PUT,DELETE,PATCH,OPTIONS' },
+            { key: 'Access-Control-Allow-Headers', value: 'Content-Type,Authorization,Cookie,Accept' },
+          ]
+        }
+      ]
+    }
   };
 
   // تصدير إعدادات Next.js لكي يستخدمها المشروع
