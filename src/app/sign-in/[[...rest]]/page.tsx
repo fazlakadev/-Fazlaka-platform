@@ -647,13 +647,43 @@ export default function SignInPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-colors duration-500 px-4 sm:px-6 pt-32 pb-16 relative overflow-hidden" dir={isRTL ? 'rtl' : 'ltr'}>
-      {/* Decorative animated circles */}
-      <div className="absolute top-10 left-10 w-40 h-40 rounded-full bg-gradient-to-r from-blue-400/20 to-purple-400/20 blur-2xl animate-pulse shadow-xl shadow-blue-500/10"></div>
-      <div className="absolute bottom-20 right-10 w-60 h-60 rounded-full bg-gradient-to-r from-purple-400/15 to-blue-400/15 blur-3xl animate-pulse shadow-xl shadow-purple-500/10"></div>
-      <div className="absolute top-1/4 right-1/4 w-32 h-32 rounded-full bg-blue-300/30 dark:bg-blue-300/10 blur-xl animate-bounce shadow-lg shadow-blue-400/20"></div>
-      <div className="absolute bottom-1/3 left-1/3 w-24 h-24 rounded-full bg-purple-300/30 dark:bg-purple-300/10 blur-lg animate-ping shadow-lg shadow-purple-400/20"></div>
-      <div className="absolute top-1/2 left-1/4 w-20 h-20 rounded-full bg-gradient-to-r from-blue-500/25 to-purple-500/25 blur-lg animate-pulse shadow-lg shadow-blue-500/20"></div>
-      <div className="absolute bottom-1/4 right-1/3 w-28 h-28 rounded-full bg-gradient-to-r from-purple-500/20 to-blue-500/20 blur-xl animate-bounce shadow-lg shadow-purple-500/20"></div>
+      {/* Glassmorphism background grid */}
+      <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05]" style={{
+        backgroundImage: `radial-gradient(circle at 1px 1px, #6366f1 1px, transparent 0)`,
+        backgroundSize: '40px 40px'
+      }}></div>
+      
+      {/* Animated floating particles */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {[...Array(20)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute rounded-full"
+            style={{
+              width: `${2 + Math.random() * 6}px`,
+              height: `${2 + Math.random() * 6}px`,
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              background: `radial-gradient(circle, ${
+                ['#6366f1', '#8b5cf6', '#3b82f6', '#06b6d4'][i % 4]
+              }, transparent)`,
+              animation: `float ${6 + Math.random() * 10}s ease-in-out infinite`,
+              animationDelay: `${Math.random() * 5}s`,
+              opacity: 0.3 + Math.random() * 0.4,
+            }}
+          />
+        ))}
+      </div>
+      
+      {/* Decorative glass blur orbs */}
+      <div className="absolute top-10 left-10 w-48 h-48 rounded-full bg-gradient-to-r from-blue-400/20 to-purple-400/20 blur-3xl animate-pulse shadow-xl shadow-blue-500/10"></div>
+      <div className="absolute bottom-20 right-10 w-72 h-72 rounded-full bg-gradient-to-r from-purple-400/15 to-blue-400/15 blur-3xl animate-pulse shadow-xl shadow-purple-500/10"></div>
+      <div className="absolute top-1/4 right-1/4 w-36 h-36 rounded-full bg-blue-300/30 dark:bg-blue-300/10 blur-2xl animate-bounce shadow-lg shadow-blue-400/20"></div>
+      <div className="absolute bottom-1/3 left-1/3 w-28 h-28 rounded-full bg-purple-300/30 dark:bg-purple-300/10 blur-2xl animate-ping shadow-lg shadow-purple-400/20"></div>
+      <div className="absolute top-1/2 left-1/4 w-24 h-24 rounded-full bg-gradient-to-r from-blue-500/25 to-purple-500/25 blur-2xl animate-pulse shadow-lg shadow-blue-500/20"></div>
+      <div className="absolute bottom-1/4 right-1/3 w-32 h-32 rounded-full bg-gradient-to-r from-purple-500/20 to-blue-500/20 blur-2xl animate-bounce shadow-lg shadow-purple-500/20"></div>
+      {/* Ambient light effect */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-indigo-500/5 blur-[120px] pointer-events-none"></div>
       
       <div className="w-full max-w-7xl mx-auto relative z-10">
         <div className="flex flex-col lg:flex-row gap-10 items-center justify-center">
@@ -663,7 +693,7 @@ export default function SignInPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg rounded-2xl shadow-xl dark:shadow-2xl dark:shadow-blue-500/20 border border-gray-200 dark:border-gray-800 p-6 sm:p-8"
+              className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl rounded-3xl shadow-2xl dark:shadow-2xl dark:shadow-blue-500/20 border border-white/40 dark:border-gray-700/50 p-6 sm:p-8 hover:shadow-blue-500/10 transition-shadow duration-500"
             >
               {/* Header */}
               <motion.div 
@@ -1418,6 +1448,15 @@ export default function SignInPage() {
           </div>
         </div>
       </div>
+      
+      <style jsx>{`
+        @keyframes float {
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          25% { transform: translateY(-20px) rotate(90deg); }
+          50% { transform: translateY(-10px) rotate(180deg); }
+          75% { transform: translateY(-25px) rotate(270deg); }
+        }
+      `}</style>
     </div>
   );
 }

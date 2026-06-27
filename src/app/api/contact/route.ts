@@ -1,9 +1,9 @@
 // src/app/api/contact/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { getToken } from "next-auth/jwt";
-import { prisma } from "@/lib/prisma"; // استيراد Prisma Client
+import { prisma } from "@/lib/prisma";
 import nodemailer from "nodemailer";
 import type { Attachment } from "nodemailer/lib/mailer";
+import { getUserIdFromRequest } from "@/lib/auth-helper";
 
 /**
  * Types
@@ -15,14 +15,6 @@ type AttachmentData = {
   url: string | null;
   isImage: boolean;
   error?: string;
-};
-
-type TokenUser = {
-  sub?: string; // user id
-  email?: string;
-  name?: string;
-  picture?: string;
-  [k: string]: unknown;
 };
 
 /**
@@ -69,13 +61,15 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    // === التحقق من المستخدم ===
-    const token = (await getToken({
-      req: request,
-      secret: process.env.NEXTAUTH_SECRET,
-    })) as TokenUser | null;
+    // === التحقق من المستخدم (يدعم session cookies و Bearer JWT) ===
+    const userId = await getUserIdFromRequest(request);
+    if (!userId) {
+      return NextResponse.json({ error: "يجب تسجيل الدخول أولاً" }, { status: 401 });
+    }
 
-    if (!token || !token.email) {
+    // جلب المستخدم من قاعدة البيانات للحصول على email والاسم
+    const user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true, email: true, name: true, image: true } });
+    if (!user || !user.email) {
       return NextResponse.json({ error: "يجب تسجيل الدخول أولاً" }, { status: 401 });
     }
 
@@ -92,7 +86,7 @@ export async function POST(request: NextRequest) {
     }
 
     // التحقق من أن المستخدم يضيف بياناته الخاصة فقط
-    if (token.email && email !== token.email) {
+    if (email !== user.email) {
       return NextResponse.json({ error: "غير مصرح به" }, { status: 403 });
     }
 
@@ -141,10 +135,10 @@ export async function POST(request: NextRequest) {
           name: name.trim(),
           email: email.trim().toLowerCase(),
           message: message.trim(),
-          userId: token.sub ?? "",
-          userFirstName: (token.name?.split(" ")[0]?.trim()) || "",
-          userLastName: (token.name ? token.name.split(" ").slice(1).join(" ").trim() : "") || "",
-          userImageUrl: (token.picture as string) || "",
+          userId: user.id,
+          userFirstName: (user.name?.split(" ")[0]?.trim()) || "",
+          userLastName: (user.name ? user.name.split(" ").slice(1).join(" ").trim() : "") || "",
+          userImageUrl: user.image || "",
           // إنشاء المرفقات المرتبطة باستخدام Nested Write
           attachments: {
             create: attachmentsData.map((att) => ({
@@ -273,11 +267,11 @@ export async function POST(request: NextRequest) {
               </div>
               
               <div class="user-info">
-                ${token.picture ? `<img src="${token.picture}" alt="${name}" class="user-avatar">` : `<div class="user-avatar" style="background: #667eea; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; font-weight: bold;">${name.charAt(0).toUpperCase()}</div>`}
+                ${user.image ? `<img src="${user.image}" alt="${name}" class="user-avatar">` : `<div class="user-avatar" style="background: #667eea; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; font-weight: bold;">${name.charAt(0).toUpperCase()}</div>`}
                 <div class="user-details">
                   <h3>${name}</h3>
                   <p>📧 ${email}</p>
-                  <p>🆔 ${token.sub ?? ""}</p>
+                  <p>🆔 ${user.id}</p>
                 </div>
               </div>
               

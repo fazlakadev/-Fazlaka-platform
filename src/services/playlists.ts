@@ -97,6 +97,7 @@ interface CreatePlaylistData {
   description?: string;
   descriptionEn?: string;
   imageUrl?: string;
+  isPublic?: boolean;
   episodes?: string[];
   articles?: string[];
 }
@@ -112,7 +113,7 @@ export async function createPlaylist(userId: string, playlistData: CreatePlaylis
       description: playlistData.description,
       descriptionEn: playlistData.descriptionEn,
       imageUrl: playlistData.imageUrl,
-      isPublic: false,
+      isPublic: playlistData.isPublic ?? false,
       user: { connect: { id: userId } },
     };
 

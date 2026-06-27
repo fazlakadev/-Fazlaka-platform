@@ -1,17 +1,15 @@
 // app/api/playlists/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { fetchPlaylists, createPlaylist } from '@/services/playlists';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
+import { getUserIdFromRequest } from '@/lib/auth-helper';
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const userId = await getUserIdFromRequest(request);
     const { searchParams } = new URL(request.url);
     const language = searchParams.get('language') || 'ar';
     
-    // تمرير معرف المستخدم الحالي إن وجد لجلب قوائمه الخاصة
-    const playlists = await fetchPlaylists(language, session?.user?.id);
+    const playlists = await fetchPlaylists(language, userId ?? undefined);
     
     return NextResponse.json({ playlists }, {
       headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
@@ -24,26 +22,25 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const userId = await getUserIdFromRequest(request);
     
-    if (!session?.user?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const playlistData = await request.json();
     
-    // التحقق من وجود العنوان
     if (!playlistData.title) {
        return NextResponse.json({ error: 'Title is required' }, { status: 400 });
     }
 
-    // إنشاء قائمة مرتبطة بالمستخدم
-    const newPlaylist = await createPlaylist(session.user.id, {
+    const newPlaylist = await createPlaylist(userId, {
         title: playlistData.title,
-        titleEn: playlistData.titleEn || playlistData.title, // توفير قيمة افتراضية
+        titleEn: playlistData.titleEn || playlistData.title,
         description: playlistData.description,
         descriptionEn: playlistData.descriptionEn,
         imageUrl: playlistData.imageUrl,
+        isPublic: playlistData.isPublic ?? false,
         episodes: playlistData.episodes,
         articles: playlistData.articles
     });
