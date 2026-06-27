@@ -51,3 +51,6 @@ next-env.d.ts
 /.clerk/
 
 /src/generated/prisma
+
+# flutter web build output
+/public/app/
