@@ -80,6 +80,7 @@ export async function POST(request: NextRequest) {
         email: user.email,
         image: user.image,
         role: user.role,
+        isVerified: true,
       },
     });
   } catch (error) {

@@ -24,6 +24,7 @@ export async function POST(request: NextRequest) {
         role: true,
         isActive: true,
         emailVerified: true,
+        verificationToken: true,
         password: true,
         banned: true,
       },
@@ -53,6 +54,7 @@ export async function POST(request: NextRequest) {
     }
 
     const token = signToken({ userId: user.id })
+    const isVerified = !user.verificationToken
 
     return NextResponse.json({
       success: true,
@@ -65,6 +67,7 @@ export async function POST(request: NextRequest) {
         role: user.role,
         isActive: user.isActive,
         emailVerified: user.emailVerified,
+        isVerified,
       },
     })
   } catch (error) {
