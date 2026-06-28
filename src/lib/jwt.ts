@@ -8,7 +8,11 @@ export function signToken(payload: { userId: string }): string {
 
 export function verifyToken(token: string): { userId: string } | null {
   try {
-    return jwt.verify(token, SECRET) as { userId: string }
+    const payload = jwt.verify(token, SECRET) as Record<string, unknown>
+    // Accept both `userId` (our own tokens) and `id`/`sub` (NextAuth JWT tokens)
+    const userId = (payload.userId ?? payload.id ?? payload.sub) as string | undefined
+    if (!userId) return null
+    return { userId }
   } catch {
     return null
   }
