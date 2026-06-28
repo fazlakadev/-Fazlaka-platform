@@ -15,9 +15,10 @@ interface Article {
   id: string;
   title: string; titleEn: string; slug: string;
   excerpt?: string; excerptEn?: string;
+  excerptMobile?: string; excerptMobileEn?: string;
   content?: Record<string, unknown>; contentEn?: Record<string, unknown>;
   featuredImageUrl?: string; featuredImageUrlEn?: string;
-  season?: Season | null; // Prisma returns object or null
+  season?: Season | null;
   episode?: Episode | null;
 }
 
@@ -94,6 +95,8 @@ export default function EditArticlePage() {
   const [articleSlug, setArticleSlug] = useState('');
   const [excerpt, setExcerpt] = useState('');
   const [excerptEn, setExcerptEn] = useState('');
+  const [excerptMobile, setExcerptMobile] = useState('');
+  const [excerptMobileEn, setExcerptMobileEn] = useState('');
   const [content, setContent] = useState('');
   const [contentEn, setContentEn] = useState('');
   const [selectedSeason, setSelectedSeason] = useState<SeasonOption | null>(null);
@@ -131,6 +134,8 @@ export default function EditArticlePage() {
         setArticleSlug(article.slug || '');
         setExcerpt(article.excerpt || '');
         setExcerptEn(article.excerptEn || '');
+        setExcerptMobile(article.excerptMobile || '');
+        setExcerptMobileEn(article.excerptMobileEn || '');
         setContent(typeof article.content === 'string' ? article.content : JSON.stringify(article.content || ''));
         setContentEn(typeof article.contentEn === 'string' ? article.contentEn : JSON.stringify(article.contentEn || ''));
         setFeaturedImageUrl(article.featuredImageUrl || '');
@@ -194,6 +199,7 @@ export default function EditArticlePage() {
     const articleData = {
       title, titleEn, slug: articleSlug,
       excerpt, excerptEn,
+      excerptMobile, excerptMobileEn,
       content, contentEn,
       featuredImageUrl, featuredImageUrlEn,
       seasonId: selectedSeason?.value || null,
@@ -250,6 +256,7 @@ export default function EditArticlePage() {
               <h2 className="text-xl font-semibold mb-4 flex items-center gap-2 dark:text-white"><span className="w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center text-sm">AR</span> Arabic Content</h2>
               <div className="mb-4"><label className="block text-sm font-medium mb-2 dark:text-gray-300">Title</label><input type="text" value={title} onChange={(e) => setTitle(e.target.value)} className="w-full p-3 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white" dir="rtl" /></div>
               <div className="mb-4"><label className="block text-sm font-medium mb-2 dark:text-gray-300">Excerpt</label><SimpleTextEditor content={excerpt} onChange={setExcerpt} language="ar" /></div>
+              <div className="mb-4"><label className="block text-sm font-medium mb-2 dark:text-gray-300">Mobile Excerpt <span className="text-gray-400 text-xs">(plain text)</span></label><textarea value={excerptMobile} onChange={(e) => setExcerptMobile(e.target.value)} dir="rtl" className="w-full p-3 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white" rows={3} /></div>
               <div className="mb-4"><label className="block text-sm font-medium mb-2 dark:text-gray-300">Content</label><SimpleTextEditor content={content} onChange={setContent} language="ar" /></div>
               <div className="mb-4">
                 <label className="block text-sm font-medium mb-2 dark:text-gray-300">Image</label>
@@ -269,6 +276,7 @@ export default function EditArticlePage() {
               <h2 className="text-xl font-semibold mb-4 flex items-center gap-2 dark:text-white"><span className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm">EN</span> English Content</h2>
               <div className="mb-4"><label className="block text-sm font-medium mb-2 dark:text-gray-300">Title</label><input type="text" value={titleEn} onChange={(e) => setTitleEn(e.target.value)} className="w-full p-3 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white" /></div>
               <div className="mb-4"><label className="block text-sm font-medium mb-2 dark:text-gray-300">Excerpt</label><SimpleTextEditor content={excerptEn} onChange={setExcerptEn} language="en" /></div>
+              <div className="mb-4"><label className="block text-sm font-medium mb-2 dark:text-gray-300">Mobile Excerpt <span className="text-gray-400 text-xs">(plain text)</span></label><textarea value={excerptMobileEn} onChange={(e) => setExcerptMobileEn(e.target.value)} className="w-full p-3 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white" rows={3} /></div>
               <div className="mb-4"><label className="block text-sm font-medium mb-2 dark:text-gray-300">Content</label><SimpleTextEditor content={contentEn} onChange={setContentEn} language="en" /></div>
               <div className="mb-4">
                 <label className="block text-sm font-medium mb-2 dark:text-gray-300">Image</label>

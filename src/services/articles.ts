@@ -19,6 +19,7 @@ interface PopulatedArticle extends Article {
 export interface ArticleWithLocalized extends Omit<Article, 'season' | 'episode'> {
   localizedTitle?: string;
   localizedExcerpt?: string | null;
+  localizedExcerptMobile?: string | null;
   localizedContent?: PortableTextBlock[] | null;
   localizedFeaturedImageUrl?: string | null;
   season?: {
@@ -47,6 +48,7 @@ function mapArticle(article: PopulatedArticle, language: string): ArticleWithLoc
     id: article.id,
     localizedTitle: language === 'ar' ? article.title : article.titleEn,
     localizedExcerpt: language === 'ar' ? article.excerpt : article.excerptEn,
+    localizedExcerptMobile: language === 'ar' ? article.excerptMobile : article.excerptMobileEn,
     localizedContent: (language === 'ar' ? article.content : article.contentEn) as PortableTextBlock[] | null,
     localizedFeaturedImageUrl: language === 'ar' ? article.featuredImageUrl : article.featuredImageUrlEn,
     season: article.season ? {

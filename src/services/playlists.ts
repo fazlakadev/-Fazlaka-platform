@@ -21,6 +21,7 @@ interface PopulatedPlaylist extends Playlist {
 export interface PlaylistWithLocalized extends Playlist {
   localizedTitle?: string;
   localizedDescription?: string | null;
+  localizedDescriptionMobile?: string | null;
   localizedImageUrl?: string | null;
   user?: { name: string | null; image: string | null } | null;
 }
@@ -32,6 +33,7 @@ function mapPlaylist(playlist: PopulatedPlaylist, language: string): PlaylistWit
     updatedAt: playlist.updatedAt,
     localizedTitle: language === 'ar' ? playlist.title : playlist.titleEn,
     localizedDescription: language === 'ar' ? playlist.description : playlist.descriptionEn,
+    localizedDescriptionMobile: language === 'ar' ? playlist.descriptionMobile : playlist.descriptionMobileEn,
     localizedImageUrl: language === 'ar' ? playlist.imageUrl : playlist.imageUrlEn,
     user: playlist.user
   };
@@ -96,6 +98,8 @@ interface CreatePlaylistData {
   titleEn: string;
   description?: string;
   descriptionEn?: string;
+  descriptionMobile?: string;
+  descriptionMobileEn?: string;
   imageUrl?: string;
   isPublic?: boolean;
   episodes?: string[];
@@ -112,6 +116,8 @@ export async function createPlaylist(userId: string, playlistData: CreatePlaylis
       slug,
       description: playlistData.description,
       descriptionEn: playlistData.descriptionEn,
+      descriptionMobile: playlistData.descriptionMobile,
+      descriptionMobileEn: playlistData.descriptionMobileEn,
       imageUrl: playlistData.imageUrl,
       isPublic: playlistData.isPublic ?? false,
       user: { connect: { id: userId } },
@@ -153,6 +159,8 @@ export async function updatePlaylist(userId: string, slug: string, playlistData:
     if (playlistData.titleEn) data.titleEn = playlistData.titleEn;
     if (playlistData.description !== undefined) data.description = playlistData.description;
     if (playlistData.descriptionEn !== undefined) data.descriptionEn = playlistData.descriptionEn;
+    if (playlistData.descriptionMobile !== undefined) data.descriptionMobile = playlistData.descriptionMobile;
+    if (playlistData.descriptionMobileEn !== undefined) data.descriptionMobileEn = playlistData.descriptionMobileEn;
     if (playlistData.imageUrl !== undefined) data.imageUrl = playlistData.imageUrl;
 
     // Robust handling for relations (Accepts both IDs and Objects)

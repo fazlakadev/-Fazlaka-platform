@@ -36,6 +36,8 @@ export default function AddEpisodePage() {
   const [slug, setSlug] = useState('');
   const [description, setDescription] = useState('');
   const [descriptionEn, setDescriptionEn] = useState('');
+  const [descriptionMobile, setDescriptionMobile] = useState('');
+  const [descriptionMobileEn, setDescriptionMobileEn] = useState('');
   const [content, setContent] = useState('');
   const [contentEn, setContentEn] = useState('');
   const [videoUrl, setVideoUrl] = useState('');
@@ -106,6 +108,7 @@ export default function AddEpisodePage() {
     const episodeData = {
       title, titleEn, slug,
       description, descriptionEn,
+      descriptionMobile, descriptionMobileEn,
       content, contentEn,
       videoUrl, videoUrlEn,
       thumbnailUrl, thumbnailUrlEn,
@@ -171,6 +174,7 @@ export default function AddEpisodePage() {
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2"><span className="w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center text-sm">AR</span> Arabic Content</h2>
               <div className="mb-4"><label className="block text-sm font-medium mb-2">Title (Arabic)</label><input type="text" required value={title} onChange={(e) => setTitle(e.target.value)} className="w-full p-3 border rounded-md dark:bg-gray-700 dark:text-white" dir="rtl" /></div>
               <div className="mb-4"><label className="block text-sm font-medium mb-2">Description (Arabic)</label><SimpleTextEditor content={description} onChange={setDescription} language="ar" /></div>
+              <div className="mb-4"><label className="block text-sm font-medium mb-2">Mobile Description (Arabic) <span className="text-gray-400 text-xs">(plain text)</span></label><textarea value={descriptionMobile} onChange={(e) => setDescriptionMobile(e.target.value)} dir="rtl" className="w-full p-3 border rounded-md dark:bg-gray-700 dark:text-white" rows={3} placeholder="Mobile-specific description..." /></div>
               <div className="mb-4"><label className="block text-sm font-medium mb-2">Content (Arabic)</label><SimpleTextEditor content={content} onChange={setContent} language="ar" /></div>
               <div className="mb-4"><label className="block text-sm font-medium mb-2">Video URL (Arabic)</label><input type="url" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} className="w-full p-3 border rounded-md dark:bg-gray-700 dark:text-white" /></div>
               <div className="mb-4">
@@ -191,6 +195,7 @@ export default function AddEpisodePage() {
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2"><span className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm">EN</span> English Content</h2>
               <div className="mb-4"><label className="block text-sm font-medium mb-2">Title (English)</label><input type="text" required value={titleEn} onChange={(e) => setTitleEn(e.target.value)} className="w-full p-3 border rounded-md dark:bg-gray-700 dark:text-white" /></div>
               <div className="mb-4"><label className="block text-sm font-medium mb-2">Description (English)</label><SimpleTextEditor content={descriptionEn} onChange={setDescriptionEn} language="en" /></div>
+              <div className="mb-4"><label className="block text-sm font-medium mb-2">Mobile Description (English) <span className="text-gray-400 text-xs">(plain text)</span></label><textarea value={descriptionMobileEn} onChange={(e) => setDescriptionMobileEn(e.target.value)} className="w-full p-3 border rounded-md dark:bg-gray-700 dark:text-white" rows={3} placeholder="Mobile-specific description..." /></div>
               <div className="mb-4"><label className="block text-sm font-medium mb-2">Content (English)</label><SimpleTextEditor content={contentEn} onChange={setContentEn} language="en" /></div>
               <div className="mb-4"><label className="block text-sm font-medium mb-2">Video URL (English)</label><input type="url" value={videoUrlEn} onChange={(e) => setVideoUrlEn(e.target.value)} className="w-full p-3 border rounded-md dark:bg-gray-700 dark:text-white" /></div>
               <div className="mb-4">

@@ -137,6 +137,8 @@ export default function AddArticlePage() {
   const [slug, setSlug] = useState('');
   const [excerpt, setExcerpt] = useState('');
   const [excerptEn, setExcerptEn] = useState('');
+  const [excerptMobile, setExcerptMobile] = useState('');
+  const [excerptMobileEn, setExcerptMobileEn] = useState('');
   const [content, setContent] = useState('');
   const [contentEn, setContentEn] = useState('');
   const [selectedSeason, setSelectedSeason] = useState<SeasonOption | null>(null);
@@ -216,6 +218,7 @@ export default function AddArticlePage() {
     const articleData = {
       title, titleEn, slug,
       excerpt, excerptEn,
+      excerptMobile, excerptMobileEn,
       content, contentEn,
       featuredImageUrl, featuredImageUrlEn,
       seasonId: selectedSeason ? selectedSeason.value : null,
@@ -289,6 +292,10 @@ export default function AddArticlePage() {
                 <SimpleTextEditor content={excerpt} onChange={setExcerpt} language="ar" />
               </div>
               <div className="mb-4">
+                <label className="block text-sm font-medium mb-2">Mobile Excerpt (Arabic) <span className="text-gray-400 text-xs">(plain text, shown in app)</span></label>
+                <textarea value={excerptMobile} onChange={(e) => setExcerptMobile(e.target.value)} dir="rtl" className="w-full p-3 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white" rows={3} placeholder="Mobile-specific excerpt..." />
+              </div>
+              <div className="mb-4">
                 <label className="block text-sm font-medium mb-2">Content (Arabic)</label>
                 <SimpleTextEditor content={content} onChange={setContent} language="ar" />
               </div>
@@ -320,6 +327,10 @@ export default function AddArticlePage() {
               <div className="mb-4">
                 <label className="block text-sm font-medium mb-2">Excerpt (English)</label>
                 <SimpleTextEditor content={excerptEn} onChange={setExcerptEn} language="en" />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-2">Mobile Excerpt (English) <span className="text-gray-400 text-xs">(plain text, shown in app)</span></label>
+                <textarea value={excerptMobileEn} onChange={(e) => setExcerptMobileEn(e.target.value)} className="w-full p-3 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white" rows={3} placeholder="Mobile-specific excerpt..." />
               </div>
               <div className="mb-4">
                 <label className="block text-sm font-medium mb-2">Content (English)</label>

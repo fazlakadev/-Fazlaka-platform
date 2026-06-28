@@ -31,6 +31,8 @@ export default function EditPlaylistPage() {
   const [playlistSlug, setPlaylistSlug] = useState('');
   const [description, setDescription] = useState('');
   const [descriptionEn, setDescriptionEn] = useState('');
+  const [descriptionMobile, setDescriptionMobile] = useState('');
+  const [descriptionMobileEn, setDescriptionMobileEn] = useState('');
   const [selectedEpisodes, setSelectedEpisodes] = useState<string[]>([]);
   const [selectedArticles, setSelectedArticles] = useState<string[]>([]);
   // Updated interfaces
@@ -65,6 +67,7 @@ export default function EditPlaylistPage() {
         setTitle(p.title || ''); setTitleEn(p.titleEn || '');
         setPlaylistSlug(p.slug || '');
         setDescription(p.description || ''); setDescriptionEn(p.descriptionEn || '');
+        setDescriptionMobile(p.descriptionMobile || ''); setDescriptionMobileEn(p.descriptionMobileEn || '');
         setImageUrl(p.imageUrl || ''); setImageUrlEn(p.imageUrlEn || '');
         
         // Updated mapping for Prisma objects (use id)
@@ -114,6 +117,7 @@ export default function EditPlaylistPage() {
     const playlistData = {
       title, titleEn, slug: playlistSlug,
       description, descriptionEn,
+      descriptionMobile, descriptionMobileEn,
       imageUrl, imageUrlEn,
       episodes: selectedEpisodes,
       articles: selectedArticles,
@@ -163,6 +167,7 @@ export default function EditPlaylistPage() {
               <h2 className="text-xl font-semibold mb-4 dark:text-white flex items-center gap-2"><span className="w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center text-sm">AR</span> Arabic</h2>
               <div className="mb-4"><label className="block text-sm font-medium mb-2">Title</label><input type="text" required value={title} onChange={(e) => setTitle(e.target.value)} className="w-full p-3 border rounded-md dark:bg-gray-700 dark:text-white" dir="rtl" /></div>
               <div className="mb-4"><label className="block text-sm font-medium mb-2">Description</label><SimpleTextEditor content={description} onChange={setDescription} language="ar" /></div>
+              <div className="mb-4"><label className="block text-sm font-medium mb-2">Mobile Description <span className="text-gray-400 text-xs">(plain text)</span></label><textarea value={descriptionMobile} onChange={(e) => setDescriptionMobile(e.target.value)} dir="rtl" className="w-full p-3 border rounded-md dark:bg-gray-700 dark:text-white" rows={3} /></div>
               <div className="mb-4">
                 <label className="block text-sm font-medium mb-2">Image</label>
                 <div className="flex items-center gap-3">
@@ -181,6 +186,7 @@ export default function EditPlaylistPage() {
               <h2 className="text-xl font-semibold mb-4 dark:text-white flex items-center gap-2"><span className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm">EN</span> English</h2>
               <div className="mb-4"><label className="block text-sm font-medium mb-2">Title</label><input type="text" required value={titleEn} onChange={(e) => setTitleEn(e.target.value)} className="w-full p-3 border rounded-md dark:bg-gray-700 dark:text-white" /></div>
               <div className="mb-4"><label className="block text-sm font-medium mb-2">Description</label><SimpleTextEditor content={descriptionEn} onChange={setDescriptionEn} language="en" /></div>
+              <div className="mb-4"><label className="block text-sm font-medium mb-2">Mobile Description <span className="text-gray-400 text-xs">(plain text)</span></label><textarea value={descriptionMobileEn} onChange={(e) => setDescriptionMobileEn(e.target.value)} className="w-full p-3 border rounded-md dark:bg-gray-700 dark:text-white" rows={3} /></div>
               <div className="mb-4">
                 <label className="block text-sm font-medium mb-2">Image</label>
                 <div className="flex items-center gap-3">

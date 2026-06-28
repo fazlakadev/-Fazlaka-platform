@@ -18,6 +18,7 @@ interface PopulatedEpisode extends Episode {
 export interface EpisodeWithLocalized extends Episode {
   localizedTitle?: string;
   localizedDescription?: string | null;
+  localizedDescriptionMobile?: string | null;
   localizedContent?: PortableTextBlock[] | null;
   localizedVideoUrl?: string | null;
   localizedThumbnailUrl?: string | null;
@@ -29,6 +30,7 @@ function mapEpisode(episode: PopulatedEpisode, language: string): EpisodeWithLoc
     id: episode.id,
     localizedTitle: language === 'ar' ? episode.title : episode.titleEn,
     localizedDescription: language === 'ar' ? episode.description : episode.descriptionEn,
+    localizedDescriptionMobile: language === 'ar' ? episode.descriptionMobile : episode.descriptionMobileEn,
     localizedContent: (language === 'ar' ? episode.content : episode.contentEn) as PortableTextBlock[] | null,
     localizedVideoUrl: language === 'ar' ? episode.videoUrl : episode.videoUrlEn,
     localizedThumbnailUrl: language === 'ar' ? episode.thumbnailUrl : episode.thumbnailUrlEn

@@ -619,6 +619,8 @@ model Season {
   slug            String     @unique
   description     String?    @db.Text
   descriptionEn   String?    @map("description_en") @db.Text
+  descriptionMobile     String?    @map("description_mobile") @db.Text
+  descriptionMobileEn   String?    @map("description_mobile_en") @db.Text
   thumbnailUrl    String?    @map("thumbnail_url")
   thumbnailUrlEn  String?    @map("thumbnail_url_en")
   publishedAt     DateTime?  @map("published_at")
@@ -639,6 +641,8 @@ model Episode {
   slug            String     @unique
   description     String?    @db.Text
   descriptionEn   String?    @map("description_en") @db.Text
+  descriptionMobile     String?    @map("description_mobile") @db.Text
+  descriptionMobileEn   String?    @map("description_mobile_en") @db.Text
   content         Json?
   contentEn       Json?      @map("content_en")
   videoUrl        String?    @map("video_url")
@@ -669,6 +673,8 @@ model Article {
   slug              String     @unique
   excerpt           String?    @db.Text
   excerptEn         String?    @map("excerpt_en") @db.Text
+  excerptMobile     String?    @map("excerpt_mobile") @db.Text
+  excerptMobileEn   String?    @map("excerpt_mobile_en") @db.Text
   content           Json?
   contentEn         Json?      @map("content_en")
   featuredImageUrl  String?    @map("featured_image_url")
@@ -700,6 +706,8 @@ model Playlist {
   slug            String     @unique
   description     String?    @db.Text
   descriptionEn   String?    @map("description_en") @db.Text
+  descriptionMobile     String?    @map("description_mobile") @db.Text
+  descriptionMobileEn   String?    @map("description_mobile_en") @db.Text
   imageUrl        String?    @map("image_url")
   imageUrlEn      String?    @map("image_url_en")
   

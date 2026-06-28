@@ -20,6 +20,8 @@ interface CreateSeasonData {
   slug?: string;
   description?: string;
   descriptionEn?: string;
+  descriptionMobile?: string;
+  descriptionMobileEn?: string;
   thumbnailUrl?: string;
   thumbnailUrlEn?: string;
   episodes?: string[];
@@ -33,6 +35,8 @@ interface UpdateSeasonData {
   slug?: string;
   description?: string;
   descriptionEn?: string;
+  descriptionMobile?: string;
+  descriptionMobileEn?: string;
   thumbnailUrl?: string;
   thumbnailUrlEn?: string;
   episodes?: string[];
@@ -46,6 +50,8 @@ interface PrismaSeasonUpdateData {
   titleEn?: string;
   description?: string;
   descriptionEn?: string;
+  descriptionMobile?: string;
+  descriptionMobileEn?: string;
   thumbnailUrl?: string;
   thumbnailUrlEn?: string;
   publishedAt?: Date;
@@ -86,7 +92,7 @@ export async function getSeasonBySlug(slug: string, _language: string = 'ar') {
 
 export async function createSeason(data: CreateSeasonData) {
   try {
-    const { episodes, articles, publishedAt, title, titleEn, slug: inputSlug, description, descriptionEn, thumbnailUrl, thumbnailUrlEn } = data;
+    const { episodes, articles, publishedAt, title, titleEn, slug: inputSlug, description, descriptionEn, descriptionMobile, descriptionMobileEn, thumbnailUrl, thumbnailUrlEn } = data;
     const publishedAtDate = publishedAt ? new Date(publishedAt) : new Date();
     
     // التعامل مع titleEn: إذا كان مطلوبًا في Prisma، نستخدم title كبديل إذا لم يتوفر titleEn
@@ -100,6 +106,8 @@ export async function createSeason(data: CreateSeasonData) {
         slug,
         description,
         descriptionEn,
+        descriptionMobile,
+        descriptionMobileEn,
         thumbnailUrl,
         thumbnailUrlEn,
         publishedAt: publishedAtDate,
@@ -122,7 +130,7 @@ export async function createSeason(data: CreateSeasonData) {
 
 export async function updateSeason(slug: string, data: UpdateSeasonData) {
   try {
-    const { episodes, articles, publishedAt, title, titleEn, description, descriptionEn, thumbnailUrl, thumbnailUrlEn, slug: newSlug } = data;
+    const { episodes, articles, publishedAt, title, titleEn, description, descriptionEn, descriptionMobile, descriptionMobileEn, thumbnailUrl, thumbnailUrlEn, slug: newSlug } = data;
     
     const updateData: PrismaSeasonUpdateData = {};
     
@@ -132,6 +140,8 @@ export async function updateSeason(slug: string, data: UpdateSeasonData) {
     if (titleEn !== undefined) updateData.titleEn = titleEn;
     if (description !== undefined) updateData.description = description;
     if (descriptionEn !== undefined) updateData.descriptionEn = descriptionEn;
+    if (descriptionMobile !== undefined) updateData.descriptionMobile = descriptionMobile;
+    if (descriptionMobileEn !== undefined) updateData.descriptionMobileEn = descriptionMobileEn;
     if (thumbnailUrl !== undefined) updateData.thumbnailUrl = thumbnailUrl;
     if (thumbnailUrlEn !== undefined) updateData.thumbnailUrlEn = thumbnailUrlEn;
     if (newSlug !== undefined) updateData.slug = newSlug;
