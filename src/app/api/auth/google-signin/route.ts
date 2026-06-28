@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { encode } from 'next-auth/jwt';
+import { signToken } from '@/lib/jwt';
 
 export async function POST(request: NextRequest) {
   try {
@@ -69,23 +69,11 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const sessionToken = await encode({
-      token: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        picture: user.image,
-        role: user.role,
-        sub: user.id,
-        iat: Math.floor(Date.now() / 1000),
-        exp: Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60,
-      },
-      secret: process.env.NEXTAUTH_SECRET!,
-    });
+    const token = signToken({ userId: user.id });
 
     return NextResponse.json({
       success: true,
-      sessionToken,
+      token,
       user: {
         id: user.id,
         name: user.name,
