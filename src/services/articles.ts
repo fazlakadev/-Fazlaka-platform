@@ -153,25 +153,47 @@ export async function fetchArticlesBySeason(seasonId: string, language: string =
 
 export async function createArticle(articleData: Partial<Article>): Promise<Article | null> {
   try {
-    // Generate slug if not provided
     const slug = articleData.slug || generateSlug(articleData.titleEn || articleData.title || '');
 
-    // Prepare data for creation
-    // تم إصلاح الخطأ: استبدال any بـ Record<string, unknown>
     const data: Record<string, unknown> = {
-      ...articleData,
+      title: articleData.title,
+      titleEn: articleData.titleEn,
       slug,
+      excerpt: articleData.excerpt,
+      excerptEn: articleData.excerptEn,
+      excerptMobile: articleData.excerptMobile,
+      excerptMobileEn: articleData.excerptMobileEn,
+      contentMobile: articleData.contentMobile,
+      contentMobileEn: articleData.contentMobileEn,
+      featuredImageUrl: articleData.featuredImageUrl,
+      featuredImageUrlEn: articleData.featuredImageUrlEn,
     };
 
-    // Handle relations (assuming input has IDs for season and episode)
+    // Handle JSON content fields
+    if (articleData.content) {
+      data.content = typeof articleData.content === 'string'
+        ? JSON.parse(articleData.content as string)
+        : articleData.content;
+    } else {
+      data.content = Prisma.JsonNull;
+    }
+    if (articleData.contentEn) {
+      data.contentEn = typeof articleData.contentEn === 'string'
+        ? JSON.parse(articleData.contentEn as string)
+        : articleData.contentEn;
+    } else {
+      data.contentEn = Prisma.JsonNull;
+    }
+
+    // Handle relations
     if (articleData.seasonId) {
       data.season = { connect: { id: articleData.seasonId } };
-      delete data.seasonId;
     }
     if (articleData.episodeId) {
       data.episode = { connect: { id: articleData.episodeId } };
-      delete data.episodeId;
     }
+
+    data.publishedAt = articleData.publishedAt ? new Date(articleData.publishedAt) : new Date();
 
     const newArticle = await prisma.article.create({ data: data as Prisma.ArticleCreateInput });
     return newArticle;
@@ -193,28 +215,58 @@ export async function updateArticle(idOrSlug: string, articleData: Partial<Artic
       }
     });
 
-    if (!article) return null;
-
-    // تم إصلاح الخطأ: استبدال any بـ Record<string, unknown>
-    const data: Record<string, unknown> = { ...articleData };
-
-    // Handle JSON content fields
-    if (typeof data.content === 'string') {
-      try { data.content = JSON.parse(data.content as string); } catch { /* keep as string */ }
-    }
-    if (typeof data.contentEn === 'string') {
-      try { data.contentEn = JSON.parse(data.contentEn as string); } catch { /* keep as string */ }
+    if (!article) {
+      console.error('Article not found:', idOrSlug);
+      return null;
     }
 
-    // Handle relations
-    if (articleData.seasonId) {
-      data.season = { connect: { id: articleData.seasonId } };
-      delete data.seasonId;
+    // Build explicit update data — only known fields
+    const data: Record<string, unknown> = {};
+
+    if (articleData.title !== undefined) data.title = articleData.title;
+    if (articleData.titleEn !== undefined) data.titleEn = articleData.titleEn;
+    if (articleData.slug !== undefined) data.slug = articleData.slug;
+    if (articleData.excerpt !== undefined) data.excerpt = articleData.excerpt;
+    if (articleData.excerptEn !== undefined) data.excerptEn = articleData.excerptEn;
+    if (articleData.excerptMobile !== undefined) data.excerptMobile = articleData.excerptMobile;
+    if (articleData.excerptMobileEn !== undefined) data.excerptMobileEn = articleData.excerptMobileEn;
+    if (articleData.featuredImageUrl !== undefined) data.featuredImageUrl = articleData.featuredImageUrl;
+    if (articleData.featuredImageUrlEn !== undefined) data.featuredImageUrlEn = articleData.featuredImageUrlEn;
+    if (articleData.contentMobile !== undefined) data.contentMobile = articleData.contentMobile;
+    if (articleData.contentMobileEn !== undefined) data.contentMobileEn = articleData.contentMobileEn;
+
+    // Handle JSON content fields — parse string to object
+    if (articleData.content !== undefined) {
+      data.content = typeof articleData.content === 'string'
+        ? (articleData.content ? JSON.parse(articleData.content as string) : Prisma.JsonNull)
+        : articleData.content;
     }
-    if (articleData.episodeId) {
-      data.episode = { connect: { id: articleData.episodeId } };
-      delete data.episodeId;
+    if (articleData.contentEn !== undefined) {
+      data.contentEn = typeof articleData.contentEn === 'string'
+        ? (articleData.contentEn ? JSON.parse(articleData.contentEn as string) : Prisma.JsonNull)
+        : articleData.contentEn;
     }
+
+    // Handle season relation
+    if (articleData.seasonId !== undefined) {
+      data.season = articleData.seasonId
+        ? { connect: { id: articleData.seasonId } }
+        : { disconnect: true };
+    }
+
+    // Handle episode relation
+    if (articleData.episodeId !== undefined) {
+      data.episode = articleData.episodeId
+        ? { connect: { id: articleData.episodeId } }
+        : { disconnect: true };
+    }
+
+    // Handle publishedAt
+    if (articleData.publishedAt !== undefined) {
+      data.publishedAt = articleData.publishedAt ? new Date(articleData.publishedAt) : null;
+    }
+
+    console.log('Updating article with data keys:', Object.keys(data));
 
     const updatedArticle = await prisma.article.update({
       where: { id: article.id },
