@@ -20,6 +20,7 @@ export interface EpisodeWithLocalized extends Episode {
   localizedDescription?: string | null;
   localizedDescriptionMobile?: string | null;
   localizedContent?: PortableTextBlock[] | null;
+  localizedContentMobile?: string | null;
   localizedVideoUrl?: string | null;
   localizedThumbnailUrl?: string | null;
 }
@@ -32,6 +33,7 @@ function mapEpisode(episode: PopulatedEpisode, language: string): EpisodeWithLoc
     localizedDescription: language === 'ar' ? episode.description : episode.descriptionEn,
     localizedDescriptionMobile: language === 'ar' ? episode.descriptionMobile : episode.descriptionMobileEn,
     localizedContent: (language === 'ar' ? episode.content : episode.contentEn) as PortableTextBlock[] | null,
+    localizedContentMobile: language === 'ar' ? (episode as any).contentMobile : (episode as any).contentMobileEn,
     localizedVideoUrl: language === 'ar' ? episode.videoUrl : episode.videoUrlEn,
     localizedThumbnailUrl: language === 'ar' ? episode.thumbnailUrl : episode.thumbnailUrlEn
   };
@@ -99,20 +101,46 @@ export async function createEpisode(episodeData: Partial<Episode> & { articles?:
   try {
     const slug = episodeData.slug || generateSlug(episodeData.titleEn || episodeData.title || '');
 
-    // تم إصلاح الخطأ: استبدال any بـ Record<string, unknown>
     const data: Record<string, unknown> = {
-      ...episodeData,
+      title: episodeData.title,
+      titleEn: episodeData.titleEn,
       slug,
+      description: episodeData.description,
+      descriptionEn: episodeData.descriptionEn,
+      descriptionMobile: episodeData.descriptionMobile,
+      descriptionMobileEn: episodeData.descriptionMobileEn,
+      videoUrl: episodeData.videoUrl,
+      videoUrlEn: episodeData.videoUrlEn,
+      thumbnailUrl: episodeData.thumbnailUrl,
+      thumbnailUrlEn: episodeData.thumbnailUrlEn,
+      publishedAt: episodeData.publishedAt,
+      contentMobile: (episodeData as any).contentMobile,
+      contentMobileEn: (episodeData as any).contentMobileEn,
     };
 
     if (episodeData.seasonId) {
       data.season = { connect: { id: episodeData.seasonId } };
-      delete data.seasonId;
+    }
+
+    if (episodeData.content !== undefined) {
+      const raw = episodeData.content;
+      if (typeof raw === 'string' && (raw.trimStart().startsWith('{') || raw.trimStart().startsWith('['))) {
+        try { data.content = JSON.parse(raw); } catch { data.content = raw; }
+      } else {
+        data.content = raw ?? Prisma.JsonNull;
+      }
+    }
+    if (episodeData.contentEn !== undefined) {
+      const raw = episodeData.contentEn;
+      if (typeof raw === 'string' && (raw.trimStart().startsWith('{') || raw.trimStart().startsWith('['))) {
+        try { data.contentEn = JSON.parse(raw); } catch { data.contentEn = raw; }
+      } else {
+        data.contentEn = raw ?? Prisma.JsonNull;
+      }
     }
 
     if (episodeData.articles && Array.isArray(episodeData.articles)) {
       data.articles = { connect: episodeData.articles.map(id => ({ id })) };
-      delete data.articles; // Remove from top level as it's handled in connect
     }
 
     const newEpisode = await prisma.episode.create({ 
@@ -135,15 +163,48 @@ export async function updateEpisode(idOrSlug: string, episodeData: Partial<Episo
 
     if (!episode) return null;
 
-    // تم إصلاح الخطأ: استبدال any بـ Record<string, unknown>
-    const data: Record<string, unknown> = { ...episodeData };
+    const data: Record<string, unknown> = {};
 
-    if (episodeData.seasonId) {
-      data.season = { connect: { id: episodeData.seasonId } };
-      delete data.seasonId;
+    if (episodeData.title !== undefined) data.title = episodeData.title;
+    if (episodeData.titleEn !== undefined) data.titleEn = episodeData.titleEn;
+    if (episodeData.slug !== undefined) data.slug = episodeData.slug;
+    if (episodeData.description !== undefined) data.description = episodeData.description;
+    if (episodeData.descriptionEn !== undefined) data.descriptionEn = episodeData.descriptionEn;
+    if (episodeData.descriptionMobile !== undefined) data.descriptionMobile = episodeData.descriptionMobile;
+    if (episodeData.descriptionMobileEn !== undefined) data.descriptionMobileEn = episodeData.descriptionMobileEn;
+    if (episodeData.videoUrl !== undefined) data.videoUrl = episodeData.videoUrl;
+    if (episodeData.videoUrlEn !== undefined) data.videoUrlEn = episodeData.videoUrlEn;
+    if (episodeData.thumbnailUrl !== undefined) data.thumbnailUrl = episodeData.thumbnailUrl;
+    if (episodeData.thumbnailUrlEn !== undefined) data.thumbnailUrlEn = episodeData.thumbnailUrlEn;
+    if (episodeData.publishedAt !== undefined) data.publishedAt = episodeData.publishedAt;
+    if ((episodeData as any).contentMobile !== undefined) data.contentMobile = (episodeData as any).contentMobile;
+    if ((episodeData as any).contentMobileEn !== undefined) data.contentMobileEn = (episodeData as any).contentMobileEn;
+
+    if (episodeData.seasonId !== undefined) {
+      if (episodeData.seasonId) {
+        data.season = { connect: { id: episodeData.seasonId } };
+      } else {
+        data.season = { disconnect: true };
+      }
     }
 
-    // Handle articles update (set will replace existing relations)
+    if (episodeData.content !== undefined) {
+      const raw = episodeData.content;
+      if (typeof raw === 'string' && (raw.trimStart().startsWith('{') || raw.trimStart().startsWith('['))) {
+        try { data.content = JSON.parse(raw); } catch { data.content = raw; }
+      } else {
+        data.content = raw ?? Prisma.JsonNull;
+      }
+    }
+    if (episodeData.contentEn !== undefined) {
+      const raw = episodeData.contentEn;
+      if (typeof raw === 'string' && (raw.trimStart().startsWith('{') || raw.trimStart().startsWith('['))) {
+        try { data.contentEn = JSON.parse(raw); } catch { data.contentEn = raw; }
+      } else {
+        data.contentEn = raw ?? Prisma.JsonNull;
+      }
+    }
+
     if (episodeData.articles && Array.isArray(episodeData.articles)) {
       data.articles = { set: episodeData.articles.map(id => ({ id })) };
     }

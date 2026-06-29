@@ -50,6 +50,8 @@ export default function EditEpisodePage() {
   const [descriptionMobileEn, setDescriptionMobileEn] = useState('');
   const [content, setContent] = useState('');
   const [contentEn, setContentEn] = useState('');
+  const [contentMobile, setContentMobile] = useState('');
+  const [contentMobileEn, setContentMobileEn] = useState('');
   const [videoUrl, setVideoUrl] = useState('');
   const [videoUrlEn, setVideoUrlEn] = useState('');
   const [selectedSeason, setSelectedSeason] = useState<{ value: string; label: string } | null>(null);
@@ -87,6 +89,7 @@ export default function EditEpisodePage() {
         setDescription(ep.description || ''); setDescriptionEn(ep.descriptionEn || '');
         setDescriptionMobile(ep.descriptionMobile || ''); setDescriptionMobileEn(ep.descriptionMobileEn || '');
         setContent(ep.content || ''); setContentEn(ep.contentEn || '');
+        setContentMobile((ep as any).contentMobile || ''); setContentMobileEn((ep as any).contentMobileEn || '');
         setVideoUrl(ep.videoUrl || ''); setVideoUrlEn(ep.videoUrlEn || '');
         setThumbnailUrl(ep.thumbnailUrl || ''); setThumbnailUrlEn(ep.thumbnailUrlEn || '');
         
@@ -168,9 +171,10 @@ export default function EditEpisodePage() {
       description, descriptionEn,
       descriptionMobile, descriptionMobileEn,
       content, contentEn,
+      contentMobile, contentMobileEn,
       videoUrl, videoUrlEn,
       thumbnailUrl, thumbnailUrlEn,
-      seasonId: selectedSeason ? selectedSeason.value : null, // Updated key
+      seasonId: selectedSeason ? selectedSeason.value : null,
       articles: selectedArticles,
     };
 
@@ -229,6 +233,7 @@ export default function EditEpisodePage() {
               <div className="mb-4"><label className="block text-sm font-medium mb-2 dark:text-gray-300">Description <span className="text-gray-400 text-xs">(website - HTML)</span></label><SimpleTextEditor content={description} onChange={setDescription} language="ar" /></div>
               <div className="mb-4"><label className="block text-sm font-medium mb-2 dark:text-gray-300">Mobile Description <span className="text-gray-400 text-xs">(plain text - shown in app)</span></label><textarea value={descriptionMobile} onChange={(e) => setDescriptionMobile(e.target.value)} dir="rtl" className="w-full p-3 border rounded-md dark:bg-gray-700 dark:text-white" rows={3} /></div>
               <div className="mb-4"><label className="block text-sm font-medium mb-2 dark:text-gray-300">Content</label><SimpleTextEditor content={content} onChange={setContent} language="ar" /></div>
+              <div className="mb-4"><label className="block text-sm font-medium mb-2 dark:text-gray-300">Mobile Content <span className="text-gray-400 text-xs">(plain text - shown in app)</span></label><textarea value={contentMobile} onChange={(e) => setContentMobile(e.target.value)} dir="rtl" className="w-full p-3 border rounded-md dark:bg-gray-700 dark:text-white" rows={3} /></div>
               <div className="mb-4"><label className="block text-sm font-medium mb-2 dark:text-gray-300">Video URL</label><input type="url" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} className="w-full p-3 border rounded-md dark:bg-gray-700" /></div>
               <div className="mb-4">
                 <label className="block text-sm font-medium mb-2 dark:text-gray-300">Thumbnail</label>
@@ -249,6 +254,7 @@ export default function EditEpisodePage() {
               <div className="mb-4"><label className="block text-sm font-medium mb-2 dark:text-gray-300">Description <span className="text-gray-400 text-xs">(website - HTML)</span></label><SimpleTextEditor content={descriptionEn} onChange={setDescriptionEn} language="en" /></div>
               <div className="mb-4"><label className="block text-sm font-medium mb-2 dark:text-gray-300">Mobile Description <span className="text-gray-400 text-xs">(plain text - shown in app)</span></label><textarea value={descriptionMobileEn} onChange={(e) => setDescriptionMobileEn(e.target.value)} className="w-full p-3 border rounded-md dark:bg-gray-700 dark:text-white" rows={3} /></div>
               <div className="mb-4"><label className="block text-sm font-medium mb-2 dark:text-gray-300">Content</label><SimpleTextEditor content={contentEn} onChange={setContentEn} language="en" /></div>
+              <div className="mb-4"><label className="block text-sm font-medium mb-2 dark:text-gray-300">Mobile Content <span className="text-gray-400 text-xs">(plain text - shown in app)</span></label><textarea value={contentMobileEn} onChange={(e) => setContentMobileEn(e.target.value)} className="w-full p-3 border rounded-md dark:bg-gray-700 dark:text-white" rows={3} /></div>
               <div className="mb-4"><label className="block text-sm font-medium mb-2 dark:text-gray-300">Video URL</label><input type="url" value={videoUrlEn} onChange={(e) => setVideoUrlEn(e.target.value)} className="w-full p-3 border rounded-md dark:bg-gray-700" /></div>
               <div className="mb-4">
                 <label className="block text-sm font-medium mb-2 dark:text-gray-300">Thumbnail</label>

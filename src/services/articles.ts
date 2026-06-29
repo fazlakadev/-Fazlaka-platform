@@ -235,16 +235,22 @@ export async function updateArticle(idOrSlug: string, articleData: Partial<Artic
     if (articleData.contentMobile !== undefined) data.contentMobile = articleData.contentMobile;
     if (articleData.contentMobileEn !== undefined) data.contentMobileEn = articleData.contentMobileEn;
 
-    // Handle JSON content fields — parse string to object
+    // Handle JSON content fields — parse only if it looks like JSON
     if (articleData.content !== undefined) {
-      data.content = typeof articleData.content === 'string'
-        ? (articleData.content ? JSON.parse(articleData.content as string) : Prisma.JsonNull)
-        : articleData.content;
+      const raw = articleData.content;
+      if (typeof raw === 'string' && (raw.trimStart().startsWith('{') || raw.trimStart().startsWith('['))) {
+        try { data.content = JSON.parse(raw); } catch { data.content = raw; }
+      } else {
+        data.content = raw ?? Prisma.JsonNull;
+      }
     }
     if (articleData.contentEn !== undefined) {
-      data.contentEn = typeof articleData.contentEn === 'string'
-        ? (articleData.contentEn ? JSON.parse(articleData.contentEn as string) : Prisma.JsonNull)
-        : articleData.contentEn;
+      const raw = articleData.contentEn;
+      if (typeof raw === 'string' && (raw.trimStart().startsWith('{') || raw.trimStart().startsWith('['))) {
+        try { data.contentEn = JSON.parse(raw); } catch { data.contentEn = raw; }
+      } else {
+        data.contentEn = raw ?? Prisma.JsonNull;
+      }
     }
 
     // Handle season relation

@@ -643,6 +643,8 @@ model Episode {
   descriptionMobileEn   String?    @map("description_mobile_en") @db.Text
   content         Json?
   contentEn       Json?      @map("content_en")
+  contentMobile     String?    @map("content_mobile") @db.Text
+  contentMobileEn   String?    @map("content_mobile_en") @db.Text
   videoUrl        String?    @map("video_url")
   videoUrlEn      String?    @map("video_url_en")
   thumbnailUrl    String?    @map("thumbnail_url")

@@ -40,6 +40,8 @@ export default function AddEpisodePage() {
   const [descriptionMobileEn, setDescriptionMobileEn] = useState('');
   const [content, setContent] = useState('');
   const [contentEn, setContentEn] = useState('');
+  const [contentMobile, setContentMobile] = useState('');
+  const [contentMobileEn, setContentMobileEn] = useState('');
   const [videoUrl, setVideoUrl] = useState('');
   const [videoUrlEn, setVideoUrlEn] = useState('');
   const [selectedSeason, setSelectedSeason] = useState<SeasonOption | null>(null);
@@ -110,10 +112,11 @@ export default function AddEpisodePage() {
       description, descriptionEn,
       descriptionMobile, descriptionMobileEn,
       content, contentEn,
+      contentMobile, contentMobileEn,
       videoUrl, videoUrlEn,
       thumbnailUrl, thumbnailUrlEn,
       seasonId: selectedSeason ? selectedSeason.value : null,
-      articles: selectedArticles, // Backend expects array of IDs
+      articles: selectedArticles,
       publishedAt: new Date(),
     };
 
@@ -176,6 +179,7 @@ export default function AddEpisodePage() {
               <div className="mb-4"><label className="block text-sm font-medium mb-2">Description (Arabic) <span className="text-gray-400 text-xs">(website - HTML)</span></label><SimpleTextEditor content={description} onChange={setDescription} language="ar" /></div>
               <div className="mb-4"><label className="block text-sm font-medium mb-2">Mobile Description (Arabic) <span className="text-gray-400 text-xs">(plain text - shown in app)</span></label><textarea value={descriptionMobile} onChange={(e) => setDescriptionMobile(e.target.value)} dir="rtl" className="w-full p-3 border rounded-md dark:bg-gray-700 dark:text-white" rows={3} placeholder="Mobile-specific description..." /></div>
               <div className="mb-4"><label className="block text-sm font-medium mb-2">Content (Arabic)</label><SimpleTextEditor content={content} onChange={setContent} language="ar" /></div>
+              <div className="mb-4"><label className="block text-sm font-medium mb-2">Mobile Content (Arabic) <span className="text-gray-400 text-xs">(plain text - shown in app)</span></label><textarea value={contentMobile} onChange={(e) => setContentMobile(e.target.value)} dir="rtl" className="w-full p-3 border rounded-md dark:bg-gray-700 dark:text-white" rows={3} placeholder="Mobile-specific content..." /></div>
               <div className="mb-4"><label className="block text-sm font-medium mb-2">Video URL (Arabic)</label><input type="url" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} className="w-full p-3 border rounded-md dark:bg-gray-700 dark:text-white" /></div>
               <div className="mb-4">
                 <label className="block text-sm font-medium mb-2">Thumbnail (Arabic)</label>
@@ -197,6 +201,7 @@ export default function AddEpisodePage() {
               <div className="mb-4"><label className="block text-sm font-medium mb-2">Description (English) <span className="text-gray-400 text-xs">(website - HTML)</span></label><SimpleTextEditor content={descriptionEn} onChange={setDescriptionEn} language="en" /></div>
               <div className="mb-4"><label className="block text-sm font-medium mb-2">Mobile Description (English) <span className="text-gray-400 text-xs">(plain text - shown in app)</span></label><textarea value={descriptionMobileEn} onChange={(e) => setDescriptionMobileEn(e.target.value)} className="w-full p-3 border rounded-md dark:bg-gray-700 dark:text-white" rows={3} placeholder="Mobile-specific description..." /></div>
               <div className="mb-4"><label className="block text-sm font-medium mb-2">Content (English)</label><SimpleTextEditor content={contentEn} onChange={setContentEn} language="en" /></div>
+              <div className="mb-4"><label className="block text-sm font-medium mb-2">Mobile Content (English) <span className="text-gray-400 text-xs">(plain text - shown in app)</span></label><textarea value={contentMobileEn} onChange={(e) => setContentMobileEn(e.target.value)} className="w-full p-3 border rounded-md dark:bg-gray-700 dark:text-white" rows={3} placeholder="Mobile-specific content..." /></div>
               <div className="mb-4"><label className="block text-sm font-medium mb-2">Video URL (English)</label><input type="url" value={videoUrlEn} onChange={(e) => setVideoUrlEn(e.target.value)} className="w-full p-3 border rounded-md dark:bg-gray-700 dark:text-white" /></div>
               <div className="mb-4">
                 <label className="block text-sm font-medium mb-2">Thumbnail (English)</label>
