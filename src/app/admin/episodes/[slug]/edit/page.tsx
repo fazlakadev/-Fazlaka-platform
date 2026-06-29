@@ -14,6 +14,7 @@ interface Episode {
   description?: string; descriptionEn?: string;
   descriptionMobile?: string; descriptionMobileEn?: string;
   content?: string; contentEn?: string;
+  contentMobile?: string; contentMobileEn?: string;
   videoUrl?: string; videoUrlEn?: string;
   thumbnailUrl?: string; thumbnailUrlEn?: string;
   season?: Season | null;
@@ -89,7 +90,7 @@ export default function EditEpisodePage() {
         setDescription(ep.description || ''); setDescriptionEn(ep.descriptionEn || '');
         setDescriptionMobile(ep.descriptionMobile || ''); setDescriptionMobileEn(ep.descriptionMobileEn || '');
         setContent(ep.content || ''); setContentEn(ep.contentEn || '');
-        setContentMobile((ep as any).contentMobile || ''); setContentMobileEn((ep as any).contentMobileEn || '');
+        setContentMobile(ep.contentMobile || ''); setContentMobileEn(ep.contentMobileEn || '');
         setVideoUrl(ep.videoUrl || ''); setVideoUrlEn(ep.videoUrlEn || '');
         setThumbnailUrl(ep.thumbnailUrl || ''); setThumbnailUrlEn(ep.thumbnailUrlEn || '');
         
