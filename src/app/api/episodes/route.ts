@@ -25,6 +25,7 @@ export async function POST(request: NextRequest) {
     const newEpisode = await createEpisode(episodeData);
     
     if (!newEpisode) {
+      console.error('createEpisode returned null for:', JSON.stringify({ title: episodeData.title, slug: episodeData.slug, seasonId: episodeData.seasonId }));
       return NextResponse.json(
         { error: 'Failed to create episode' },
         { status: 400 }
