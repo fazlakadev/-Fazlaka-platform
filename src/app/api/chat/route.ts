@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenerativeAI, GenerateContentStreamResult } from '@google/generative-ai';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
+import { getUserIdFromRequest } from '@/lib/auth-helper';
 import { prisma } from '@/lib/prisma'; // تم التعديل: استخدام Named Import
 import { Prisma } from '@prisma/client';
 import { fetchUserData } from '@/services/userService';
@@ -65,10 +64,10 @@ export async function POST(req: NextRequest) {
       return new NextResponse(JSON.stringify({ error: 'Invalid request body: messages missing or malformed' }), { status: 400 });
     }
 
-    // Get session for authentication
-    const session = await getServerSession(authOptions);
+    // Get userId for authentication (supports both JWT Bearer token and NextAuth session)
+    const userId = await getUserIdFromRequest(req);
     
-    if (!session?.user?.id) {
+    if (!userId) {
       return new NextResponse(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });    
     }
 

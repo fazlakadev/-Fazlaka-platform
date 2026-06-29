@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
+import { getUserIdFromRequest } from '@/lib/auth-helper';
 import { prisma } from '@/lib/prisma'; // تم التعديل: استخدام Named Import
 import { randomBytes } from 'crypto';
 
@@ -32,10 +31,10 @@ export async function POST(
       );
     }
     
-    const session = await getServerSession(authOptions);
-    console.log('User session:', session?.user?.id);
+    const userId = await getUserIdFromRequest(request);
+    console.log('User ID:', userId);
     
-    if (!session?.user?.id) {
+    if (!userId) {
       console.error('Share API: Unauthorized access attempt');
       return NextResponse.json(
         { error: 'Unauthorized: You must be logged in to share a chat.' },
@@ -58,19 +57,19 @@ export async function POST(
     const { isPublic } = requestBody;
     console.log('Request body (isPublic):', isPublic);
     
-    console.log(`Searching for chat with ID: ${id} and user: ${session.user.id}`);
+    console.log(`Searching for chat with ID: ${id} and user: ${userId}`);
     // البحث عن المحادثة
     const chat = await prisma.chatHistory.findFirst({ 
       where: {
         id: id,
-        userId: session.user.id 
+        userId: userId 
       }
     });
     
     console.log('Chat found:', chat);
     
     if (!chat) {
-      console.error(`Share API: Chat not found for ID: ${id} and user: ${session.user.id}`);
+      console.error(`Share API: Chat not found for ID: ${id} and user: ${userId}`);
       return NextResponse.json(
         { error: 'Chat not found or you do not have permission to share it.' },
         { status: 404 }

@@ -1,18 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
-import { prisma } from '@/lib/prisma'; // تم التعديل: استخدام Named Import
+import { getUserIdFromRequest } from '@/lib/auth-helper';
+import { prisma } from '@/lib/prisma';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const userId = await getUserIdFromRequest(request);
     
-    if (!session?.user?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const chatHistory = await prisma.chatHistory.findMany({
-      where: { userId: session.user.id },
+      where: { userId },
       orderBy: { updatedAt: 'desc' },
       select: { id: true, title: true, createdAt: true, updatedAt: true }
     });
@@ -26,9 +25,9 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const userId = await getUserIdFromRequest(request);
     
-    if (!session?.user?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -40,7 +39,7 @@ export async function POST(request: NextRequest) {
 
     const newChat = await prisma.chatHistory.create({
       data: {
-        userId: session.user.id,
+        userId,
         title,
         messages: []
       }
