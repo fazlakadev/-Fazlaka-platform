@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, type ComponentType } from "react";
 import { useSession } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { pusherClient } from "@/lib/pusher";
@@ -14,7 +14,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/components/Language/LanguageProvider";
 
 // --- Translations ---
-const translations: Record<string, any> = {
+const translations: Record<string, Record<string, string>> = {
   ar: {
     friends: "الأصدقاء",
     requests: "الطلبات",
@@ -437,7 +437,7 @@ export default function ChatFriendsPage() {
     friends.some(f => f.requester.id === userId || f.receiver.id === userId);
 
   // --- Tab Buttons ---
-  const tabs: { key: TabType; label: string; icon: any }[] = [
+  const tabs: { key: TabType; label: string; icon: ComponentType<{ className?: string }> }[] = [
     { key: "friends", label: t.friends, icon: Users },
     { key: "requests", label: t.requests, icon: UserPlus },
     { key: "search", label: t.search, icon: Search },
