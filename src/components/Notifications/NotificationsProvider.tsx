@@ -52,47 +52,20 @@ export function NotificationsProvider({ children }: NotificationsProviderProps) 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // استخدام SSE للاستماع للإشعارات الفورية
+  // استخدام polling للتحقق من الإشعارات الجديدة
   useServerSentEvents('/api/notifications/stream', {
-    onMessage: (event) => {
+    onMessage: (data) => {
       try {
-        const data = JSON.parse(event.data);
-        
-        if (data.type === 'notification') {
-          const newNotification = data.data;
-          
-          // تحديث الحقول المحلية
-          newNotification.localizedTitle = language === 'ar' 
-            ? newNotification.title 
-            : newNotification.titleEn || newNotification.title;
-          newNotification.localizedMessage = language === 'ar' 
-            ? newNotification.message 
-            : newNotification.messageEn || newNotification.message;
-          
-          // التأكد من أن الحقل isRead موجود
-          if (newNotification.isRead === undefined) newNotification.isRead = false;
-          
-          setNotifications(prev => [newNotification, ...prev]);
-          
-          if (!newNotification.isRead) {
-            setUnreadCount(prev => prev + 1);
-            
-            if ('Notification' in window && Notification.permission === 'granted') {
-              new Notification(newNotification.localizedTitle, {
-                body: newNotification.localizedMessage,
-                icon: '/favicon.ico',
-                tag: newNotification.id, // استخدام id
-                requireInteraction: true
-              });
-            }
-          }
+        const response = data as { type?: string; data?: { notifications: Notification[]; unreadCount: number } };
+        if (response.type === 'notifications' && response.data) {
+          setNotifications(response.data.notifications);
+          setUnreadCount(response.data.unreadCount || 0);
         }
       } catch (error) {
-        console.error('Error parsing SSE message:', error);
+        console.error('Error polling notifications:', error);
       }
     },
-    onError: (event) => {
-      console.error('SSE error:', event);
+    onError: () => {
       setError('Connection to notification stream failed');
     }
   });

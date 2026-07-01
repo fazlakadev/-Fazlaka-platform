@@ -1,7 +1,9 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
-import { addConnection, removeConnection } from '@/services/sseService';
+import { fetchUserNotifications, fetchUnreadNotificationsCount } from '@/services/notifications';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -11,30 +13,15 @@ export async function GET(request: NextRequest) {
   }
 
   const userId = session.user.id;
-  const encoder = new TextEncoder();
-  
-  const stream = new ReadableStream({
-    start(controller) {
-      addConnection(userId, controller);
-      
-      const connectMessage = { 
-        type: 'connected', 
-        data: { message: 'Connected to notification stream' }
-      };
-      controller.enqueue(encoder.encode(`data: ${JSON.stringify(connectMessage)}\n\n`));
-      
-      request.signal.addEventListener('abort', () => {
-        removeConnection(userId);
-        controller.close();
-      });
-    }
-  });
+  const { searchParams } = new URL(request.url);
+  const language = searchParams.get('language') || 'ar';
+  const since = searchParams.get('since') || '';
 
-  return new Response(stream, {
-    headers: {
-      'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
-      'Connection': 'keep-alive',
-    },
+  const notifications = await fetchUserNotifications(userId, language, 20, 0);
+  const unreadCount = await fetchUnreadNotificationsCount(userId);
+
+  return NextResponse.json({
+    type: 'notifications',
+    data: { notifications, unreadCount, since }
   });
 }

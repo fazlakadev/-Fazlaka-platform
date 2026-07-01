@@ -1,13 +1,10 @@
-// File: src/lib/realtimeNotifications.ts
-
 export class RealtimeNotifications {
   private static instance: RealtimeNotifications;
-  private eventSource: EventSource | null = null;
+  private intervalId: ReturnType<typeof setInterval> | null = null;
   private listeners: { [key: string]: ((data: unknown) => void)[] } = {};
-  private reconnectAttempts = 0;
-  private maxReconnectAttempts = 5;
-  private reconnectInterval = 3000;
   private userId: string | null = null;
+  private lastFetch: number = 0;
+  private pollInterval: number = 5000;
 
   private constructor() {}
 
@@ -19,43 +16,39 @@ export class RealtimeNotifications {
   }
 
   public connect(userId: string): void {
-    if (this.eventSource) this.disconnect();
+    if (this.intervalId) this.disconnect();
     this.userId = userId;
-    this.reconnectAttempts = 0;
-    this.establishConnection();
+    this.lastFetch = 0;
+    this.startPolling();
   }
 
-  private establishConnection(): void {
+  private async startPolling(): Promise<void> {
+    this.poll();
+    this.intervalId = setInterval(() => this.poll(), this.pollInterval);
+  }
+
+  private async poll(): Promise<void> {
     if (!this.userId) return;
-    const url = `/api/notifications/stream?userId=${this.userId}`; // Note: userId is handled by session in API, but kept for consistency if needed
-    this.eventSource = new EventSource(url);
-
-    this.eventSource.onopen = () => {
-      console.log('Connected to notification stream');
-      this.reconnectAttempts = 0;
-    };
-
-    this.eventSource.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        this.emit(data.type, data.data);
-      } catch (error) {
-        console.error('Error parsing SSE message:', error);
+    try {
+      const url = `/api/notifications/stream?userId=${this.userId}&since=${this.lastFetch}&_t=${Date.now()}`;
+      const response = await fetch(url, { cache: 'no-store' });
+      if (!response.ok) return;
+      
+      const data = await response.json();
+      this.lastFetch = Date.now();
+      
+      if (data.type) {
+        this.emit(data.type, data.data || data);
       }
-    };
-
-    this.eventSource.onerror = () => {
-      if (this.reconnectAttempts < this.maxReconnectAttempts) {
-        this.reconnectAttempts++;
-        setTimeout(() => this.establishConnection(), this.reconnectInterval);
-      }
-    };
+    } catch {
+      // Silently retry on next interval
+    }
   }
 
   public disconnect(): void {
-    if (this.eventSource) {
-      this.eventSource.close();
-      this.eventSource = null;
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+      this.intervalId = null;
     }
   }
 

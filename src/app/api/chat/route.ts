@@ -7,6 +7,7 @@ import { fetchUserData } from '@/services/userService';
 import { fetchChatbotKnowledge, ChatbotKnowledge } from '@/services/chatbotData';
 
 export const runtime = 'nodejs';
+export const maxDuration = 30;
 
 // تعريف واجهات للبيانات
 interface ChatMessage {

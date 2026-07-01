@@ -1,79 +1,69 @@
 "use client";
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 
 interface EventSourceOptions {
-  onMessage?: (event: MessageEvent) => void;
-  onError?: (event: Event) => void;
-  onOpen?: (event: Event) => void;
+  onMessage?: (data: Record<string, unknown>) => void;
+  onError?: (error: Error) => void;
+  onOpen?: () => void;
   reconnectInterval?: number;
   maxReconnectAttempts?: number;
 }
 
 export function useServerSentEvents(url: string, options: EventSourceOptions = {}) {
   const { data: session } = useSession();
-  const [readyState, setReadyState] = useState<number>(0); // 0: CONNECTING, 1: OPEN, 2: CLOSED
-  const [lastEventId, setLastEventId] = useState<string | null>(null);
-  const eventSourceRef = useRef<EventSource | null>(null);
+  const [readyState, setReadyState] = useState<number>(0);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const reconnectAttempts = useRef(0);
   const {
     onMessage,
     onError,
     onOpen,
-    reconnectInterval = 3000,
-    maxReconnectAttempts = 5
+    reconnectInterval = 5000,
+    maxReconnectAttempts = 9999
   } = options;
+
+  const poll = useCallback(async () => {
+    if (!session?.user?.id) return;
+    
+    try {
+      const eventUrl = `${url}?userId=${session.user.id}&_t=${Date.now()}`;
+      const response = await fetch(eventUrl, { cache: 'no-store' });
+      if (!response.ok) throw new Error(`Poll failed: ${response.status}`);
+      
+      const data = await response.json();
+      setReadyState(1);
+      reconnectAttempts.current = 0;
+      if (onOpen) onOpen();
+      if (onMessage) onMessage(data);
+    } catch (err) {
+      setReadyState(2);
+      if (onError) onError(err instanceof Error ? err : new Error(String(err)));
+      
+      if (reconnectAttempts.current < maxReconnectAttempts) {
+        reconnectAttempts.current++;
+      }
+    }
+  }, [session?.user?.id, url, onMessage, onError, onOpen, maxReconnectAttempts]);
 
   useEffect(() => {
     if (!session?.user?.id) return;
 
-    const connect = () => {
-      if (eventSourceRef.current) {
-        eventSourceRef.current.close();
-      }
-
-      // إضافة معرف المستخدم إلى URL
-      const eventUrl = `${url}?userId=${session.user.id}`;
-      eventSourceRef.current = new EventSource(eventUrl);
-
-      eventSourceRef.current.onopen = (event) => {
-        setReadyState(1);
-        reconnectAttempts.current = 0;
-        if (onOpen) onOpen(event);
-      };
-
-      eventSourceRef.current.onmessage = (event) => {
-        const eventData = event as MessageEvent & { lastEventId?: string };
-        setLastEventId(eventData.lastEventId || null);
-        if (onMessage) onMessage(event);
-      };
-
-      eventSourceRef.current.onerror = (event) => {
-        setReadyState(2);
-        if (onError) onError(event);
-        
-        // محاولة إعادة الاتصال
-        if (reconnectAttempts.current < maxReconnectAttempts) {
-          reconnectAttempts.current++;
-          setTimeout(connect, reconnectInterval);
-        }
-      };
-    };
-
-    connect();
+    poll();
+    intervalRef.current = setInterval(poll, reconnectInterval);
 
     return () => {
-      if (eventSourceRef.current) {
-        eventSourceRef.current.close();
-        eventSourceRef.current = null;
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
       }
     };
-  }, [session?.user?.id, url, onMessage, onError, onOpen, reconnectInterval, maxReconnectAttempts]);
+  }, [session?.user?.id, poll, reconnectInterval]);
 
   return {
     readyState,
-    lastEventId,
-    eventSource: eventSourceRef.current
+    lastEventId: null,
+    eventSource: null
   };
 }

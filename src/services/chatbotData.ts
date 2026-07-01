@@ -1,9 +1,10 @@
 import { prisma } from '@/lib/prisma';
-// استيراد الأنواع من الملفات المركزية لضمان التوافق
 import { Article } from '@/types/article';
 import { FAQ } from '@/types/faq';
-// استيراد الأنواع من Prisma للكيانات الأخرى
 import { Episode, Season, Playlist, Team } from '@prisma/client';
+
+const CACHE_TTL = 30_000;
+let knowledgeCache: { data: ChatbotKnowledge | null; timestamp: number } = { data: null, timestamp: 0 };
 
 // تعريف واجهة لمحتوى PortableText (يستخدم محلياً)
 export interface PortableTextBlock {
@@ -59,6 +60,10 @@ export interface ChatbotKnowledge {
 }
 
 export async function fetchChatbotKnowledge(language: string = 'ar'): Promise<ChatbotKnowledge> {
+  const now = Date.now();
+  if (knowledgeCache.data && (now - knowledgeCache.timestamp) < CACHE_TTL) {
+    return knowledgeCache.data;
+  }
   try {
     const [articlesData, episodesData, seasonsData, playlistsData, teamMembersData, faqsData] = await Promise.all([
       prisma.article.findMany({ take: 20 }),
@@ -80,7 +85,7 @@ export async function fetchChatbotKnowledge(language: string = 'ar'): Promise<Ch
     
     const totalContent = articles.length + episodes.length + seasons.length + playlists.length;
     
-    return {
+    const result = {
       articles,
       episodes,
       seasons,
@@ -96,6 +101,8 @@ export async function fetchChatbotKnowledge(language: string = 'ar'): Promise<Ch
         totalContent
       }
     };
+    knowledgeCache = { data: result, timestamp: Date.now() };
+    return result;
   } catch (error) {
     console.error('Error fetching chatbot knowledge:', error);
     return {
