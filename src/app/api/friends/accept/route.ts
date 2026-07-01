@@ -31,17 +31,18 @@ export async function POST(req: NextRequest) {
 
     if (!friendship) return NextResponse.json({ error: "Request not found" }, { status: 404 });
 
-    if (action === "ACCEPT") {
-      await prisma.friendship.update({
-        where: { id: friendship.id },
-        data: { status: "ACCEPTED" },
-      });
-
-      return NextResponse.json({ success: true });
-    } else {
+    if (action === "REJECT") {
       await prisma.friendship.delete({ where: { id: friendship.id } });
       return NextResponse.json({ success: true });
     }
+
+    // Default to ACCEPT (even if action is missing/undefined)
+    await prisma.friendship.update({
+      where: { id: friendship.id },
+      data: { status: "ACCEPTED" },
+    });
+
+    return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json({ error: "Internal Error" }, { status: 500 });
   }
