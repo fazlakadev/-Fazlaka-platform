@@ -214,70 +214,17 @@ export default function Footer() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
   
-  // إضافة نظام التحديث الفوري للروابط الاجتماعية
-  useEffect(() => {
-    if (!mounted) return;
-    
-    // إنشاء اتصال EventSource للاستماع إلى تحديثات SSE
-    const eventSource = new EventSource('/api/stream');
-    
-    eventSource.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        console.log('Received SSE update:', data);
-        
-        // تحديث البيانات عند تلقي إشعار بتغيير في الروابط الاجتماعية
-        if (
-          data.type === 'change' && data.collection === 'socialLinks' ||
-          data.type === 'socialLinkCreated' ||
-          data.type === 'socialLinkUpdated' ||
-          data.type === 'socialLinkDeleted'
-        ) {
-          console.log('Updating social links due to change notification');
-          setLastUpdate(Date.now());
-          
-          // جلب البيانات المحدثة
-          fetchSocialLinksFromMongoDB().then(linksData => {
-            setSocialLinks(linksData);
-          }).catch(error => {
-            console.error('Error fetching updated social links:', error);
-          });
-        }
-      } catch (error) {
-        console.error('Error parsing SSE message:', error);
-      }
-    };
-    
-    eventSource.onerror = (error) => {
-      console.error('SSE error:', error);
-      eventSource.close();
-      
-      // إعادة محاولة الاتصال بعد 5 ثوانٍ
-      setTimeout(() => {
-        console.log('Attempting to reconnect to SSE...');
-        const newEventSource = new EventSource('/api/stream');
-        newEventSource.onmessage = eventSource.onmessage;
-        newEventSource.onerror = eventSource.onerror;
-      }, 5000);
-    };
-    
-    return () => {
-      eventSource.close();
-    };
-  }, [mounted]);
-
-  // إضافة مؤقت للتحديث الدوري كنسخة احتياطية
+  // تحديث دوري للروابط الاجتماعية (بديل عن SSE)
   useEffect(() => {
     if (!mounted) return;
     
     const interval = setInterval(() => {
-      console.log('Periodic refresh check for social links');
       fetchSocialLinksFromMongoDB().then(linksData => {
         setSocialLinks(linksData);
       }).catch(error => {
         console.error('Error during periodic refresh:', error);
       });
-    }, 60000); // تحديث كل دقيقة
+    }, 60000);
     
     return () => clearInterval(interval);
   }, [mounted]);

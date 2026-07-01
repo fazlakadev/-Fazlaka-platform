@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
           { requesterId: userId },
           { receiverId: userId },
         ],
-        status: "ACCEPTED",
+        status: { in: ["PENDING", "ACCEPTED"] },
       },
       include: {
         requester: { select: { id: true, name: true, image: true } },
@@ -60,6 +60,7 @@ export async function POST(req: NextRequest) {
           { requesterId: userId, receiverId },
           { requesterId: receiverId, receiverId: userId },
         ],
+        status: { in: ["PENDING", "ACCEPTED"] },
       },
     });
 

@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback, type ComponentType } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { pusherClient } from "@/lib/pusher";
+import FriendsPopup from "@/components/Friends/FriendsPopup";
 import {
   User, MessageCircle, UserPlus, UserCheck, Check, X, Loader2, Send, ArrowLeft,
-  Edit, Trash2, ImagePlus, Search, ExternalLink, Eye, Users, Clock, Ban
+  Edit, Trash2, ImagePlus, Search, ExternalLink, Eye, Clock, Ban, Users
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -113,14 +114,6 @@ interface ChatPartner {
   banner?: string | null;
 }
 
-interface SearchedUser {
-  id: string;
-  name: string | null;
-  image: string | null;
-}
-
-type TabType = "friends" | "requests" | "search";
-
 export default function ChatFriendsPage() {
   const { data: session } = useSession();
   const searchParams = useSearchParams();
@@ -128,10 +121,7 @@ export default function ChatFriendsPage() {
   const { isRTL, language } = useLanguage();
   const t = translations[language];
 
-  const [activeTab, setActiveTab] = useState<TabType>("friends");
   const [friends, setFriends] = useState<Friend[]>([]);
-  const [pendingRequests, setPendingRequests] = useState<Friend[]>([]);
-  const [sentRequestsList, setSentRequestsList] = useState<Friend[]>([]);
   const [loadingFriends, setLoadingFriends] = useState(true);
 
   const [selectedChat, setSelectedChat] = useState<{
@@ -152,12 +142,6 @@ export default function ChatFriendsPage() {
   const [viewingImage, setViewingImage] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const [addFriendSearch, setAddFriendSearch] = useState("");
-  const [searchResults, setSearchResults] = useState<SearchedUser[]>([]);
-  const [isSearchingUsers, setIsSearchingUsers] = useState(false);
-  const [hasSearched, setHasSearched] = useState(false);
-  const [sentRequestIds, setSentRequestIds] = useState<string[]>([]);
-
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -172,9 +156,6 @@ export default function ChatFriendsPage() {
       const data = await res.json();
       const allFriends: Friend[] = data.friends || [];
       setFriends(allFriends.filter((f: Friend) => f.status === "ACCEPTED"));
-      setPendingRequests(allFriends.filter((f: Friend) => f.status === "PENDING" && f.receiverId === session.user?.id));
-      setSentRequestsList(allFriends.filter((f: Friend) => f.status === "PENDING" && f.requesterId === session.user?.id));
-      setSentRequestIds(allFriends.filter((f: Friend) => f.status === "PENDING" && f.requesterId === session.user?.id).map((f: Friend) => f.receiverId));
     } catch (error) {
       console.error("Error fetching friends", error);
     } finally {
@@ -202,7 +183,6 @@ export default function ChatFriendsPage() {
         .then(data => {
           if (data.id) {
             setSelectedChat({ id: null, friend: data });
-            setActiveTab("friends");
           }
         });
     }
@@ -316,64 +296,6 @@ export default function ChatFriendsPage() {
     }
   };
 
-  const handleAccept = async (requesterId: string) => {
-    await fetch('/api/friends/accept', {
-      method: 'POST',
-      body: JSON.stringify({ requesterId, action: 'ACCEPT' }),
-      headers: { 'Content-Type': 'application/json' }
-    });
-    fetchFriends();
-  };
-
-  const handleReject = async (requesterId: string) => {
-    await fetch('/api/friends/accept', {
-      method: 'POST',
-      body: JSON.stringify({ requesterId, action: 'REJECT' }),
-      headers: { 'Content-Type': 'application/json' }
-    });
-    fetchFriends();
-  };
-
-  const handleCancelRequest = async (receiverId: string) => {
-    await fetch(`/api/friends/cancel?userId=${receiverId}`, { method: 'DELETE' });
-    fetchFriends();
-  };
-
-  const handleSearchUsers = async () => {
-    if (!addFriendSearch) return;
-    setIsSearchingUsers(true);
-    setHasSearched(true);
-    try {
-      const res = await fetch(`/api/users/search?q=${addFriendSearch}`);
-      if (res.ok) {
-        const data = await res.json();
-        setSearchResults(data.users || []);
-      }
-    } catch (error) {
-      console.error("Search failed", error);
-    } finally {
-      setIsSearchingUsers(false);
-    }
-  };
-
-  const handleSendFriendRequest = async (receiverId: string) => {
-    try {
-      const res = await fetch('/api/friends', {
-        method: 'POST',
-        body: JSON.stringify({ receiverId }),
-        headers: { 'Content-Type': 'application/json' }
-      });
-      if (res.ok) {
-        setSentRequestIds(prev => [...prev, receiverId]);
-      } else {
-        const data = await res.json();
-        alert(data.error || "Error sending request");
-      }
-    } catch (error) {
-      console.error("Error sending request", error);
-    }
-  };
-
   const handleEdit = async (messageId: string) => {
     if (!editContent.trim()) return;
     await fetch("/api/messages", {
@@ -433,15 +355,7 @@ export default function ChatFriendsPage() {
     return friendUser.name?.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
-  const isFriend = (userId: string) =>
-    friends.some(f => f.requester.id === userId || f.receiver.id === userId);
-
-  // --- Tab Buttons ---
-  const tabs: { key: TabType; label: string; icon: ComponentType<{ className?: string }> }[] = [
-    { key: "friends", label: t.friends, icon: Users },
-    { key: "requests", label: t.requests, icon: UserPlus },
-    { key: "search", label: t.search, icon: Search },
-  ];
+  const allFriendIds = new Set(friends.flatMap(f => [f.requesterId, f.receiverId]));
 
   // --- Render ---
   return (
@@ -457,225 +371,76 @@ export default function ChatFriendsPage() {
           animate={{ x: 0, opacity: 1 }}
           className={`w-full md:w-96 border-r border-slate-200/50 dark:border-zinc-800/50 flex flex-col bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl shadow-2xl rounded-tl-3xl ${selectedChat ? 'hidden md:flex' : 'flex'}`}
         >
-          {/* Tabs */}
-          <div className="p-4 pb-0">
-            <h1 className="text-2xl font-bold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 mb-4">
-              {t.friends}
-            </h1>
-            <div className="flex gap-1 bg-slate-100 dark:bg-zinc-800 rounded-xl p-1">
-              {tabs.map((tab) => {
-                const Icon = tab.icon;
-                const badge = tab.key === "requests" ? pendingRequests.length : null;
-                return (
-                  <button
-                    key={tab.key}
-                    onClick={() => { setActiveTab(tab.key); setHasSearched(false); }}
-                    className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
-                      activeTab === tab.key
-                        ? 'bg-white dark:bg-zinc-700 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                        : 'text-slate-500 dark:text-zinc-400 hover:text-slate-700 dark:hover:text-zinc-200'
-                    }`}
-                  >
-                    <Icon className="w-4 h-4" />
-                    <span className="hidden sm:inline">{tab.label}</span>
-                    {badge != null && badge > 0 && (
-                      <span className="bg-rose-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
-                        {badge}
-                      </span>
-                    )}
+          {/* Sidebar Header */}
+          <div className="p-4">
+            <div className="flex items-center justify-between mb-4">
+              <h1 className="text-2xl font-bold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 flex items-center gap-2">
+                <Users className="w-6 h-6 text-indigo-500" />
+                {t.friends}
+              </h1>
+              <FriendsPopup
+                acceptedFriendIds={friends.flatMap(f => [f.requesterId, f.receiverId])}
+                onFriendAction={fetchFriends}
+                trigger={
+                  <button className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold transition-all shadow-lg">
+                    <UserPlus className="w-4 h-4" /> {t.friendRequests}
                   </button>
-                );
-              })}
+                }
+              />
+            </div>
+            <div className="relative group">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-hover:text-indigo-500 transition-colors" />
+              <input
+                type="text"
+                placeholder="Search friends..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-slate-100 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-xl py-2.5 pl-9 pr-4 text-sm text-slate-700 dark:text-zinc-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-zinc-900 transition-all"
+              />
             </div>
           </div>
 
-          {/* Search within friends */}
-          {activeTab === "friends" && (
-            <div className="p-4 pb-2">
-              <div className="relative group">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-hover:text-indigo-500 transition-colors" />
-                <input
-                  type="text"
-                  placeholder="Search friends..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-slate-100 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-xl py-2.5 pl-9 pr-4 text-sm text-slate-700 dark:text-zinc-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-zinc-900 transition-all"
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Tab Content */}
+          {/* Friends List */}
           <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-zinc-700 scrollbar-track-transparent">
             {loadingFriends ? (
               <div className="flex justify-center items-center h-40"><Loader2 className="w-6 h-6 animate-spin text-indigo-600"/></div>
-            ) : activeTab === "friends" ? (
-              /* --- FRIENDS LIST --- */
-              filteredFriends.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-40 text-slate-400 px-4 text-center">
-                  <UserCheck className="w-10 h-10 mb-3 opacity-30" />
-                  <p className="font-medium">{t.noFriends}</p>
-                </div>
-              ) : (
-                <div className="space-y-1 p-2">
-                  {filteredFriends.map((friend, index) => {
-                    const friendUser = getFriend(friend);
-                    return (
-                      <motion.button
-                        key={friend.id}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.02 }}
-                        onClick={() => setSelectedChat({ id: null, friend: friendUser })}
-                        whileHover={{ scale: 1.01, x: 5, transition: { duration: 0.1 } }}
-                        whileTap={{ scale: 0.98 }}
-                        className="w-full flex items-center gap-4 p-3 rounded-2xl hover:bg-slate-50 dark:hover:bg-zinc-800/60 transition-colors group relative overflow-hidden"
-                      >
-                        <div className="w-14 h-14 rounded-full overflow-hidden bg-slate-200 dark:bg-zinc-700 shadow-sm group-hover:ring-2 group-hover:ring-indigo-500 transition-all duration-200 flex-shrink-0">
-                          {friendUser.image ? (
-                            <Image src={friendUser.image} alt="" width={56} height={56} className="object-cover transition-transform duration-300 group-hover:scale-110" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-300 to-purple-300 dark:from-indigo-600 dark:to-purple-700">
-                              <User className="w-6 h-6 text-white"/>
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex-1 text-left z-10">
-                          <h4 className="font-semibold text-sm text-slate-800 dark:text-zinc-100">{friendUser.name}</h4>
-                          <p className="text-xs text-slate-400 group-hover:text-indigo-500 transition-colors">{t.startChat}</p>
-                        </div>
-                        <MessageCircle className="w-5 h-5 text-slate-300 group-hover:text-indigo-500 transition-colors" />
-                      </motion.button>
-                    );
-                  })}
-                </div>
-              )
-            ) : activeTab === "requests" ? (
-              /* --- REQUESTS (INCOMING + SENT) --- */
-              <div className="p-4 space-y-6">
-                {/* Incoming */}
-                {pendingRequests.length > 0 && (
-                  <div>
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400 mb-3 flex items-center gap-2">
-                      <UserPlus className="w-3.5 h-3.5" /> {t.friendRequests} ({pendingRequests.length})
-                    </h3>
-                    <div className="space-y-2">
-                      {pendingRequests.map((req) => (
-                        <motion.div key={req.id} layout initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="flex items-center justify-between p-3 bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-indigo-100 dark:border-indigo-900/50 hover:shadow-md transition-shadow">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-400 to-purple-500 p-[2px] shadow-sm flex-shrink-0">
-                              <div className="w-full h-full rounded-full overflow-hidden bg-white dark:bg-black">
-                                {req.requester.image ? <Image src={req.requester.image} alt="" width={40} height={40} className="object-cover"/> : <User className="w-4 h-4 text-slate-400 mx-auto mt-2"/>}
-                              </div>
-                            </div>
-                            <span className="text-sm font-semibold text-slate-700 dark:text-white">{req.requester.name}</span>
-                          </div>
-                          <div className="flex gap-1.5">
-                            <motion.button whileTap={{ scale: 0.8 }} onClick={() => handleAccept(req.requester.id)} className="p-2 bg-emerald-500 text-white rounded-full shadow-md hover:bg-emerald-600"><Check className="w-4 h-4"/></motion.button>
-                            <motion.button whileTap={{ scale: 0.8 }} onClick={() => handleReject(req.requester.id)} className="p-2 bg-rose-100 dark:bg-rose-900/30 text-rose-500 rounded-full hover:bg-rose-200"><X className="w-4 h-4"/></motion.button>
-                          </div>
-                        </motion.div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Sent */}
-                {sentRequestsList.length > 0 && (
-                  <div>
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400 mb-3 flex items-center gap-2">
-                      <Clock className="w-3.5 h-3.5" /> {t.sentRequests} ({sentRequestsList.length})
-                    </h3>
-                    <div className="space-y-2">
-                      {sentRequestsList.map((req) => (
-                        <motion.div key={req.id} layout initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="flex items-center justify-between p-3 bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-slate-200 dark:border-zinc-800">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-200 dark:bg-zinc-700 flex-shrink-0">
-                              {req.receiver.image ? <Image src={req.receiver.image} alt="" width={40} height={40} className="object-cover"/> : <User className="w-4 h-4 text-slate-400 mx-auto mt-2"/>}
-                            </div>
-                            <span className="text-sm font-semibold text-slate-700 dark:text-white">{req.receiver.name}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-yellow-600 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900/30 px-2.5 py-1 rounded-full">{t.pending}</span>
-                            <motion.button whileTap={{ scale: 0.8 }} onClick={() => handleCancelRequest(req.receiver.id)} className="p-1.5 bg-slate-200 dark:bg-zinc-700 text-slate-500 rounded-full hover:bg-rose-100 hover:text-rose-500 transition-colors"><Ban className="w-3.5 h-3.5"/></motion.button>
-                          </div>
-                        </motion.div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {pendingRequests.length === 0 && sentRequestsList.length === 0 && (
-                  <div className="flex flex-col items-center justify-center h-40 text-slate-400 text-center">
-                    <UserPlus className="w-10 h-10 mb-3 opacity-30" />
-                    <p className="font-medium">{t.noRequests}</p>
-                  </div>
-                )}
+            ) : filteredFriends.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-40 text-slate-400 px-4 text-center">
+                <UserCheck className="w-10 h-10 mb-3 opacity-30" />
+                <p className="font-medium">{t.noFriends}</p>
               </div>
             ) : (
-              /* --- SEARCH TAB --- */
-              <div className="p-4 space-y-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                  <input
-                    type="text"
-                    placeholder={t.searchPlaceholder}
-                    value={addFriendSearch}
-                    onChange={(e) => setAddFriendSearch(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSearchUsers()}
-                    className="w-full bg-slate-100 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-xl py-3 pl-10 pr-4 text-sm text-slate-700 dark:text-zinc-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
-                  />
-                </div>
-
-                <motion.button
-                  whileTap={{ scale: 0.98 }}
-                  onClick={handleSearchUsers}
-                  disabled={isSearchingUsers || !addFriendSearch}
-                  className="w-full py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold shadow-lg disabled:opacity-50 transition-all text-sm"
-                >
-                  {isSearchingUsers ? <Loader2 className="w-4 h-4 animate-spin inline-block" /> : null}
-                  {isSearchingUsers ? "..." : t.search}
-                </motion.button>
-
-                {/* Results */}
-                <div className="flex-1">
-                  {isSearchingUsers ? (
-                    <div className="flex justify-center items-center h-32"><Loader2 className="w-6 h-6 animate-spin text-indigo-500"/></div>
-                  ) : searchResults.length > 0 ? (
-                    <div className="space-y-2">
-                      {searchResults.map((user) => (
-                        <motion.div key={user.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between p-3 bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-slate-100 dark:border-zinc-800">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-200 dark:bg-zinc-700 flex-shrink-0">
-                              {user.image ? <Image src={user.image} alt="" width={40} height={40} className="object-cover"/> : <User className="w-5 h-5 text-slate-400 mx-auto mt-2"/>}
-                            </div>
-                            <span className="font-medium text-slate-700 dark:text-white text-sm">{user.name}</span>
+              <div className="space-y-1 p-2">
+                {filteredFriends.map((friend, index) => {
+                  const friendUser = getFriend(friend);
+                  return (
+                    <motion.button
+                      key={friend.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.02 }}
+                      onClick={() => setSelectedChat({ id: null, friend: friendUser })}
+                      whileHover={{ scale: 1.01, x: 5, transition: { duration: 0.1 } }}
+                      whileTap={{ scale: 0.98 }}
+                      className="w-full flex items-center gap-4 p-3 rounded-2xl hover:bg-slate-50 dark:hover:bg-zinc-800/60 transition-colors group relative overflow-hidden"
+                    >
+                      <div className="w-14 h-14 rounded-full overflow-hidden bg-slate-200 dark:bg-zinc-700 shadow-sm group-hover:ring-2 group-hover:ring-indigo-500 transition-all duration-200 flex-shrink-0">
+                        {friendUser.image ? (
+                          <Image src={friendUser.image} alt="" width={56} height={56} className="object-cover transition-transform duration-300 group-hover:scale-110" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-300 to-purple-300 dark:from-indigo-600 dark:to-purple-700">
+                            <User className="w-6 h-6 text-white"/>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Link href={`/users/${user.id}`} target="_blank">
-                              <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} className="p-2 text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 transition-colors" title={t.viewProfile}>
-                                <Eye className="w-4 h-4"/>
-                              </motion.button>
-                            </Link>
-                            {sentRequestIds.includes(user.id) ? (
-                              <span className="text-xs text-slate-400 bg-slate-200 dark:bg-zinc-700 px-3 py-1.5 rounded-full">{t.requestSent}</span>
-                            ) : isFriend(user.id) ? (
-                              <span className="text-xs text-emerald-500 bg-emerald-100 dark:bg-emerald-900/30 px-3 py-1.5 rounded-full">{t.friend}</span>
-                            ) : (
-                              <motion.button whileTap={{ scale: 0.9 }} onClick={() => handleSendFriendRequest(user.id)} className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs rounded-full font-semibold transition-colors shadow-md">
-                                {t.addFriend}
-                              </motion.button>
-                            )}
-                          </div>
-                        </motion.div>
-                      ))}
-                    </div>
-                  ) : hasSearched ? (
-                    <p className="text-center text-slate-400 text-sm py-10">{t.noUsersFound}</p>
-                  ) : (
-                    <p className="text-center text-slate-400 text-sm py-10">{t.searchHint}</p>
-                  )}
-                </div>
+                        )}
+                      </div>
+                      <div className="flex-1 text-left z-10">
+                        <h4 className="font-semibold text-sm text-slate-800 dark:text-zinc-100">{friendUser.name}</h4>
+                        <p className="text-xs text-slate-400 group-hover:text-indigo-500 transition-colors">{t.startChat}</p>
+                      </div>
+                      <MessageCircle className="w-5 h-5 text-slate-300 group-hover:text-indigo-500 transition-colors" />
+                    </motion.button>
+                  );
+                })}
               </div>
             )}
           </div>

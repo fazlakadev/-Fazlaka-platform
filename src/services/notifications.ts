@@ -27,29 +27,12 @@ export async function fetchUserNotifications(
   skip: number = 0
 ): Promise<NotificationWithLocalized[]> {
   try {
-    // [تشخيص] طباعة الـ ID الذي يبحث عنه المستخدم
-    console.log(`%c[DEBUG] Fetching notifications for User ID: ${userId}`, 'color: blue; font-weight: bold;');
-
     const notifications = await prisma.notification.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
       take: limit,
       skip: skip,
     });
-
-    // [تشخيص] طباعة النتيجة
-    console.log(`%c[DEBUG] Found ${notifications.length} notifications.`, 'color: green;');
-
-    if (notifications.length === 0) {
-      // تحقق إضافي: هل يوجد أي إشعارات في النظام لأي مستخدم آخر؟
-      const anyNotif = await prisma.notification.findFirst();
-      if (anyNotif) {
-        console.log(`%c[DEBUG] MISMATCH! Found notifications for User ID: ${anyNotif.userId}`, 'color: red; font-weight: bold;');
-        console.log(`%c[DEBUG] But current user is: ${userId}`, 'color: red;');
-      } else {
-        console.log(`%c[DEBUG] Database is empty. No notifications exist.`, 'color: orange;');
-      }
-    }
 
     return notifications.map(notification => ({
       ...notification,
@@ -170,12 +153,6 @@ export async function notifyAllUsers(
     });
 
     const formattedRelatedType = relatedType.toUpperCase();
-
-    console.log(`[DEBUG] notifyAllUsers: Preparing for ${users.length} users.`);
-    
-    if (users.length > 0) {
-       console.log(`[DEBUG] notifyAllUsers: Target User ID: ${users[0].id}`);
-    }
 
     const notificationsData = users.map(user => ({
       userId: user.id,

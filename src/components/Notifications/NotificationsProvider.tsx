@@ -3,7 +3,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { useSession } from 'next-auth/react';
 import { useLanguage } from '@/components/Language/LanguageProvider';
-import { useServerSentEvents } from '@/hooks/useServerSentEvents';
+import { pusherClient } from '@/lib/pusher';
 import { toast } from 'react-hot-toast';
 
 // تعريف واجهة الإشعار (تم تغيير _id إلى id)
@@ -52,24 +52,6 @@ export function NotificationsProvider({ children }: NotificationsProviderProps) 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // استخدام polling للتحقق من الإشعارات الجديدة
-  useServerSentEvents('/api/notifications/stream', {
-    onMessage: (data) => {
-      try {
-        const response = data as { type?: string; data?: { notifications: Notification[]; unreadCount: number } };
-        if (response.type === 'notifications' && response.data) {
-          setNotifications(response.data.notifications);
-          setUnreadCount(response.data.unreadCount || 0);
-        }
-      } catch (error) {
-        console.error('Error polling notifications:', error);
-      }
-    },
-    onError: () => {
-      setError('Connection to notification stream failed');
-    }
-  });
-
   const fetchNotifications = useCallback(async () => {
     if (!session?.user?.id) return;
     
@@ -91,6 +73,24 @@ export function NotificationsProvider({ children }: NotificationsProviderProps) 
       setLoading(false);
     }
   }, [session?.user?.id, language]);
+
+  // استقبال الإشعارات عبر Pusher بدلاً من polling
+  useEffect(() => {
+    if (!session?.user?.id) return;
+
+    const privateChannel = pusherClient.subscribe(`private-user-${session.user.id}`);
+    privateChannel.bind('notification', () => fetchNotifications());
+
+    const broadcastChannel = pusherClient.subscribe('notifications-broadcast');
+    broadcastChannel.bind('notification', () => fetchNotifications());
+
+    return () => {
+      privateChannel.unbind_all();
+      privateChannel.unsubscribe();
+      broadcastChannel.unbind_all();
+      broadcastChannel.unsubscribe();
+    };
+  }, [session?.user?.id, fetchNotifications]);
 
   const handleMarkAsRead = useCallback(async (notificationId: string) => {
     if (!session?.user?.id) return;

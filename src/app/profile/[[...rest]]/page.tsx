@@ -1,13 +1,14 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
-import { User, Mail, Calendar, Settings, Lock, MailPlus, MessageCircle, Users, UserPlus, Check, X, Search, Copy, UserCheck, Eye, Share2, Link2 } from "lucide-react"
+import { User, Mail, Calendar, Settings, Lock, MailPlus, MessageCircle, Users, UserPlus, Check, X, Copy, UserCheck, Link2 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { useLanguage } from "@/components/Language/LanguageProvider"
+import FriendsPopup from "@/components/Friends/FriendsPopup"
 
 // Translation object
 const translations = {
@@ -31,6 +32,7 @@ const translations = {
     notVerified: "غير موثق",
     primary: "أساسي",
     goToChat: "الذهاب للمحادثات",
+    friendRequests: "الطلبات",
     friendsTitle: "الأصدقاء",
     pendingRequests: "طلبات الصداقة المعلقة",
     noFriends: "لا يوجد أصدقاء بعد.",
@@ -42,12 +44,6 @@ const translations = {
     copyCode: "نسخ الكود",
     copied: "تم النسخ!",
     addFriend: "إضافة صديق",
-    searchFriends: "البحث عن أصدقاء",
-    searchPlaceholder: "ابحث بالاسم أو الكود...",
-    noUsersFound: "لا يوجد مستخدمين بهذا الاسم أو الكود.",
-    sendRequest: "إرسال طلب",
-    requestSent: "تم الإرسال",
-    viewProfile: "عرض الملف",
     shareProfile: "مشاركة الملف",
     copyLink: "نسخ الرابط",
     linkCopied: "تم نسخ الرابط!",
@@ -87,6 +83,7 @@ const translations = {
     notVerified: "Not Verified",
     primary: "Primary",
     goToChat: "Go to Chats",
+    friendRequests: "Requests",
     friendsTitle: "Friends",
     pendingRequests: "Pending Friend Requests",
     noFriends: "No friends yet.",
@@ -98,12 +95,6 @@ const translations = {
     copyCode: "Copy Code",
     copied: "Copied!",
     addFriend: "Add Friend",
-    searchFriends: "Find Friends",
-    searchPlaceholder: "Search by name or code...",
-    noUsersFound: "No users found with that name or code.",
-    sendRequest: "Send Request",
-    requestSent: "Sent",
-    viewProfile: "View Profile",
     shareProfile: "Share Profile",
     copyLink: "Copy Link",
     linkCopied: "Link Copied!",
@@ -132,14 +123,6 @@ interface Friendship {
   receiver: { id: string; name: string | null; image: string | null; };
 }
 
-// Interface for Search Result User
-interface SearchResultUser {
-  id: string;
-  name: string | null;
-  image: string | null;
-  bio: string | null;
-}
-
 const GlassCard = motion.div
 
 export default function ProfilePage() {
@@ -158,18 +141,26 @@ export default function ProfilePage() {
   const [pendingRequests, setPendingRequests] = useState<Friendship[]>([])
   const [friends, setFriends] = useState<Friendship[]>([])
 
-  // Search & Code State
-  const [searchQuery, setSearchQuery] = useState("")
-  const [searchResults, setSearchResults] = useState<SearchResultUser[]>([])
-  const [isSearching, setIsSearching] = useState(false)
-  const [hasSearched, setHasSearched] = useState(false) // New: to track if search happened
-  const [sentRequests, setSentRequests] = useState<string[]>([])
   const [copiedCode, setCopiedCode] = useState(false)
   const [copiedLink, setCopiedLink] = useState(false) // New: for profile link
   const [nlSubscribed, setNlSubscribed] = useState<boolean | null>(null)
   const [nlUnsubscribing, setNlUnsubscribing] = useState(false)
 
   const t = translations[language]
+
+  const fetchFriendsData = useCallback(async () => {
+    try {
+      const res = await fetch('/api/friends')
+      if (res.ok) {
+        const data = await res.json()
+        const friendsData: Friendship[] = data.friends || []
+        setPendingRequests(friendsData.filter((f) => f.status === 'PENDING' && f.receiverId === session?.user?.id))
+        setFriends(friendsData.filter((f) => f.status === 'ACCEPTED'))
+      }
+    } catch {
+      console.error("Error fetching friends data")
+    }
+  }, [session])
 
   useEffect(() => {
     if (status === "loading") return
@@ -197,22 +188,6 @@ export default function ProfilePage() {
       }
     }
 
-    const fetchFriendsData = async () => {
-      try {
-        const res = await fetch('/api/friends')
-        if (res.ok) {
-          const data = await res.json()
-          const friendsData: Friendship[] = data.friends || []
-          setPendingRequests(friendsData.filter((f) => f.status === 'PENDING' && f.receiverId === session?.user?.id))
-          setFriends(friendsData.filter((f) => f.status === 'ACCEPTED'))
-          const sent = friendsData.filter((f) => f.status === 'PENDING' && f.requesterId === session?.user?.id).map(f => f.receiverId)
-          setSentRequests(sent)
-        }
-      } catch {
-        console.error("Error fetching friends data")
-      }
-    }
-
     const fetchNLStatus = async () => {
       if (!session?.user?.email) return;
       try {
@@ -225,7 +200,7 @@ export default function ProfilePage() {
     fetchUserData()
     fetchFriendsData()
     fetchNLStatus()
-  }, [session, status, router])
+  }, [session, status, router, fetchFriendsData])
 
   // Copy User Code Function
   const handleCopyCode = () => {
@@ -243,44 +218,6 @@ export default function ProfilePage() {
       navigator.clipboard.writeText(profileUrl)
       setCopiedLink(true)
       setTimeout(() => setCopiedLink(false), 2000)
-    }
-  }
-
-  // Search Users Function
-  const handleSearch = async () => {
-    if (!searchQuery) return
-    
-    setIsSearching(true)
-    setHasSearched(true) // Set search attempted
-    try {
-      const res = await fetch(`/api/users/search?q=${searchQuery}`)
-      if (res.ok) {
-        const data = await res.json()
-        setSearchResults(data.users)
-      }
-    } catch (error) {
-      console.error("Search failed", error)
-    } finally {
-      setIsSearching(false)
-    }
-  }
-
-  const handleSendRequest = async (receiverId: string) => {
-    try {
-      const res = await fetch('/api/friends', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ receiverId })
-      })
-      
-      if (res.ok) {
-        setSentRequests(prev => [...prev, receiverId])
-      } else {
-        const data = await res.json()
-        alert(data.error || "Error sending request")
-      }
-    } catch (error) {
-      console.error("Error sending request", error)
     }
   }
 
@@ -355,7 +292,7 @@ export default function ProfilePage() {
   if (!session) return null
 
   return (
-    <div className={`min-h-screen relative overflow-hidden bg-black ${isRTL ? 'rtl' : 'ltr'}`} style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+    <div className={`min-h-screen relative bg-black ${isRTL ? 'rtl' : 'ltr'}`} style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
       
       <Background isBanned={isBanned} />
 
@@ -654,96 +591,6 @@ export default function ProfilePage() {
           </div>
         </GlassCard>
 
-        {/* Search & Add Friend Section */}
-        {!isBanned && (
-          <GlassCard
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="bg-white/10 backdrop-blur-lg rounded-[2rem] p-8 shadow-xl border border-white/20 mt-8"
-          >
-            <div className="flex items-center gap-2 mb-6">
-              <div className="w-1 h-6 rounded-full bg-purple-500"></div>
-              <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                <UserPlus className="w-5 h-5 text-purple-400" />
-                {t.searchFriends}
-              </h3>
-            </div>
-
-            <div className="flex gap-2 mb-4">
-              <div className="relative flex-1">
-                <Search className="absolute top-1/2 left-3 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input 
-                  type="text"
-                  placeholder={t.searchPlaceholder}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
-                />
-              </div>
-              <button 
-                onClick={handleSearch}
-                disabled={isSearching}
-                className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl transition-all font-semibold disabled:opacity-50"
-              >
-                {isSearching ? "..." : t.searchFriends}
-              </button>
-            </div>
-
-            {/* Search Results */}
-            {searchResults.length > 0 ? (
-              <div className="space-y-3 mt-4 border-t border-white/10 pt-4">
-                {searchResults.map((user) => (
-                  <div key={user.id} className="flex items-center justify-between p-3 bg-white/5 rounded-xl hover:bg-white/10 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden">
-                        {user.image ? <Image src={user.image} alt="" width={40} height={40} /> : <User className="w-full h-full p-2 text-gray-400"/>}
-                      </div>
-                      <div>
-                        <span className="font-medium text-white block">{user.name || "User"}</span>
-                        <span className="text-xs text-gray-500 truncate max-w-[150px] block">{user.bio || user.id}</span>
-                      </div>
-                    </div>
-                    
-                    <div className="flex gap-2">
-                       {/* View Profile Button */}
-                       <Link href={`/users/${user.id}`}>
-                         <button className="p-2 bg-white/10 hover:bg-white/20 rounded-full text-white transition-all" title={t.viewProfile}>
-                           <Eye className="w-4 h-4" />
-                         </button>
-                       </Link>
-
-                       {/* Add Friend Button Logic */}
-                        {sentRequests.includes(user.id) ? (
-                           <button disabled className="px-4 py-1 bg-gray-600 text-gray-300 rounded-full text-sm font-medium cursor-not-allowed">
-                             {t.requestSent}
-                           </button>
-                        ) : friends.some(f => (f.requester.id === user.id || f.receiver.id === user.id)) ? (
-                           <span className="text-xs text-green-400 bg-green-900/30 px-3 py-1 rounded-full flex items-center">
-                             {t.friendsTitle}
-                           </span>
-                        ) : (
-                          <button 
-                            onClick={() => handleSendRequest(user.id)}
-                            className="px-4 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-full text-sm font-medium transition-all"
-                          >
-                            {t.sendRequest}
-                          </button>
-                        )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-               // Only show "No users found" if search happened and results are empty
-               hasSearched && !isSearching && (
-                 <p className="text-center text-gray-500 mt-4 text-sm">{t.noUsersFound}</p>
-               )
-            )}
-          </GlassCard>
-        )}
-
         {/* Friends Section */}
         {!isBanned && (
           <div className="mt-8 space-y-8">
@@ -787,20 +634,31 @@ export default function ProfilePage() {
                 transition={{ duration: 0.5, delay: 0.4 }}
                 className="bg-white/10 backdrop-blur-lg rounded-[2rem] p-8 shadow-xl border border-white/20"
               >
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center gap-2">
-                    <div className="w-1 h-6 rounded-full bg-blue-500"></div>
-                    <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                      <Users className="w-5 h-5 text-blue-400" />
-                      {t.friendsTitle} ({friends.length})
-                    </h3>
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-2">
+                      <div className="w-1 h-6 rounded-full bg-blue-500"></div>
+                      <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                        <Users className="w-5 h-5 text-blue-400" />
+                        {t.friendsTitle} ({friends.length})
+                      </h3>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <FriendsPopup
+                        acceptedFriendIds={friends.filter(f => f.status === 'ACCEPTED').flatMap(f => [f.requesterId, f.receiverId])}
+                        onFriendAction={fetchFriendsData}
+                        trigger={
+                          <button className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full text-sm font-semibold transition-all shadow-lg">
+                            <UserPlus className="w-4 h-4" /> {t.friendRequests}
+                          </button>
+                        }
+                      />
+                      <Link href="/chat_friends">
+                        <button className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-full text-sm font-semibold transition-all shadow-lg">
+                          <MessageCircle className="w-4 h-4" /> {t.goToChat}
+                        </button>
+                      </Link>
+                    </div>
                   </div>
-                  <Link href="/chat_friends">
-                     <button className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-full text-sm font-semibold transition-all shadow-lg">
-                        <MessageCircle className="w-4 h-4" /> {t.goToChat}
-                     </button>
-                  </Link>
-                </div>
 
                 {friends.length === 0 ? (
                   <p className="text-gray-500 text-center py-4">{t.noFriends}</p>
@@ -828,7 +686,6 @@ export default function ProfilePage() {
           </div>
         )}
       </div>
-      
       <style jsx global>{`
         @keyframes twinkle {
           0% { opacity: 0.2; transform: scale(0.8); }
