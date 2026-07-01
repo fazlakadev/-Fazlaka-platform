@@ -1,50 +1,50 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
+import { getUserIdFromRequest } from "@/lib/auth-helper";
 import { pusherServer } from "@/lib/pusher";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const userId = await getUserIdFromRequest(request);
 
-    if (!session?.user?.id) {
+    if (!userId) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, name: true, email: true, image: true },
+    });
+
+    if (!user) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
     const formData = await request.formData();
-    const socket_id = formData.get("socket_id") as string;
-    const channel_name = formData.get("channel_name") as string;
+    const socketId = formData.get("socket_id") as string | null;
+    const channelName = formData.get("channel_name") as string | null;
 
-    // التعامل مع القنوات الخاصة (Private Channels)
-    if (channel_name.startsWith("private-")) {
-      // منطق قنوات المحادثات: private-conversation-{conversationId}
-      if (channel_name.includes("conversation-")) {
-        const conversationId = channel_name.split("-")[2];
-        
-        // التحقق مما إذا كان المستخدم مشاركاً في هذه المحادثة
-        const participant = await prisma.conversationParticipant.findFirst({
-          where: {
-            conversationId: conversationId,
-            userId: session.user.id,
-          },
-        });
-
-        if (!participant) {
-          return new NextResponse("Forbidden: Not a participant", { status: 403 });
-        }
-      }
-      
-      // منطق التذاكر (من الكود القديم)
-      // ... احتفظ بالمنطق القديم للتذاكر هنا إذا لزم الأمر
+    if (!socketId || !channelName) {
+      return new NextResponse("Missing socket or channel", { status: 400 });
     }
 
-    const authResponse = pusherServer.authorizeChannel(socket_id, channel_name, {
-      user_id: session.user.id,
+    if (channelName.startsWith("private-conversation-")) {
+      const conversationId = channelName.replace("private-conversation-", "");
+      const participant = await prisma.conversationParticipant.findFirst({
+        where: { conversationId, userId },
+      });
+
+      if (!participant) {
+        return new NextResponse("Forbidden: Not a participant", { status: 403 });
+      }
+    }
+
+    const authResponse = pusherServer.authorizeChannel(socketId, channelName, {
+      user_id: user.id,
       user_info: {
-        name: session.user.name,
-        email: session.user.email,
-        image: session.user.image,
+        name: user.name,
+        email: user.email,
+        image: user.image,
       },
     });
 
