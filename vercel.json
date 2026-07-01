@@ -6,5 +6,14 @@
     "src/app/api/search/route.ts": {
       "maxDuration": 15
     }
+  },
+  "git": {
+    "deploymentEnabled": {
+      "main": true
+    }
+  },
+  "github": {
+    "silent": false,
+    "autoJobCancelation": true
   }
 }
