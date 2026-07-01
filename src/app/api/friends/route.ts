@@ -30,6 +30,10 @@ export async function GET(req: NextRequest) {
         friendId: friendUser.id,
         status: f.status,
         user: friendUser,
+        requester: f.requester,
+        receiver: f.receiver,
+        requesterId: f.requesterId,
+        receiverId: f.receiverId,
         createdAt: f.createdAt.toISOString(),
       };
     });

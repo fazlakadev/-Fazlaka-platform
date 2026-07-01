@@ -178,15 +178,15 @@ export default function UserProfilePage() {
         });
         setFriendStatus('PENDING_SENT');
       } else if (action === 'cancel') {
-        await fetch(`/api/friends/cancel?userId=${userData.id}`, { method: 'DELETE' });
-        setFriendStatus('NONE');
+        const res = await fetch(`/api/friends/cancel?userId=${userData.id}`, { method: 'DELETE' });
+        if (res.ok) setFriendStatus('NONE');
       } else if (action === 'accept') {
-        await fetch('/api/friends/accept', {
+        const res = await fetch('/api/friends/accept', {
           method: 'POST',
           body: JSON.stringify({ requesterId: userData.id, action: 'ACCEPT' }),
           headers: { 'Content-Type': 'application/json' }
         });
-        setFriendStatus('ACCEPTED');
+        if (res.ok) setFriendStatus('ACCEPTED');
       } else if (action === 'unfriend') {
         await fetch(`/api/friends?friendId=${userData.id}`, { method: 'DELETE' });
         setFriendStatus('NONE');

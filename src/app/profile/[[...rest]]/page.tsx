@@ -201,10 +201,11 @@ export default function ProfilePage() {
       try {
         const res = await fetch('/api/friends')
         if (res.ok) {
-          const data: Friendship[] = await res.json()
-          setPendingRequests(data.filter((f) => f.status === 'PENDING' && f.receiverId === session?.user?.id))
-          setFriends(data.filter((f) => f.status === 'ACCEPTED'))
-          const sent = data.filter((f) => f.status === 'PENDING' && f.requesterId === session?.user?.id).map(f => f.receiverId)
+          const data = await res.json()
+          const friendsData: Friendship[] = data.friends || []
+          setPendingRequests(friendsData.filter((f) => f.status === 'PENDING' && f.receiverId === session?.user?.id))
+          setFriends(friendsData.filter((f) => f.status === 'ACCEPTED'))
+          const sent = friendsData.filter((f) => f.status === 'PENDING' && f.requesterId === session?.user?.id).map(f => f.receiverId)
           setSentRequests(sent)
         }
       } catch {
@@ -292,8 +293,8 @@ export default function ProfilePage() {
     setPendingRequests(prev => prev.filter(r => r.requester.id !== requesterId))
     const res = await fetch('/api/friends')
     if(res.ok) {
-       const data: Friendship[] = await res.json()
-       setFriends(data.filter((f) => f.status === 'ACCEPTED'))
+       const data = await res.json()
+       setFriends((data.friends || []).filter((f: Friendship) => f.status === 'ACCEPTED'))
     }
   }
 
