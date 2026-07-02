@@ -3,15 +3,14 @@
 import React, { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useSession } from 'next-auth/react'; // استيراد useSession
+import { useSession } from 'next-auth/react';
 import { gsap } from 'gsap';
 import { useLanguage } from '@/components/Language/LanguageProvider';
 import './AdminSidebar.css';
 
-// تم إضافة خيار التعليقات هنا
 const navigationLinks = [
   { title: 'لوحة التحكم', titleEn: 'Dashboard', link: '/admin' },
-  { title: 'تحليلات الموقع', titleEn: 'Analytics', link: '/admin' },
+  { title: 'بحث متقدم', titleEn: 'Search', link: '/admin/search' },
   { title: 'المقالات', titleEn: 'Articles', link: '/admin/articles' },
   { title: 'الحلقات', titleEn: 'Episodes', link: '/admin/episodes' },
   { title: 'الأسئلة الشائعة', titleEn: 'FAQs', link: '/admin/faqs' },
@@ -32,9 +31,10 @@ const navigationLinks = [
 
 interface AdminSidebarProps {
   isRTL: boolean;
+  onSearchToggle?: () => void;
 }
 
-export default function AdminSidebar({ isRTL }: AdminSidebarProps) {
+export default function AdminSidebar({ isRTL, onSearchToggle }: AdminSidebarProps) {
   const { data: session } = useSession(); // جلب بيانات المستخدم
   const { language } = useLanguage();
   const pathname = usePathname();
@@ -276,25 +276,37 @@ export default function AdminSidebar({ isRTL }: AdminSidebarProps) {
         ))}
       </div>
 
-      {/* زر القائمة - يتحرك للأعلى عند الفتح */}
+      {/* زر القائمة + زر البحث */}
       <header className="staggered-menu-header">
-        <button
-          ref={toggleBtnRef}
-          className={`sm-toggle-btn ${open ? 'active' : ''}`}
-          onClick={toggleMenu}
-          aria-label={open ? 'Close menu' : 'Open menu'}
-        >
-          <div className="sm-btn-content">
-            <div ref={iconRef} className="sm-icon-wrap">
-              <span ref={el => { if(el) linesRef.current[0] = el }} className="sm-line" />
-              <span ref={el => { if(el) linesRef.current[1] = el }} className="sm-line" />
-              <span ref={el => { if(el) linesRef.current[2] = el }} className="sm-line" />
+        <div className="sm-header-buttons">
+          <button
+            ref={toggleBtnRef}
+            className={`sm-toggle-btn ${open ? 'active' : ''}`}
+            onClick={toggleMenu}
+            aria-label={open ? 'Close menu' : 'Open menu'}
+          >
+            <div className="sm-btn-content">
+              <div ref={iconRef} className="sm-icon-wrap">
+                <span ref={el => { if(el) linesRef.current[0] = el }} className="sm-line" />
+                <span ref={el => { if(el) linesRef.current[1] = el }} className="sm-line" />
+                <span ref={el => { if(el) linesRef.current[2] = el }} className="sm-line" />
+              </div>
+              <span ref={btnTextRef} className="sm-btn-text">
+                  {language === 'ar' ? 'إغلاق القائمة' : 'Close Menu'}
+              </span>
             </div>
-            <span ref={btnTextRef} className="sm-btn-text">
-                {language === 'ar' ? 'إغلاق القائمة' : 'Close Menu'}
-            </span>
-          </div>
-        </button>
+          </button>
+          <button
+            onClick={onSearchToggle}
+            className="sm-search-btn"
+            aria-label={language === 'ar' ? 'بحث' : 'Search'}
+            title={language === 'ar' ? 'بحث (Alt+K)' : 'Search (Alt+K)'}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+            </svg>
+          </button>
+        </div>
       </header>
 
       <aside ref={panelRef} className="staggered-menu-panel">

@@ -1,9 +1,8 @@
 // src/components/Search/SearchResults.tsx
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { 
   getRelativeTime,
   isToday,
@@ -11,9 +10,51 @@ import {
 } from '@/utils/dateUtils';
 import { SemanticSearchResult } from '@/services/semanticSearch';
 
-// تعريف الأنواع الممكنة للغة ونوع المحتوى
 type Language = 'ar' | 'en';
 type ContentType = 'article' | 'episode' | 'season' | 'playlist' | 'team' | 'faq' | 'privacy' | 'terms';
+
+const typeConfig: Record<ContentType, { color: string; gradient: string; border: string }> = {
+  article: { color: 'from-blue-500 to-cyan-500', gradient: 'from-blue-50 to-cyan-50 dark:from-blue-950/30 dark:to-cyan-950/30', border: 'border-blue-200 dark:border-blue-800' },
+  episode: { color: 'from-emerald-500 to-teal-500', gradient: 'from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30', border: 'border-emerald-200 dark:border-emerald-800' },
+  season: { color: 'from-orange-500 to-rose-500', gradient: 'from-orange-50 to-rose-50 dark:from-orange-950/30 dark:to-rose-950/30', border: 'border-orange-200 dark:border-orange-800' },
+  playlist: { color: 'from-pink-500 to-purple-500', gradient: 'from-pink-50 to-purple-50 dark:from-pink-950/30 dark:to-purple-950/30', border: 'border-pink-200 dark:border-pink-800' },
+  team: { color: 'from-violet-500 to-indigo-500', gradient: 'from-violet-50 to-indigo-50 dark:from-violet-950/30 dark:to-indigo-950/30', border: 'border-violet-200 dark:border-violet-800' },
+  faq: { color: 'from-cyan-500 to-blue-500', gradient: 'from-cyan-50 to-blue-50 dark:from-cyan-950/30 dark:to-blue-950/30', border: 'border-cyan-200 dark:border-cyan-800' },
+  privacy: { color: 'from-green-500 to-emerald-500', gradient: 'from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30', border: 'border-green-200 dark:border-green-800' },
+  terms: { color: 'from-purple-500 to-violet-500', gradient: 'from-purple-50 to-violet-50 dark:from-purple-950/30 dark:to-violet-950/30', border: 'border-purple-200 dark:border-purple-800' }
+};
+
+function SearchResultImage({ src, alt, defaultSrc, children }: { src: string; alt: string; defaultSrc: string; children: React.ReactNode }) {
+  const [imgSrc, setImgSrc] = useState(src);
+  const [imgError, setImgError] = useState(false);
+
+  return (
+    <div className="relative h-full w-full">
+      {imgError ? (
+        <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+        </div>
+      ) : (
+        <img
+          src={imgSrc}
+          alt={alt}
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+          onError={() => {
+            if (imgSrc !== defaultSrc) {
+              setImgSrc(defaultSrc);
+            } else {
+              setImgError(true);
+            }
+          }}
+        />
+      )}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+      {children}
+    </div>
+  );
+}
 
 export default function SearchResults({ 
   results, 
@@ -98,98 +139,55 @@ export default function SearchResults({
     const { type, data } = result;
     
     switch (type) {
-      case 'article':
-        return `/articles/${data.slug}`;
-      case 'episode':
-        return `/episodes/${data.slug}`;
-      case 'season':
-        return `/seasons/${data.slug}`;
-      case 'playlist':
-        return `/playlists/${data._id || data.id}`;
-      case 'team':
-        return `/team/${data.slug}`;
-      case 'faq':
-        return `/faqs#${data._id || data.id}`;
-      case 'privacy':
-        return `/privacy#${data._id || data.id}`;
-      case 'terms':
-        return `/terms#${data._id || data.id}`;
-      default:
-        return '/';
+      case 'article': return `/articles/${data.slug}`;
+      case 'episode': return `/episodes/${data.slug}`;
+      case 'season': return `/seasons/${data.slug}`;
+      case 'playlist': return `/playlists/${data._id || data.id}`;
+      case 'team': return `/team/${data.slug}`;
+      case 'faq': return `/faqs#${data._id || data.id}`;
+      case 'privacy': return `/privacy#${data._id || data.id}`;
+      case 'terms': return `/terms#${data._id || data.id}`;
+      default: return '/';
     }
   };
 
   const getResultImage = (result: SemanticSearchResult): string => {
     const { type, data } = result;
-    
     switch (type) {
-      case 'article':
-        return String(data.featuredImageUrl || data.featuredImageUrlEn || '/images/default-article.jpg');
-      case 'episode':
-        return String(data.thumbnailUrl || data.thumbnailUrlEn || '/images/default-episode.jpg');
-      case 'season':
-        return String(data.thumbnailUrl || data.thumbnailUrlEn || '/images/default-season.jpg');
-      case 'playlist':
-        return String(data.imageUrl || data.imageUrlEn || '/images/default-playlist.jpg');
-      case 'team':
-        return String(data.imageUrl || data.imageUrlEn || '/images/default-avatar.jpg');
-      case 'faq':
-      case 'privacy':
-      case 'terms':
-        // لهذه الأنواع، سنستخدم صورة افتراضية بدلاً من null
-        return '/images/default-content.jpg';
-      default:
-        return '/images/default-content.jpg';
+      case 'article': return String(data.featuredImageUrl || data.featuredImageUrlEn || '/images/default-article.jpg');
+      case 'episode': return String(data.thumbnailUrl || data.thumbnailUrlEn || '/images/default-episode.jpg');
+      case 'season': return String(data.thumbnailUrl || data.thumbnailUrlEn || '/images/default-season.jpg');
+      case 'playlist': return String(data.imageUrl || data.imageUrlEn || '/images/default-playlist.jpg');
+      case 'team': return String(data.imageUrl || data.imageUrlEn || '/images/default-avatar.jpg');
+      case 'faq': case 'privacy': case 'terms': return '/images/default-content.jpg';
+      default: return '/images/default-content.jpg';
     }
   };
 
   const getResultTitle = (result: SemanticSearchResult): string => {
     const { type, data } = result;
-    
     switch (type) {
-      case 'article':
+      case 'article': case 'episode': case 'season': case 'playlist':
         return String(result.highlightedTitle || data.localizedTitle || data.title || '');
-      case 'episode':
+      case 'team': return String(result.highlightedTitle || data.localizedName || data.name || '');
+      case 'faq': return String(result.highlightedTitle || data.localizedQuestion || data.question || '');
+      case 'privacy': case 'terms':
         return String(result.highlightedTitle || data.localizedTitle || data.title || '');
-      case 'season':
-        return String(result.highlightedTitle || data.localizedTitle || data.title || '');
-      case 'playlist':
-        return String(result.highlightedTitle || data.localizedTitle || data.title || '');
-      case 'team':
-        return String(result.highlightedTitle || data.localizedName || data.name || '');
-      case 'faq':
-        return String(result.highlightedTitle || data.localizedQuestion || data.question || '');
-      case 'privacy':
-        return String(result.highlightedTitle || data.localizedTitle || data.title || '');
-      case 'terms':
-        return String(result.highlightedTitle || data.localizedTitle || data.title || '');
-      default:
-        return String(result.highlightedTitle || data.title || data.name || '');
+      default: return String(result.highlightedTitle || data.title || data.name || '');
     }
   };
 
   const getResultDescription = (result: SemanticSearchResult): string => {
     const { type, data } = result;
-    
     switch (type) {
-      case 'article':
-        return String(result.highlightedDescription || data.localizedExcerpt || data.excerpt || '');
-      case 'episode':
+      case 'article': return String(result.highlightedDescription || data.localizedExcerpt || data.excerpt || '');
+      case 'episode': case 'season': case 'playlist':
         return String(result.highlightedDescription || data.localizedDescription || data.description || '');
-      case 'season':
+      case 'team': return String(result.highlightedDescription || data.localizedBio || data.bio || '');
+      case 'faq': return String(result.highlightedDescription || data.localizedAnswer || data.answer || '');
+      case 'privacy': case 'terms':
         return String(result.highlightedDescription || data.localizedDescription || data.description || '');
-      case 'playlist':
-        return String(result.highlightedDescription || data.localizedDescription || data.description || '');
-      case 'team':
-        return String(result.highlightedDescription || data.localizedBio || data.bio || '');
-      case 'faq':
-        return String(result.highlightedDescription || data.localizedAnswer || data.answer || '');
-      case 'privacy':
-        return String(result.highlightedDescription || data.localizedDescription || data.description || '');
-      case 'terms':
-        return String(result.highlightedDescription || data.localizedDescription || data.description || '');
-      default:
-        return String(result.highlightedDescription || data.description || '');
+      default: return String(result.highlightedDescription || data.description || '');
     }
   };
 
@@ -199,103 +197,102 @@ export default function SearchResults({
   };
 
   const getFormattedDate = (date: string | Date) => {
-    if (isToday(date)) {
-      return language === 'ar' ? 'اليوم' : 'Today';
-    } else if (isYesterday(date)) {
-      return language === 'ar' ? 'أمس' : 'Yesterday';
-    } else {
-      return getRelativeTime(date, language);
-    }
+    if (isToday(date)) return language === 'ar' ? 'اليوم' : 'Today';
+    if (isYesterday(date)) return language === 'ar' ? 'أمس' : 'Yesterday';
+    return getRelativeTime(date, language);
   };
 
-  // تحديد لون الخلفية بناءً على النوع للأقسام التي ليس لها صور
-  const getIconBackgroundColor = (type: ContentType) => {
-    switch (type) {
-      case 'faq':
-        return 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400';
-      case 'privacy':
-        return 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400';
-      case 'terms':
-        return 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400';
-      default:
-        return 'bg-gray-100 dark:bg-gray-700/30 text-gray-600 dark:text-gray-400';
-    }
-  };
-
-  // التحقق مما إذا كان يجب عرض الأيقونة بدلاً من الصورة
   const shouldShowIcon = (result: SemanticSearchResult) => {
     return ['faq', 'privacy', 'terms'].includes(result.type);
   };
 
   return (
-    <div className="space-y-4">
-      {results.map((result, index) => (
-        <div key={`${result.type}-${result.data._id || result.data.id || index}`} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow border border-gray-100 dark:border-gray-700">
-          <div className="flex flex-col md:flex-row">
-            {/* Image or Icon */}
-            <div className="md:w-1/4 h-48 md:h-auto">
-              {shouldShowIcon(result) ? (
-                // عرض أيقونة بدلاً من الصورة للأقسام التي ليس لها صور
-                <Link href={getResultUrl(result)}>
-                  <div className={`h-full w-full relative overflow-hidden flex items-center justify-center ${getIconBackgroundColor(result.type as ContentType)}`}>
-                    <div className="text-4xl">
-                      {getTypeIcon(result.type as ContentType)}
-                    </div>
-                    <div className="absolute top-2 left-2 bg-white dark:bg-gray-800 px-2 py-1 rounded-md text-xs font-medium flex items-center shadow-sm">
-                      {getTypeIcon(result.type as ContentType)}
-                      <span className="mr-1">{getTypeLabel(result.type as ContentType)}</span>
-                    </div>
-                  </div>
-                </Link>
-              ) : (
-                <Link href={getResultUrl(result)}>
-                  <div className="h-full w-full relative overflow-hidden">
-                    <Image
-                      src={getResultImage(result)}
-                      alt={getResultTitle(result)}
-                      fill
-                      className="object-cover"
-                    />
-                    <div className="absolute top-2 left-2 bg-amber-500 text-white px-2 py-1 rounded-md text-xs font-medium flex items-center">
-                      {getTypeIcon(result.type as ContentType)}
-                      <span className="mr-1">{getTypeLabel(result.type as ContentType)}</span>
-                    </div>
-                  </div>
-                </Link>
-              )}
-            </div>
-            
-            {/* Content */}
-            <div className="md:w-3/4 p-6">
-              <div className="flex justify-between items-start mb-2">
-                <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200">
-                  <Link href={getResultUrl(result)} className="hover:text-amber-600 dark:hover:text-amber-400 transition-colors">
-                    <span dangerouslySetInnerHTML={{ __html: getResultTitle(result) }} />
-                  </Link>
-                </h3>
-                <span className="text-sm text-gray-500 dark:text-gray-400">
-                  {getFormattedDate(getResultDate(result))}
-                </span>
-              </div>
-              
-              <p className="text-gray-600 dark:text-gray-400 mb-4 line-clamp-3">
-                <span dangerouslySetInnerHTML={{ __html: getResultDescription(result) }} />
-              </p>
-              
-              {result.relevance && (
-                <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                  <span>{result.relevance}</span>
-                  <span className="mx-2">•</span>
-                  <span>{Math.round(result.score * 100)}% {language === 'ar' ? 'مطابقة' : 'match'}</span>
+    <div className="space-y-5">
+      {results.map((result, index) => {
+        const type = result.type as ContentType;
+        const cfg = typeConfig[type] || typeConfig.article;
+        return (
+          <div key={`${result.type}-${result.data._id || result.data.id || index}`} className="search-result-card group">
+            <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 dark:border-gray-700/50 hover:border-indigo-200 dark:hover:border-indigo-700/50 overflow-hidden hover:-translate-y-1 hover:scale-[1.01]">
+              <div className="flex flex-col md:flex-row">
+                {/* Image Section */}
+                <div className="md:w-[280px] h-52 md:h-auto relative overflow-hidden">
+                  {shouldShowIcon(result) ? (
+                    <Link href={getResultUrl(result)} className="block h-full">
+                      <div className={`h-full w-full flex items-center justify-center bg-gradient-to-br ${cfg.gradient}`}>
+                        <div className="text-6xl text-gray-400 dark:text-gray-500 opacity-50">
+                          {getTypeIcon(type)}
+                        </div>
+                        <div className={`absolute top-3 left-3 bg-gradient-to-r ${cfg.color} text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-lg`}>
+                          {getTypeIcon(type)}
+                          <span>{getTypeLabel(type)}</span>
+                        </div>
+                      </div>
+                    </Link>
+                  ) : (
+                    <Link href={getResultUrl(result)} className="block h-full">
+                      <SearchResultImage
+                        src={getResultImage(result)}
+                        alt={getResultTitle(result)}
+                        defaultSrc="/images/default-content.jpg"
+                      >
+                        <div className={`absolute top-3 left-3 bg-gradient-to-r ${cfg.color} text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-lg`}>
+                          {getTypeIcon(type)}
+                          <span>{getTypeLabel(type)}</span>
+                        </div>
+                        <div className="absolute bottom-3 left-3 right-3">
+                          <span className="text-white/90 text-sm font-medium">
+                            {getFormattedDate(getResultDate(result))}
+                          </span>
+                        </div>
+                      </SearchResultImage>
+                    </Link>
+                  )}
                 </div>
-              )}
+                
+                {/* Content Section */}
+                <div className="flex-1 p-6">
+                  <div className="flex items-start justify-between gap-4 mb-3">
+                    <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 leading-tight">
+                      <Link href={getResultUrl(result)} className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+                        <span dangerouslySetInnerHTML={{ __html: getResultTitle(result) }} />
+                      </Link>
+                    </h3>
+                    {result.relevance && (
+                      <div className="flex-shrink-0 flex items-center gap-1.5 px-2.5 py-1 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 rounded-full border border-indigo-100 dark:border-indigo-800/50">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-indigo-500" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clipRule="evenodd" />
+                        </svg>
+                        <span className="text-xs font-semibold text-indigo-600 dark:text-indigo-400">
+                          {Math.round(result.score * 100)}%
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <p className="text-gray-600 dark:text-gray-400 mb-4 line-clamp-2 leading-relaxed">
+                    <span dangerouslySetInnerHTML={{ __html: getResultDescription(result) }} />
+                  </p>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4 text-sm text-gray-400 dark:text-gray-500">
+                      <span className="flex items-center gap-1.5">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        {getFormattedDate(getResultDate(result))}
+                      </span>
+                    </div>
+                    <span className="text-indigo-500 dark:text-indigo-400 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                      {language === 'ar' ? 'عرض المزيد ←' : 'View more →'}
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

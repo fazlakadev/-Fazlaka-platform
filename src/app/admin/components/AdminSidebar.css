@@ -30,6 +30,42 @@
   transition: opacity 0.3s ease;
 }
 
+/* --- حاوية الأزرار (قائمة + بحث) --- */
+.sm-header-buttons {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 65;
+  pointer-events: none;
+  align-items: center;
+}
+
+[data-position='right'] .sm-header-buttons {
+  right: -10px;
+}
+
+[data-position='left'] .sm-header-buttons {
+  left: -10px;
+}
+
+.staggered-menu-wrapper[data-open='true'] .sm-header-buttons {
+  top: 2rem;
+  transform: translateY(0);
+}
+
+[data-position='right'].staggered-menu-wrapper[data-open='true'] .sm-header-buttons {
+  right: 2rem;
+  left: auto;
+}
+
+[data-position='left'].staggered-menu-wrapper[data-open='true'] .sm-header-buttons {
+  left: 2rem;
+  right: auto;
+}
+
 /* --- الزر الجديد --- */
 .staggered-menu-header {
   position: fixed;
@@ -42,8 +78,6 @@
 }
 
 .sm-toggle-btn {
-  position: absolute;
-  top: 50%; 
   width: 56px;
   height: 56px;
   
@@ -68,23 +102,58 @@
   overflow: hidden;
 }
 
-/* Positioning Logic - الوضع المغلق */
-[data-position='right'] .sm-toggle-btn {
-  right: -10px;
-  transform: translateY(-50%);
+/* زر البحث */
+.sm-search-btn {
+  width: 56px;
+  height: 56px;
+  background: rgba(37, 99, 235, 0.25);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+  cursor: pointer;
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+  overflow: hidden;
 }
-[data-position='left'] .sm-toggle-btn {
-  left: -10px;
-  transform: translateY(-50%);
+
+.sm-search-btn:hover {
+  background: rgba(99, 102, 241, 0.4);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: scale(1.05);
+  box-shadow: 0 8px 32px 0 rgba(99, 102, 241, 0.3);
+}
+
+.sm-search-btn:active {
+  transform: scale(0.95);
+}
+
+.sm-toggle-btn,
+.sm-search-btn {
+  position: relative;
+}
+
+.staggered-menu-wrapper[data-open='true'] .sm-search-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: none;
+}
+
+.staggered-menu-wrapper[data-open='true'] .sm-search-btn:hover {
+  background: rgba(99, 102, 241, 0.3);
+  border-color: rgba(99, 102, 241, 0.4);
+  transform: scale(1.05);
 }
 
 /* --- حالة الفتح (مُصححة للاتجاهات) --- */
 .staggered-menu-wrapper[data-open='true'] .sm-toggle-btn {
-  /* الانتقال للأعلى */
-  top: 2rem !important; 
-  transform: translateY(0) !important;
-  
   width: auto;
+  
   min-width: 56px;
   background: rgba(255, 255, 255, 0.1);
   border-color: rgba(255,255,255,0.1);
@@ -362,5 +431,20 @@
 /* Responsive */
 @media (max-width: 640px) {
   .staggered-menu-panel, .sm-prelayers { width: 85%; }
-  .sm-toggle-btn { width: 48px; height: 48px; }
+  .sm-toggle-btn { width: 44px; height: 44px; min-width: 44px; }
+  .sm-search-btn { width: 44px; height: 44px; min-width: 44px; }
+  .sm-header-buttons { gap: 4px; }
+  .sm-toggle-btn .sm-btn-text { display: none; }
+  .sm-panel-inner { padding: 5rem 1rem 1rem; }
+  .sm-panel-link { padding: 0.65rem 0.75rem; }
+  .sm-item-number { font-size: 0.7rem; margin-inline-end: 0.6rem; }
+  .sm-item-text { font-size: 0.85rem; }
+  .user-profile { padding: 0.75rem; gap: 0.75rem; }
+  .user-avatar { width: 40px; height: 40px; }
+}
+
+@media (max-width: 380px) {
+  .sm-toggle-btn { width: 38px; height: 38px; min-width: 38px; }
+  .sm-search-btn { width: 38px; height: 38px; min-width: 38px; }
+  .sm-header-buttons { gap: 3px; }
 }
