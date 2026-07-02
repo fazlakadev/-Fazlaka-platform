@@ -11,6 +11,7 @@ import './AdminSidebar.css';
 // تم إضافة خيار التعليقات هنا
 const navigationLinks = [
   { title: 'لوحة التحكم', titleEn: 'Dashboard', link: '/admin' },
+  { title: 'تحليلات الموقع', titleEn: 'Analytics', link: '/admin' },
   { title: 'المقالات', titleEn: 'Articles', link: '/admin/articles' },
   { title: 'الحلقات', titleEn: 'Episodes', link: '/admin/episodes' },
   { title: 'الأسئلة الشائعة', titleEn: 'FAQs', link: '/admin/faqs' },
