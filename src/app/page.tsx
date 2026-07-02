@@ -9,6 +9,7 @@ import "swiper/css";
 import "swiper/css/pagination";
 import { useLanguage } from '@/components/Language/LanguageProvider';
 import { useSession } from 'next-auth/react';
+import FavoriteButton from '@/components/Favorites/FavoriteButton';
 
 // --- Interfaces ---
 interface HeroSlider { 
@@ -23,8 +24,8 @@ interface HeroSlider {
   linkText?: string; 
   linkTextEn?: string; 
 }
-interface Episode { id: string; slug: string; localizedTitle?: string; localizedThumbnailUrl?: string; }
-interface Article { id: string; slug: string; localizedTitle?: string; localizedExcerpt?: string; localizedFeaturedImageUrl?: string; }
+interface Episode { id: string; slug: string; localizedTitle?: string; localizedThumbnailUrl?: string; publishedAt?: string | Date | null; }
+interface Article { id: string; slug: string; localizedTitle?: string; localizedExcerpt?: string; localizedFeaturedImageUrl?: string; publishedAt?: string | Date | null; }
 interface FAQ { id: string; localizedQuestion?: string; localizedAnswer?: string; }
 
 // --- Translations ---
@@ -77,6 +78,15 @@ const translations = {
 
 const getT = (lang: string) => translations[lang as keyof typeof translations] || translations.ar;
 const getText = (ar?: string, en?: string, lang?: string) => lang === 'en' ? (en || ar || '') : (ar || en || '');
+
+const formatContentDate = (date?: string | Date | null, language = 'ar') => {
+  if (!date) return '';
+  return new Date(date).toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
+};
 
 // --- Custom Hook for Scroll Animation ---
 function useScrollAnimation() {
@@ -319,24 +329,28 @@ const LatestEpisodes = () => {
             ))
           ) : (
             eps.slice(0, 4).map((ep) => (
-              <Link href={`/episodes/${ep.slug}`} key={ep.id} className="group block">
-                <div className="relative aspect-video rounded-2xl overflow-hidden bg-slate-800 border border-white/5 group-hover:border-cyan-500/50 transition-all duration-500 shadow-lg mb-4">
-                  {ep.localizedThumbnailUrl && (
-                    <Image src={ep.localizedThumbnailUrl} alt={ep.localizedTitle || ''} fill className="object-cover opacity-80 group-hover:scale-110 group-hover:opacity-100 transition-all duration-700" />
-                  )}
-                  
-                  {/* Gradient Overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent"></div>
-                  
-                  {/* Play Button */}
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
-                    <div className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center shadow-xl transform scale-50 group-hover:scale-100 transition-transform border border-white/30">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+              <article key={ep.id} className="group rounded-2xl border border-white/5 bg-white/[0.03] overflow-hidden transition-all duration-500 hover:-translate-y-2 hover:border-cyan-500/35 hover:bg-white/[0.06]">
+                <Link href={`/episodes/${ep.slug}`} className="block">
+                  <div className="relative aspect-video overflow-hidden bg-slate-800">
+                    {ep.localizedThumbnailUrl && (
+                      <Image src={ep.localizedThumbnailUrl} alt={ep.localizedTitle || ''} fill className="object-cover opacity-80 group-hover:scale-110 group-hover:opacity-100 transition-all duration-700" />
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#030712] via-black/10 to-transparent"></div>
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
+                      <div className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center shadow-xl transform scale-50 group-hover:scale-100 transition-transform border border-white/30">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                      </div>
                     </div>
                   </div>
+                  <div className="p-4">
+                    <h3 className="text-white font-semibold text-lg group-hover:text-cyan-400 transition-colors line-clamp-2">{ep.localizedTitle}</h3>
+                  </div>
+                </Link>
+                <div className="px-4 pb-4 flex items-center justify-between gap-3 text-xs text-slate-400">
+                  <span>{formatContentDate(ep.publishedAt, language)}</span>
+                  <FavoriteButton contentId={ep.id} contentType="episode" />
                 </div>
-                <h3 className="text-white font-semibold text-lg group-hover:text-cyan-400 transition-colors line-clamp-2">{ep.localizedTitle}</h3>
-              </Link>
+              </article>
             ))
           )}
         </div>
@@ -386,18 +400,23 @@ const LatestArticles = () => {
              ))
           ) : (
             articles.slice(0, 3).map(article => (
-              <Link href={`/articles/${article.slug}`} key={article.id} className="group relative rounded-3xl overflow-hidden border border-white/5 hover:border-indigo-500/30 transition-all duration-500 hover:-translate-y-2 bg-gradient-to-b from-white/[0.03] to-transparent">
-                <div className="relative h-56 bg-slate-800 overflow-hidden">
-                  {article.localizedFeaturedImageUrl && (
-                    <Image src={article.localizedFeaturedImageUrl} alt={article.localizedTitle || ''} fill className="object-cover opacity-80 group-hover:scale-110 group-hover:opacity-100 transition-all duration-700" />
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#030712] via-transparent to-transparent"></div>
+              <article key={article.id} className="group relative rounded-2xl overflow-hidden border border-white/5 hover:border-indigo-500/35 transition-all duration-500 hover:-translate-y-2 bg-white/[0.03]">
+                <Link href={`/articles/${article.slug}`} className="block">
+                  <div className="relative h-56 bg-slate-800 overflow-hidden">
+                    {article.localizedFeaturedImageUrl && (
+                      <Image src={article.localizedFeaturedImageUrl} alt={article.localizedTitle || ''} fill className="object-cover opacity-80 group-hover:scale-110 group-hover:opacity-100 transition-all duration-700" />
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#030712] via-transparent to-transparent"></div>
+                  </div>
+                  <div className="p-6 pb-3 relative">
+                    <h3 className="text-xl font-bold text-white group-hover:text-indigo-400 transition-colors line-clamp-2">{article.localizedTitle}</h3>
+                  </div>
+                </Link>
+                <div className="px-6 pb-5 flex items-center justify-between gap-3 text-xs text-slate-400">
+                  <span>{formatContentDate(article.publishedAt, language)}</span>
+                  <FavoriteButton contentId={article.id} contentType="article" />
                 </div>
-                <div className="p-6 relative">
-                  <h3 className="text-xl font-bold text-white mb-3 group-hover:text-indigo-400 transition-colors line-clamp-2">{article.localizedTitle}</h3>
-                  <p className="text-slate-400 text-sm line-clamp-3 leading-relaxed">{article.localizedExcerpt}</p>
-                </div>
-              </Link>
+              </article>
             ))
           )}
         </div>

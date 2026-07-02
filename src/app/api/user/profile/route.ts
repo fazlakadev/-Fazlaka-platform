@@ -1,80 +1,34 @@
-// src/app/api/user/profile/route.ts
 import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
+import { getServerSession } from "next-auth/next"
 import bcrypt from "bcryptjs"
-import { getUserIdFromRequest } from "@/lib/auth-helper"
+import { authOptions } from "@/lib/auth"
+import { prisma } from "@/lib/prisma"
+import { findUserByIdentity, publicUser } from "@/lib/user-resolver"
 
-export async function PUT(request: NextRequest) {
+type Session = {
+  user?: {
+    id?: string
+    email?: string | null
+  }
+}
+
+export async function GET() {
   try {
-    const userId = await getUserIdFromRequest(request)
-    
-    if (!userId) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      )
+    const session = await getServerSession(authOptions) as Session | null
+
+    if (!session?.user?.id && !session?.user?.email) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const body = await request.json()
-    const { name, bio, image, banner, password } = body
+    const user = await findUserByIdentity(session.user)
 
-    // بناء كائن التحديث
-    const updateData: Record<string, unknown> = {};
-    
-    if (name) updateData.name = name;
-    if (bio) updateData.bio = bio;
-    if (image) updateData.image = image;
-    if (banner !== undefined) updateData.banner = banner;
-    
-    // إذا تم توفير كلمة مرور جديدة، قم بتشفيرها
-    if (password) {
-      const hashedPassword = await bcrypt.hash(password, 12);
-      updateData.password = hashedPassword;
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 })
     }
-    
-    // تحديث المستخدم باستخدام Prisma
-    const updatedUser = await prisma.user.update({
-      where: { id: userId },
-      data: updateData,
-      include: {
-        secondaryEmails: true
-      }
-    });
-    
-    // إزالة الحقول الحساسة
-    // تم الإصلاح: إضافة secondaryEmails للإزالة من userWithoutSensitiveFields
-    const { 
-      password: _password, 
-      verificationToken, 
-      resetToken, 
-      magicToken, 
-      otpCode, 
-      emailChangeCode,
-      secondaryEmails,
-      ...userWithoutSensitiveFields 
-    } = updatedUser;
 
-    // تصفية رسائل البريد الإلكتروني الثانوية لإزالة الحقول الحساسة
-    const filteredSecondaryEmails = secondaryEmails.map(email => ({
-      id: email.id,
-      email: email.email,
-      isVerified: email.isVerified,
-      createdAt: email.createdAt,
-    }));
-
-    // حساب isVerified بناءً على وجود verificationToken
-    const isVerified = !updatedUser.verificationToken;
-
-    return NextResponse.json({
-      message: "Profile updated successfully",
-      user: {
-        ...userWithoutSensitiveFields,
-        isVerified,
-        secondaryEmails: filteredSecondaryEmails,
-      }
-    });
+    return NextResponse.json(publicUser(user))
   } catch (error) {
-    console.error("Error updating profile:", error)
+    console.error("Error fetching user profile:", error)
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
@@ -82,63 +36,49 @@ export async function PUT(request: NextRequest) {
   }
 }
 
-export async function GET(request: NextRequest) {
+export async function PUT(request: NextRequest) {
   try {
-    const userId = await getUserIdFromRequest(request)
-    
-    if (!userId) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      )
+    const session = await getServerSession(authOptions) as Session | null
+
+    if (!session?.user?.id && !session?.user?.email) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // جلب بيانات المستخدم باستخدام Prisma
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      include: {
-        secondaryEmails: true
-      }
-    });
+    const user = await findUserByIdentity(session.user)
 
     if (!user) {
-      return NextResponse.json(
-        { error: "User not found" },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: "User not found" }, { status: 404 })
     }
 
-    // إزالة الحقول الحساسة
-    // تم الإصلاح: إضافة secondaryEmails للإزالة من userWithoutSensitiveFields
-    const { 
-      password, 
-      verificationToken, 
-      resetToken, 
-      magicToken, 
-      otpCode, 
-      emailChangeCode,
-      secondaryEmails,
-      ...userWithoutSensitiveFields 
-    } = user;
+    const body = await request.json()
+    const { name, bio, image, banner, location, website, password } = body
+    const updateData: Record<string, unknown> = {}
 
-    // تصفية رسائل البريد الإلكتروني الثانوية لإزالة الحقول الحساسة
-    const filteredSecondaryEmails = secondaryEmails.map(email => ({
-      id: email.id,
-      email: email.email,
-      isVerified: email.isVerified,
-      createdAt: email.createdAt,
-    }));
+    if (name !== undefined) updateData.name = name
+    if (bio !== undefined) updateData.bio = bio
+    if (image !== undefined) updateData.image = image
+    if (banner !== undefined) updateData.banner = banner
+    if (location !== undefined) updateData.location = location
+    if (website !== undefined) updateData.website = website
 
-    // حساب isVerified بناءً على وجود verificationToken
-    const isVerified = !user.verificationToken;
+    if (password) {
+      updateData.password = await bcrypt.hash(password, 12)
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: user.id },
+      data: updateData,
+      include: {
+        secondaryEmails: true,
+      },
+    })
 
     return NextResponse.json({
-      ...userWithoutSensitiveFields,
-      isVerified,
-      secondaryEmails: filteredSecondaryEmails,
+      message: "Profile updated successfully",
+      user: publicUser(updatedUser),
     })
   } catch (error) {
-    console.error("Error fetching user profile:", error)
+    console.error("Error updating profile:", error)
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

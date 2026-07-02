@@ -2,9 +2,10 @@
 
 "use client"
 
-import { useSession, signOut } from "next-auth/react" // ← أضفنا signOut
+import { signOut } from "next-auth/react"
 import { useRouter } from "next/navigation" // ← أضفنا useRouter
 import { Edit, Shield, Globe, HelpCircle, LogOut, LogIn } from "lucide-react" // ← أضفنا LogIn
+import { motion } from "framer-motion"
 
 import { useLanguage } from "@/components/Language/LanguageProvider"
 
@@ -45,17 +46,31 @@ export default function SettingsLayout({ children, activeTab, setActiveTab, auth
   const { isRTL, language } = useLanguage()
   const t = translations[language]
 
+  const tabClassName = (tab: string) =>
+    `relative w-full flex items-center px-4 py-3 rounded-lg text-left transition-all duration-300 overflow-hidden ${
+      activeTab === tab
+        ? "text-blue-700 dark:text-cyan-200 shadow-sm"
+        : "text-gray-700 dark:text-gray-300 hover:bg-gray-100/80 dark:hover:bg-white/5"
+    }`
+
   return (
-    <div className={`min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-colors duration-500 ${isRTL ? 'rtl' : ''}`}>
+    <div className={`min-h-screen flex flex-col bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.14),transparent_34%),linear-gradient(135deg,#f8fafc_0%,#eef2ff_48%,#ecfeff_100%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.12),transparent_34%),linear-gradient(135deg,#020617_0%,#111827_52%,#172554_100%)] transition-colors duration-500 ${isRTL ? 'rtl' : ''}`}>
       {/* Empty space with header background at the top */}
-      <div className="h-20 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md shadow-sm"></div>
+      <div className="h-20 bg-white/70 dark:bg-gray-950/70 backdrop-blur-xl shadow-sm"></div>
       
       <div className="flex flex-col flex-1">
         {/* Header */}
-        <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md shadow-sm border-b border-gray-200 dark:border-gray-700">
+        <div className="bg-white/70 dark:bg-gray-950/70 backdrop-blur-xl shadow-sm border-b border-white/60 dark:border-white/10">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-center h-16">
-              <h1 className="text-xl font-semibold text-gray-900 dark:text-white">{t.settings}</h1>
+              <motion.h1
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35 }}
+                className="text-xl font-semibold text-gray-900 dark:text-white"
+              >
+                {t.settings}
+              </motion.h1>
             </div>
           </div>
         </div>
@@ -64,19 +79,21 @@ export default function SettingsLayout({ children, activeTab, setActiveTab, auth
           <div className="flex flex-col md:flex-row gap-8">
             {/* Sidebar */}
             <div className="md:w-64 flex-shrink-0">
-              <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg rounded-xl shadow-lg p-4 space-y-1">
+              <motion.div
+                initial={{ opacity: 0, x: isRTL ? 18 : -18 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.4 }}
+                className="sticky top-24 bg-white/85 dark:bg-gray-900/75 backdrop-blur-2xl rounded-2xl shadow-xl shadow-blue-900/5 dark:shadow-black/30 p-3 space-y-1 border border-white/70 dark:border-white/10"
+              >
                 {/* ← عرض زر تعديل الملف الشخصي فقط إذا كان المستخدم مسجلاً */}
                 {authStatus === "authenticated" && (
                   <button
                     onClick={() => setActiveTab("profile")}
-                    className={`w-full flex items-center px-4 py-3 rounded-lg text-left transition-colors ${
-                      activeTab === "profile"
-                        ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
-                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50"
-                    }`}
+                    className={tabClassName("profile")}
                   >
+                    {activeTab === "profile" && <motion.span layoutId="settingsActiveTab" className="absolute inset-0 bg-blue-100/90 dark:bg-cyan-500/10 rounded-lg" />}
                     <Edit className="h-5 w-5 mr-3" />
-                    {t.editProfile}
+                    <span className="relative">{t.editProfile}</span>
                   </button>
                 )}
 
@@ -84,41 +101,32 @@ export default function SettingsLayout({ children, activeTab, setActiveTab, auth
                 {authStatus === "authenticated" && (
                   <button
                     onClick={() => setActiveTab("security")}
-                    className={`w-full flex items-center px-4 py-3 rounded-lg text-left transition-colors ${
-                      activeTab === "security"
-                        ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
-                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50"
-                    }`}
+                    className={tabClassName("security")}
                   >
+                    {activeTab === "security" && <motion.span layoutId="settingsActiveTab" className="absolute inset-0 bg-blue-100/90 dark:bg-cyan-500/10 rounded-lg" />}
                     <Shield className="h-5 w-5 mr-3" />
-                    {t.accountSettings}
+                    <span className="relative">{t.accountSettings}</span>
                   </button>
                 )}
 
                 {/* ← زر المظهر متاح للجميع */}
                 <button
                   onClick={() => setActiveTab("appearance")}
-                  className={`w-full flex items-center px-4 py-3 rounded-lg text-left transition-colors ${
-                    activeTab === "appearance"
-                      ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
-                      : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50"
-                  }`}
+                  className={tabClassName("appearance")}
                 >
+                  {activeTab === "appearance" && <motion.span layoutId="settingsActiveTab" className="absolute inset-0 bg-blue-100/90 dark:bg-cyan-500/10 rounded-lg" />}
                   <Globe className="h-5 w-5 mr-3" />
-                  {t.appearanceSettings}
+                  <span className="relative">{t.appearanceSettings}</span>
                 </button>
 
                 {/* ← زر "حول" متاح للجميع */}
                 <button
                   onClick={() => setActiveTab("about")}
-                  className={`w-full flex items-center px-4 py-3 rounded-lg text-left transition-colors ${
-                    activeTab === "about"
-                      ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
-                      : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50"
-                  }`}
+                  className={tabClassName("about")}
                 >
+                  {activeTab === "about" && <motion.span layoutId="settingsActiveTab" className="absolute inset-0 bg-blue-100/90 dark:bg-cyan-500/10 rounded-lg" />}
                   <HelpCircle className="h-5 w-5 mr-3" />
-                  {t.aboutSettings}
+                  <span className="relative">{t.aboutSettings}</span>
                 </button>
 
                 {/* ← عرض زر تسجيل الخروج أو تسجيل الدخول بناءً على الحالة */}
@@ -141,14 +149,20 @@ export default function SettingsLayout({ children, activeTab, setActiveTab, auth
                     </button>
                   )}
                 </div>
-              </div>
+              </motion.div>
             </div>
 
             {/* Content */}
             <div className="flex-1">
-              <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg rounded-xl shadow-lg p-6">
+              <motion.div
+                key={activeTab}
+                initial={{ opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35 }}
+                className="bg-white/90 dark:bg-gray-900/80 backdrop-blur-2xl rounded-2xl shadow-2xl shadow-blue-900/5 dark:shadow-black/30 p-6 border border-white/70 dark:border-white/10"
+              >
                 {children}
-              </div>
+              </motion.div>
             </div>
           </div>
         </div>

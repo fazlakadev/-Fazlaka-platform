@@ -81,6 +81,7 @@ export default function ProfileSettings() {
   const [bio, setBio] = useState("")
   const [image, setImage] = useState("")
   const [banner, setBanner] = useState("")
+  const [userId, setUserId] = useState("")
   const [isSavingProfile, setIsSavingProfile] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [isUploadingBanner, setIsUploadingBanner] = useState(false)
@@ -108,13 +109,24 @@ export default function ProfileSettings() {
 
     const fetchUserData = async () => {
       try {
-        const response = await fetch(`/api/user/${session!.user.id}`)
+        const response = await fetch("/api/user/me")
         if (response.ok) {
           const userData = await response.json()
+          setUserId(userData.id || session.user.id)
           setName(userData.name || "")
           setBio(userData.bio || "")
           setImage(userData.image || session.user?.image || "")
           setBanner(userData.banner || "")
+        } else if (session.user.id) {
+          const fallbackResponse = await fetch(`/api/user/${session.user.id}`)
+          if (fallbackResponse.ok) {
+            const userData = await fallbackResponse.json()
+            setUserId(userData.id || session.user.id)
+            setName(userData.name || "")
+            setBio(userData.bio || "")
+            setImage(userData.image || session.user?.image || "")
+            setBanner(userData.banner || "")
+          }
         }
       } catch {
         console.error("Error fetching user data")
@@ -128,6 +140,8 @@ export default function ProfileSettings() {
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
+    const currentUserId = userId || session?.user?.id
+    if (!currentUserId) return
 
     if (file.size > 5 * 1024 * 1024) {
       setImageError(t.imageTooLarge)
@@ -158,7 +172,7 @@ export default function ProfileSettings() {
         
         setImage(imageUrl)
         
-        const updateResponse = await fetch(`/api/user/${session!.user.id}`, {
+        const updateResponse = await fetch(`/api/user/${currentUserId}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -195,6 +209,8 @@ export default function ProfileSettings() {
   const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
+    const currentUserId = userId || session?.user?.id
+    if (!currentUserId) return
 
     if (file.size > 10 * 1024 * 1024) {
       setBannerError(t.bannerTooLarge)
@@ -225,7 +241,7 @@ export default function ProfileSettings() {
         
         setBanner(bannerUrl)
         
-        const updateResponse = await fetch(`/api/user/${session!.user.id}`, {
+        const updateResponse = await fetch(`/api/user/${currentUserId}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -252,8 +268,11 @@ export default function ProfileSettings() {
   }
 
   const handleRemoveImage = async () => {
+    const currentUserId = userId || session?.user?.id
+    if (!currentUserId) return
+
     try {
-      const updateResponse = await fetch(`/api/user/${session!.user.id}`, {
+      const updateResponse = await fetch(`/api/user/${currentUserId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -285,8 +304,11 @@ export default function ProfileSettings() {
   }
 
   const handleRemoveBanner = async () => {
+    const currentUserId = userId || session?.user?.id
+    if (!currentUserId) return
+
     try {
-      const updateResponse = await fetch(`/api/user/${session!.user.id}`, {
+      const updateResponse = await fetch(`/api/user/${currentUserId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -310,12 +332,15 @@ export default function ProfileSettings() {
   }
 
   const handleSaveProfile = async () => {
+    const currentUserId = userId || session?.user?.id
+    if (!currentUserId) return
+
     setIsSavingProfile(true)
     setProfileError("")
     setProfileMessage("")
 
     try {
-      const response = await fetch(`/api/user/${session!.user.id}`, {
+      const response = await fetch(`/api/user/${currentUserId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

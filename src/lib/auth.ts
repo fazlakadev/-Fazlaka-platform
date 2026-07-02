@@ -62,12 +62,20 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id;
         token.role = user.role;
       }
-      if (token.id) {
-        const dbUser = await prisma.user.findUnique({
-          where: { id: token.id as string },
-          select: { role: true },
+      if (token.id || token.email) {
+        const dbUser = await prisma.user.findFirst({
+          where: {
+            OR: [
+              ...(token.id ? [{ id: token.id as string }, { googleId: token.id as string }] : []),
+              ...(token.email ? [{ email: token.email }] : []),
+            ],
+          },
+          select: { id: true, role: true },
         });
-        if (dbUser) token.role = dbUser.role;
+        if (dbUser) {
+          token.id = dbUser.id;
+          token.role = dbUser.role;
+        }
       }
       return token;
     },

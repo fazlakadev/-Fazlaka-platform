@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useSession, signOut, signIn } from "next-auth/react"
+import { useSession, signOut } from "next-auth/react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Eye, EyeOff, Lock, Mail, Key, Shield, CheckCircle, AlertCircle, ChevronDown, ChevronUp, Plus, Trash2, Star, X, Edit, Info } from "lucide-react"
 import Link from "next/link"
@@ -114,6 +114,25 @@ const translations = {
     instructions: "تعليمات",
     note: "ملاحظة:",
     securityNote: "لأسباب أمنية، يرجى التأكد من أنك في مكان آمن قبل تغيير كلمة المرور",
+
+    // Delete Account
+    deleteAccount: "حذف الحساب نهائيا",
+    deleteAccountDescription: "هذا الإجراء نهائي وسيحذف حسابك وبياناتك المرتبطة به.",
+    deleteWithPassword: "الحذف بكلمة المرور",
+    deleteWithOtp: "الحذف بكود OTP",
+    accountPassword: "كلمة مرور الحساب",
+    enterAccountPassword: "أدخل كلمة المرور لتأكيد الحذف",
+    sendDeleteOtp: "إرسال كود الحذف",
+    deleteOtpSent: "تم إرسال كود التحقق إلى بريدك الإلكتروني",
+    deleteOtpCode: "كود التحقق",
+    confirmDeleteText: "اكتب DELETE للتأكيد",
+    confirmDeletePlaceholder: "DELETE",
+    deleteAccountButton: "حذف الحساب نهائيا",
+    deletingAccount: "جار حذف الحساب...",
+    deleteAccountSuccess: "تم حذف الحساب بنجاح",
+    deleteAccountFailed: "فشل حذف الحساب",
+    deleteConfirmRequired: "اكتب DELETE لتأكيد حذف الحساب",
+    verificationRequired: "يجب إدخال طريقة تحقق صحيحة قبل الحذف",
   },
   en: {
     // General
@@ -220,6 +239,25 @@ const translations = {
     instructions: "Instructions",
     note: "Note:",
     securityNote: "For security reasons, please ensure you are in a secure place before changing your password",
+
+    // Delete Account
+    deleteAccount: "Delete Account Permanently",
+    deleteAccountDescription: "This action is final and will remove your account and related data.",
+    deleteWithPassword: "Delete with Password",
+    deleteWithOtp: "Delete with OTP",
+    accountPassword: "Account Password",
+    enterAccountPassword: "Enter your password to confirm deletion",
+    sendDeleteOtp: "Send Delete Code",
+    deleteOtpSent: "Verification code sent to your email",
+    deleteOtpCode: "Verification Code",
+    confirmDeleteText: "Type DELETE to confirm",
+    confirmDeletePlaceholder: "DELETE",
+    deleteAccountButton: "Delete Account Permanently",
+    deletingAccount: "Deleting account...",
+    deleteAccountSuccess: "Account deleted successfully",
+    deleteAccountFailed: "Failed to delete account",
+    deleteConfirmRequired: "Type DELETE to confirm account deletion",
+    verificationRequired: "Enter a valid verification method before deleting",
   }
 };
 
@@ -249,6 +287,7 @@ export default function SecuritySettings() {
   // States for section expansion
   const [isPasswordSectionExpanded, setIsPasswordSectionExpanded] = useState(false)
   const [isEmailSectionExpanded, setIsEmailSectionExpanded] = useState(false)
+  const [isDeleteSectionExpanded, setIsDeleteSectionExpanded] = useState(false)
   
   // States for password change
   const [currentPassword, setCurrentPassword] = useState("")
@@ -294,6 +333,17 @@ export default function SecuritySettings() {
   
   // States for UI
   const [passwordStrength, setPasswordStrength] = useState(0)
+
+  // States for account deletion
+  const [deleteMethod, setDeleteMethod] = useState<"password" | "otp">("password")
+  const [deletePassword, setDeletePassword] = useState("")
+  const [deleteOtpCode, setDeleteOtpCode] = useState("")
+  const [deleteOtpSent, setDeleteOtpSent] = useState(false)
+  const [deleteConfirmText, setDeleteConfirmText] = useState("")
+  const [deleteError, setDeleteError] = useState("")
+  const [deleteSuccess, setDeleteSuccess] = useState("")
+  const [isSendingDeleteOtp, setIsSendingDeleteOtp] = useState(false)
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false)
 
   useEffect(() => {
     // Calculate password strength
@@ -773,6 +823,89 @@ export default function SecuritySettings() {
     setVerificationCode("")
     setEmailError("")
     setEmailMessage("")
+  }
+
+  const handleSendDeleteOtp = async () => {
+    if (!session?.user?.email) return
+
+    setIsSendingDeleteOtp(true)
+    setDeleteError("")
+    setDeleteSuccess("")
+
+    try {
+      const response = await fetch("/api/auth/send-otp", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: session.user.email,
+          purpose: "verify",
+        }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setDeleteOtpSent(true)
+        setDeleteSuccess(t.deleteOtpSent)
+      } else {
+        setDeleteError(data.error || t.failedToSendCode)
+      }
+    } catch {
+      setDeleteError(t.failedToSendCode)
+    } finally {
+      setIsSendingDeleteOtp(false)
+    }
+  }
+
+  const handleDeleteAccount = async () => {
+    setDeleteError("")
+    setDeleteSuccess("")
+
+    if (deleteConfirmText !== "DELETE") {
+      setDeleteError(t.deleteConfirmRequired)
+      return
+    }
+
+    if (deleteMethod === "password" && !deletePassword) {
+      setDeleteError(t.verificationRequired)
+      return
+    }
+
+    if (deleteMethod === "otp" && !deleteOtpCode) {
+      setDeleteError(t.verificationRequired)
+      return
+    }
+
+    setIsDeletingAccount(true)
+
+    try {
+      const response = await fetch("/api/user/delete-account", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          method: deleteMethod,
+          password: deleteMethod === "password" ? deletePassword : undefined,
+          otpCode: deleteMethod === "otp" ? deleteOtpCode : undefined,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setDeleteSuccess(t.deleteAccountSuccess)
+        await signOut({ callbackUrl: "/" })
+      } else {
+        setDeleteError(data.error || t.deleteAccountFailed)
+      }
+    } catch {
+      setDeleteError(t.deleteAccountFailed)
+    } finally {
+      setIsDeletingAccount(false)
+    }
   }
 
   const getPasswordStrengthColor = () => {
@@ -1529,6 +1662,157 @@ export default function SecuritySettings() {
                     </div>
                   )}
                 </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Delete Account Section */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-red-200 dark:border-red-900/60 overflow-hidden">
+        <div
+          className="flex items-center justify-between p-6 cursor-pointer hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors"
+          onClick={() => setIsDeleteSectionExpanded(!isDeleteSectionExpanded)}
+          title={isDeleteSectionExpanded ? t.clickToCollapse : t.clickToExpand}
+        >
+          <div className="flex items-center">
+            <Trash2 className="h-5 w-5 mr-3 text-red-600 dark:text-red-400" />
+            <div>
+              <h2 className="text-xl font-semibold text-red-700 dark:text-red-300">{t.deleteAccount}</h2>
+              <p className="text-sm text-red-600/80 dark:text-red-300/70 mt-1">{t.deleteAccountDescription}</p>
+            </div>
+          </div>
+          <div className="flex items-center">
+            {isDeleteSectionExpanded ? (
+              <ChevronUp className="h-5 w-5 text-red-500" />
+            ) : (
+              <ChevronDown className="h-5 w-5 text-red-500" />
+            )}
+          </div>
+        </div>
+
+        <AnimatePresence>
+          {isDeleteSectionExpanded && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="overflow-hidden"
+            >
+              <div className="px-6 pb-6 space-y-5">
+                {deleteSuccess && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="p-4 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 rounded-lg border border-green-200 dark:border-green-800/30 flex items-center"
+                  >
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    {deleteSuccess}
+                  </motion.div>
+                )}
+
+                {deleteError && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="p-4 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded-lg border border-red-200 dark:border-red-800/30 flex items-center"
+                  >
+                    <AlertCircle className="h-4 w-4 mr-2" />
+                    {deleteError}
+                  </motion.div>
+                )}
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setDeleteMethod("password")}
+                    className={`p-4 rounded-xl border text-sm font-medium transition-all ${
+                      deleteMethod === "password"
+                        ? "border-red-400 bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-300"
+                        : "border-gray-200 bg-gray-50 text-gray-700 hover:border-red-200 dark:border-gray-700 dark:bg-gray-700/40 dark:text-gray-200"
+                    }`}
+                  >
+                    <Lock className="h-5 w-5 mx-auto mb-2" />
+                    {t.deleteWithPassword}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDeleteMethod("otp")}
+                    className={`p-4 rounded-xl border text-sm font-medium transition-all ${
+                      deleteMethod === "otp"
+                        ? "border-red-400 bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-300"
+                        : "border-gray-200 bg-gray-50 text-gray-700 hover:border-red-200 dark:border-gray-700 dark:bg-gray-700/40 dark:text-gray-200"
+                    }`}
+                  >
+                    <Key className="h-5 w-5 mx-auto mb-2" />
+                    {t.deleteWithOtp}
+                  </button>
+                </div>
+
+                {deleteMethod === "password" ? (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      {t.accountPassword}
+                    </label>
+                    <input
+                      type="password"
+                      value={deletePassword}
+                      onChange={(e) => setDeletePassword(e.target.value)}
+                      placeholder={t.enterAccountPassword}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-transparent shadow-sm"
+                    />
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <button
+                      type="button"
+                      onClick={handleSendDeleteOtp}
+                      disabled={isSendingDeleteOtp}
+                      className="w-full py-2.5 px-4 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-950/40 dark:text-red-300 dark:hover:bg-red-950/70 transition-colors font-medium disabled:opacity-50"
+                    >
+                      {isSendingDeleteOtp ? t.loading : t.sendDeleteOtp}
+                    </button>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        {t.deleteOtpCode}
+                      </label>
+                      <input
+                        type="text"
+                        value={deleteOtpCode}
+                        onChange={(e) => setDeleteOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                        placeholder={t.enterCode}
+                        disabled={!deleteOtpSent}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-transparent shadow-sm disabled:opacity-60"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    {t.confirmDeleteText}
+                  </label>
+                  <input
+                    type="text"
+                    value={deleteConfirmText}
+                    onChange={(e) => setDeleteConfirmText(e.target.value)}
+                    placeholder={t.confirmDeletePlaceholder}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-transparent shadow-sm"
+                  />
+                </div>
+
+                <motion.button
+                  type="button"
+                  onClick={handleDeleteAccount}
+                  disabled={isDeletingAccount}
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-gradient-to-r from-red-600 to-rose-700 text-white font-semibold shadow-lg shadow-red-500/20 hover:from-red-700 hover:to-rose-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  {isDeletingAccount ? t.deletingAccount : t.deleteAccountButton}
+                </motion.button>
               </div>
             </motion.div>
           )}

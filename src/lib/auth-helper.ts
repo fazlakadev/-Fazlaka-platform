@@ -2,6 +2,7 @@ import { NextRequest } from "next/server"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { verifyToken } from "@/lib/jwt"
+import { findUserByIdentity } from "@/lib/user-resolver"
 
 export async function getUserIdFromRequest(request: NextRequest): Promise<string | null> {
   // Try JWT Bearer token first (for mobile app / API calls)
@@ -27,7 +28,9 @@ export async function getUserIdFromRequest(request: NextRequest): Promise<string
 
   // Fall back to NextAuth session (for browser users)
   try {
-    const session = await getServerSession(authOptions) as { user?: { id?: string } } | null
+    const session = await getServerSession(authOptions) as { user?: { id?: string; email?: string | null } } | null
+    const user = await findUserByIdentity(session?.user)
+    if (user?.id) return user.id
     if (session?.user?.id) return session.user.id
     console.error("[getUserIdFromRequest] getServerSession returned no valid id")
   } catch (e) {

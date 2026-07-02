@@ -549,7 +549,6 @@ export default function EpisodesPage() {
                     {searchResults.map((episode: Episode) => {
                       const slug = episode.slug;
                       const title = episode.localizedTitle || 'No Title';
-                      const description = episode.localizedDescription || '';
                       const episodeSeason = episode.season;
                       const thumbnailUrl = episode.localizedThumbnailUrl || "/placeholder.png";
                       
@@ -566,7 +565,6 @@ export default function EpisodesPage() {
                             </div>
                             <div className="p-4">
                               <h3 className="font-semibold text-base text-gray-800 dark:text-gray-100 line-clamp-2 mb-2">{renderHighlighted(title, searchTerm)}</h3>
-                              <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mb-3">{description}</p>
                               
                               {episodeSeason && (
                                 <div className="mb-2">
@@ -599,7 +597,6 @@ export default function EpisodesPage() {
                     {searchResults.map((episode: Episode) => {
                       const slug = episode.slug;
                       const title = episode.localizedTitle || 'No Title';
-                      const description = episode.localizedDescription || '';
                       const episodeSeason = episode.season;
                       const thumbnailUrl = episode.localizedThumbnailUrl || "/placeholder.png";
                       
@@ -611,7 +608,6 @@ export default function EpisodesPage() {
                             </div>
                             <div className="flex-1 min-w-0">
                               <h3 className="font-semibold text-base text-gray-800 dark:text-gray-100 line-clamp-2 mb-1">{renderHighlighted(title, searchTerm)}</h3>
-                              <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mb-2">{description}</p>
                               
                               {episodeSeason && (
                                 <div className="flex flex-wrap gap-2 mb-1">
@@ -687,7 +683,6 @@ export default function EpisodesPage() {
                           {episodes.map((episode: Episode) => {
                             const slug = episode.slug;
                             const title = episode.localizedTitle || 'No Title';
-                            const description = episode.localizedDescription || '';
                             const thumbnailUrl = episode.localizedThumbnailUrl || "/placeholder.png";
                             
                             return viewMode === "grid" ? (
@@ -703,7 +698,6 @@ export default function EpisodesPage() {
                                   </div>
                                   <div className="p-4">
                                     <h3 className="font-semibold text-base text-gray-800 dark:text-gray-100 line-clamp-2 mb-2">{title}</h3>
-                                    <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mb-3">{description}</p>
                                     
                                     {episode.publishedAt && (
                                       <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
@@ -728,7 +722,6 @@ export default function EpisodesPage() {
                                   </div>
                                   <div className="flex-1 min-w-0">
                                     <h3 className="font-semibold text-base text-gray-800 dark:text-gray-100 line-clamp-2 mb-1">{title}</h3>
-                                    <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mb-2">{description}</p>
                                     
                                     {episode.publishedAt && (
                                       <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">

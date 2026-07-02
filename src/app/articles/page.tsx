@@ -594,7 +594,6 @@ export default function ArticlesPageClient() {
                     {searchResults.map((article: Article) => {
                       const slug = article.slug;
                       const title = article.localizedTitle || 'No Title';
-                      const excerpt = article.localizedExcerpt || '';
                       const episode = article.episode;
                       const articleSeason = article.season;
                       const thumbnailUrl = article.localizedFeaturedImageUrl || "/placeholder.png";
@@ -612,7 +611,6 @@ export default function ArticlesPageClient() {
                             </div>
                             <div className="p-4">
                               <h3 className="font-semibold text-base text-gray-800 dark:text-gray-100 line-clamp-2 mb-2">{renderHighlighted(title, searchTerm)}</h3>
-                              <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mb-3">{excerpt}</p>
                               
                               {articleSeason && (
                                 <div className="mb-2">
@@ -653,7 +651,6 @@ export default function ArticlesPageClient() {
                     {searchResults.map((article: Article) => {
                       const slug = article.slug;
                       const title = article.localizedTitle || 'No Title';
-                      const excerpt = article.localizedExcerpt || '';
                       const episode = article.episode;
                       const articleSeason = article.season;
                       const thumbnailUrl = article.localizedFeaturedImageUrl || "/placeholder.png";
@@ -666,7 +663,6 @@ export default function ArticlesPageClient() {
                             </div>
                             <div className="flex-1 min-w-0">
                               <h3 className="font-semibold text-base text-gray-800 dark:text-gray-100 line-clamp-2 mb-1">{renderHighlighted(title, searchTerm)}</h3>
-                              <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mb-2">{excerpt}</p>
                               
                               <div className="flex flex-wrap gap-2 mb-1">
                                 {articleSeason && (
@@ -747,7 +743,6 @@ export default function ArticlesPageClient() {
                           {articles.map((article: Article) => {
                             const slug = article.slug;
                             const title = article.localizedTitle || 'No Title';
-                            const excerpt = article.localizedExcerpt || '';
                             const episode = article.episode;
                             const thumbnailUrl = article.localizedFeaturedImageUrl || "/placeholder.png";
                             
@@ -764,7 +759,6 @@ export default function ArticlesPageClient() {
                                   </div>
                                   <div className="p-4">
                                     <h3 className="font-semibold text-base text-gray-800 dark:text-gray-100 line-clamp-2 mb-2">{title}</h3>
-                                    <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mb-3">{excerpt}</p>
                                     
                                     {episode && (
                                       <div className="mb-2">
@@ -797,7 +791,6 @@ export default function ArticlesPageClient() {
                                   </div>
                                   <div className="flex-1 min-w-0">
                                     <h3 className="font-semibold text-base text-gray-800 dark:text-gray-100 line-clamp-2 mb-1">{title}</h3>
-                                    <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mb-2">{excerpt}</p>
                                     
                                     {episode && (
                                       <div className="flex flex-wrap gap-2 mb-1">

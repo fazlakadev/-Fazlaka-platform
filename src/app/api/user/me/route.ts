@@ -1,61 +1,32 @@
-// src/app/api/user/me/route.ts
-import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { NextResponse } from "next/server"
+import { getServerSession } from "next-auth/next"
+import { authOptions } from "@/lib/auth"
+import { findUserByIdentity, publicUser } from "@/lib/user-resolver"
 
-export async function GET(request: NextRequest) {
+type Session = {
+  user?: {
+    id?: string
+    email?: string | null
+  }
+}
+
+export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(authOptions) as Session | null
 
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!session?.user?.id && !session?.user?.email) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // استخدام Prisma بدلاً من MongoDB
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      include: {
-        secondaryEmails: true, // تضمين رسائل البريد الإلكتروني الثانوية
-      },
-    });
+    const user = await findUserByIdentity(session.user)
 
     if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+      return NextResponse.json({ error: "User not found" }, { status: 404 })
     }
 
-    // إزالة الحقول الحساسة
-    const { 
-      password, 
-      verificationToken, 
-      resetToken, 
-      magicToken, 
-      otpCode, 
-      emailChangeCode,
-      // إزالة الحقول الحساسة من رسائل البريد الإلكتروني الثانوية
-      secondaryEmails,
-      ...userWithoutSensitiveFields 
-    } = user;
-
-    // تصفية رسائل البريد الإلكتروني الثانوية لإزالة الحقول الحساسة
-    const filteredSecondaryEmails = secondaryEmails.map(email => ({
-      id: email.id,
-      email: email.email,
-      isVerified: email.isVerified,
-      createdAt: email.createdAt,
-    }));
-
-    // حساب isVerified بناءً على وجود verificationToken
-    const isVerified = !user.verificationToken;
-
-    // تم الإصلاح: إزالة `id: user.id` لأنه موجود بالفعل في `userWithoutSensitiveFields`
-    return NextResponse.json({
-      isVerified,
-      secondaryEmails: filteredSecondaryEmails,
-      ...userWithoutSensitiveFields,
-    });
+    return NextResponse.json(publicUser(user))
   } catch (error) {
-    console.error("Error fetching user profile:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    console.error("Error fetching user profile:", error)
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 })
   }
 }
