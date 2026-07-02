@@ -15,11 +15,12 @@ import { useLanguage } from "@/components/Language/LanguageProvider";
 import ContentRenderer from "@/components/Formats/ContentRenderer";
 import VideoPlayer from "@/components/VideoPlayer";
 import CommentsClient from "@/components/comments/CommentsClient";
+import FavoriteButton from "@/components/Favorites/FavoriteButton";
 import { pusherClient } from "@/lib/pusher";
 import { useTrackView } from "@/hooks/useTrackView";
 
 import { 
-  FaPlay, FaClock, FaComment, FaStar, FaFileAlt, FaSync, FaHeart, FaShare, FaCheck, 
+  FaPlay, FaClock, FaComment, FaStar, FaFileAlt, FaSync, FaHeart, FaShare, FaCheck, FaEye,
   FaChevronLeft, FaChevronRight, FaBookmark, FaPlus, FaTimes, FaSpinner, FaFolderOpen 
 } from "react-icons/fa";
 import toast from "react-hot-toast";
@@ -36,13 +37,13 @@ interface Episode {
   content?: string; contentEn?: string; videoUrl?: string; videoUrlEn?: string; thumbnailUrl?: string;
   thumbnailUrlEn?: string; season?: Season | null; articles?: Article[]; publishedAt?: string | Date | null;
   featured?: boolean; localizedTitle?: string; localizedDescription?: string; localizedContent?: string;
-  localizedVideoUrl?: string; localizedThumbnailUrl?: string; _count?: { comments: number };
+  localizedVideoUrl?: string; localizedThumbnailUrl?: string; views?: number; _count?: { comments: number };
 }
 
 interface Article {
   id: string; title?: string; titleEn?: string; slug: string; excerpt?: string; excerptEn?: string;
   featuredImageUrl?: string; featuredImageUrlEn?: string; localizedTitle?: string; localizedExcerpt?: string;
-  localizedFeaturedImageUrl?: string;
+  localizedFeaturedImageUrl?: string; publishedAt?: string | Date | null; createdAt?: string | Date;
 }
 
 // Fix: Defined specific type for playlist items
@@ -161,40 +162,49 @@ const SectionTitle = ({ title, icon: Icon, gradient }: { title: string; icon: Re
 
 const EpisodeCard = ({ episode, t }: { episode: Episode; t: typeof translations.ar }) => (
   <motion.div whileHover={{ y: -5 }} className="h-full">
-    <Link href={`/episodes/${episode.slug}`} className="block h-full rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 group bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
-      <div className="relative h-44 overflow-hidden">
-        <Image src={episode.localizedThumbnailUrl || "/placeholder.png"} alt={episode.localizedTitle || t.noTitle} fill className="object-cover group-hover:scale-110 transition-transform duration-500" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-          <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30">
-            <FaPlay className="text-white text-lg ml-1" />
+    <div className="block h-full rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 group bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 relative">
+      <Link href={`/episodes/${episode.slug}`} className="block">
+        <div className="relative h-44 overflow-hidden">
+          <Image src={episode.localizedThumbnailUrl || "/placeholder.png"} alt={episode.localizedTitle || t.noTitle} fill className="object-cover group-hover:scale-110 transition-transform duration-500" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+            <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30">
+              <FaPlay className="text-white text-lg ml-1" />
+            </div>
           </div>
         </div>
-      </div>
-      <div className="p-4">
-        <h3 className="font-bold text-lg mb-2 line-clamp-2 dark:text-white">{episode.localizedTitle || t.noTitle}</h3>
+        <div className="p-4">
+          <h3 className="font-bold text-lg mb-2 line-clamp-2 dark:text-white">{episode.localizedTitle || t.noTitle}</h3>
+        </div>
+      </Link>
+      <div className="px-4 pb-4 flex items-center justify-between">
         <span className="text-xs px-3 py-1 bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-300 rounded-full">{t.episode}</span>
+        <FavoriteButton contentId={episode.id} contentType="episode" showCount />
       </div>
-    </Link>
+    </div>
   </motion.div>
 );
 
-const ArticleCard = ({ article, t }: { article: Article; t: typeof translations.ar }) => (
-  <motion.div whileHover={{ scale: 1.02 }} className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-lg border border-gray-100 dark:border-gray-700">
-    <Link href={`/articles/${article.slug}`}>
-      <div className="relative h-40 overflow-hidden">
-        <Image src={article.localizedFeaturedImageUrl || "/placeholder.png"} alt={article.localizedTitle || t.noTitle} fill className="object-cover hover:scale-105 transition-transform duration-500" />
-      </div>
-      <div className="p-4">
+const ArticleCard = ({ article, t }: { article: Article; t: typeof translations.ar }) => {
+  const { language } = useLanguage();
+  const articleDate = article.publishedAt || article.createdAt;
+  const formattedDate = articleDate
+    ? new Date(articleDate).toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+    : '';
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-lg border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-shadow relative">
+      <Link href={`/articles/${article.slug}`} className="block">
         <h3 className="font-bold text-lg mb-2 dark:text-white">{article.localizedTitle || t.noTitle}</h3>
-        <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 mb-3">{article.localizedExcerpt || t.readMore}</p>
-        <div className="flex justify-between items-center">
-          <span className="text-xs px-2 py-1 bg-green-100 dark:bg-green-900/50 text-green-600 dark:text-green-300 rounded-full">{t.article}</span>
+        <div className="flex items-center justify-between">
+          {formattedDate && <span className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1"><FaClock />{formattedDate}</span>}
           <span className="text-sm text-blue-500 hover:underline">{t.readArticle}</span>
         </div>
+      </Link>
+      <div className="absolute top-2 left-2">
+        <FavoriteButton contentId={article.id} contentType="article" showCount />
       </div>
-    </Link>
-  </motion.div>
-);
+    </div>
+  );
+};
 
 const LoadingSkeleton = () => (
   <div className="animate-pulse space-y-8 p-4">
@@ -222,6 +232,7 @@ export default function EpisodeDetailPageClient() {
   const [error, setError] = useState<string | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [showToast, setShowToast] = useState(false);
+  const [viewCount, setViewCount] = useState(0);
   
   // Playlist State
   const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
@@ -235,7 +246,7 @@ export default function EpisodeDetailPageClient() {
 
   const { data: session } = useSession();
   const { isFavorite, count: favoritesCount, toggleFavorite } = useFavorites(episode?.id, "episode");
-  useTrackView(episode?.id || '', 'EPISODE', episode?.slug, episode?.localizedTitle);
+  useTrackView(episode?.id || '', 'EPISODE', episode?.slug, episode?.localizedTitle, episode?.thumbnailUrl || episode?.thumbnailUrlEn);
 
   // --- Data Fetching ---
 
@@ -293,6 +304,14 @@ export default function EpisodeDetailPageClient() {
   }, [slug, language, t.error, t.notFound]);
 
   useEffect(() => { loadData(); }, [loadData]);
+
+  useEffect(() => {
+    if (!episode?.id) return;
+    fetch(`/api/content/views?contentId=${episode.id}&contentType=episode`)
+      .then(res => res.json())
+      .then(data => { if (typeof data.count === 'number') setViewCount(data.count); })
+      .catch(() => {});
+  }, [episode?.id]);
 
   // --- Playlist Logic ---
 
@@ -483,6 +502,14 @@ export default function EpisodeDetailPageClient() {
                 <FaHeart size={20} />
               </button>
               <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400"><FaHeart className="text-red-400" size={10} /> {favoritesCount}</div>
+            </div>
+
+            {/* Views Counter */}
+            <div className="flex flex-col items-center gap-1">
+              <div className="w-14 h-14 rounded-2xl bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 flex items-center justify-center shadow-lg ring-1 ring-white/10">
+                <FaEye size={20} />
+              </div>
+              <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400"><FaEye size={10} /> {viewCount}</div>
             </div>
             
             {/* Save to Playlist Button */}

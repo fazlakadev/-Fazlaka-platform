@@ -18,6 +18,7 @@ import {
   FaComment,
   FaSync,
   FaHeart,
+  FaEye,
   FaBookmark,
   FaPlus,
   FaTimes,
@@ -59,6 +60,7 @@ interface Article {
   slug: string;
   featuredImageUrl?: string;
   featuredImageUrlEn?: string;
+  views?: number;
   episode?: { 
     id: string; 
     title: string;
@@ -256,7 +258,8 @@ function ActionButtons({
   isFavorite,
   onToggleFavorite,
   favoritesCount,
-  onSaveClick
+  onSaveClick,
+  views
 }: { 
   contentId: string; 
   contentType: "episode" | "article"; 
@@ -266,6 +269,7 @@ function ActionButtons({
   onToggleFavorite: () => void;
   favoritesCount: number;
   onSaveClick: () => void;
+  views?: number;
 }) {
   const { language } = useLanguage();
   const t = translations[language];
@@ -323,6 +327,18 @@ function ActionButtons({
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t.saveToPlaylist}</span>
         </div>
 
+        {/* Views Counter */}
+        <div className="flex flex-col items-center gap-3">
+          <div className="group relative flex items-center justify-center w-12 h-12 md:w-14 md:h-14 rounded-full transition-all duration-500 hover:scale-110">
+            <div className="absolute inset-0 bg-gradient-to-br from-gray-500 to-gray-600 transition-all duration-500 rounded-full"></div>
+            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-full"></div>
+            <div className="relative z-10 flex items-center justify-center">
+              <FaEye className="w-5 h-5 md:w-6 md:h-6 text-white" />
+            </div>
+          </div>
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{views ?? 0} {language === 'ar' ? 'مشاهدة' : 'Views'}</span>
+        </div>
+
         {/* Share Button */}
         <div className="flex flex-col items-center gap-3">
           <button onClick={handleShare} className="group relative flex items-center justify-center w-12 h-12 md:w-14 md:h-14 rounded-full transition-all duration-500 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-500 overflow-hidden">
@@ -373,6 +389,7 @@ export default function ArticleDetailPageClient() {
   const [isFavorite, setIsFavorite] = useState(false);
   const [favoritesCount, setFavoritesCount] = useState(0);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [viewCount, setViewCount] = useState(0);
   
   // Playlist State
   const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
@@ -542,11 +559,18 @@ export default function ArticleDetailPageClient() {
     };
   }, [autoRefresh]);
   
-  useTrackView(article?.id || '', 'ARTICLE', article?.slug, article?.title);
+  useTrackView(article?.id || '', 'ARTICLE', article?.slug, article?.title, article?.featuredImageUrl || article?.featuredImageUrlEn);
   useEffect(() => { loadData(); }, [loadData]);
   useEffect(() => { setupEventSource(); return () => { if (eventSourceRef.current) eventSourceRef.current.close(); if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current); }; }, [setupEventSource]);
   useEffect(() => { checkFavorite(); }, [checkFavorite]);
   useEffect(() => { fetchFavoritesCount(); }, [fetchFavoritesCount]);
+  useEffect(() => {
+    if (!article?.id) return;
+    fetch(`/api/content/views?contentId=${article.id}&contentType=article`)
+      .then(res => res.json())
+      .then(data => { if (typeof data.count === 'number') setViewCount(data.count); })
+      .catch(() => {});
+  }, [article?.id]);
   
   if (loading && !isUpdating) return ( <div className="container mx-auto py-8 text-center"><div className="animate-pulse bg-gray-300 dark:bg-gray-700 h-72 w-full rounded-xl mb-4" /><div className="animate-pulse bg-gray-300 dark:bg-gray-700 h-6 w-1/2 mx-auto rounded mb-2" /></div> );
   if (error) return ( <div className="min-h-screen flex items-center justify-center"><div className="max-w-md mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-8 text-center"><h1 className="text-2xl font-bold mb-2">{t.notFound}</h1><p className="text-gray-600 mb-6">{t.notFoundMessage}</p><Link href="/articles" className="px-6 py-3 bg-blue-600 text-white rounded-lg">{t.viewAllArticles}</Link></div></div> );
@@ -596,7 +620,7 @@ export default function ArticleDetailPageClient() {
           
           {/* Interactions */}
           <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="bg-white dark:bg-gray-800 rounded-2xl md:rounded-3xl shadow-xl p-4 md:p-6 mb-6 md:mb-8 border border-gray-100 dark:border-gray-700 overflow-hidden">
-            <ActionButtons contentId={article.id} contentType="article" title={title} onCommentClick={scrollToComments} isFavorite={isFavorite} onToggleFavorite={handleToggleFavorite} favoritesCount={favoritesCount} onSaveClick={handleOpenPlaylistModal} />
+            <ActionButtons contentId={article.id} contentType="article" title={title} onCommentClick={scrollToComments} isFavorite={isFavorite} onToggleFavorite={handleToggleFavorite} favoritesCount={favoritesCount} onSaveClick={handleOpenPlaylistModal} views={viewCount} />
           </motion.section>
           
           {/* Related Content */}

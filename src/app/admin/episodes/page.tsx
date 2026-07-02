@@ -14,7 +14,8 @@ import {
   Upload,
   ChevronDown,
   X,
-  Play
+  Play,
+  BarChart3
 } from 'lucide-react';
 import Select, { StylesConfig } from 'react-select';
 import { format } from 'date-fns';
@@ -47,6 +48,7 @@ interface Episode {
   publishedAt?: string;
   createdAt: string;
   updatedAt: string;
+  views?: number;
 }
 
 interface Season {
@@ -379,6 +381,7 @@ export default function EpisodesPage() {
                 <th scope="col" className="px-6 py-3">Slug</th>
                 <th scope="col" className="px-6 py-3">Season</th>
                 <th scope="col" className="px-6 py-3">Articles</th>
+                <th scope="col" className="px-6 py-3">Views</th>
                 <th scope="col" className="px-6 py-3">Published</th>
                 <th scope="col" className="px-6 py-3">Actions</th>
               </tr>
@@ -410,19 +413,25 @@ export default function EpisodesPage() {
                         </span>
                       ) : <span className="text-gray-400">No articles</span>}
                     </td>
+                    <td className="px-6 py-4">
+                      <span className="px-2 py-1 text-xs bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-100 rounded">
+                        {episode.views || 0}
+                      </span>
+                    </td>
                     <td className="px-6 py-4">{episode.publishedAt ? formatDate(episode.publishedAt) : 'No'}</td>
                     <td className="px-6 py-4">
                       <div className="flex space-x-2">
                         {episode.videoUrl && <a href={language === 'ar' ? episode.videoUrl : episode.videoUrlEn || ''} target="_blank" rel="noopener noreferrer" className="font-medium text-purple-600 dark:text-purple-500 hover:underline flex items-center gap-1"><Play size={16} /> Play</a>}
                         <Link href={`/episodes/${episode.slug}`} className="font-medium text-green-600 dark:text-green-500 hover:underline flex items-center gap-1" target="_blank"><Eye size={16} /> Preview</Link>
                         <Link href={`/admin/episodes/${episode.slug}/edit`} className="font-medium text-blue-600 dark:text-blue-500 hover:underline flex items-center gap-1"><Edit size={16} /> Edit</Link>
+                        <Link href={`/admin/episodes/${episode.slug}/analytics`} className="font-medium text-purple-600 dark:text-purple-500 hover:underline flex items-center gap-1"><BarChart3 size={16} /> Analytics</Link>
                         <button onClick={() => handleDelete(episode.id)} className="font-medium text-red-600 dark:text-red-500 hover:underline flex items-center gap-1"><Trash2 size={16} /> Delete</button>
                       </div>
                     </td>
                   </tr>
                 ))
               ) : (
-                <tr className="bg-white border-b dark:bg-gray-800 dark:border-gray-700"><td colSpan={6} className="px-6 py-4 text-center">No episodes found</td></tr>
+                <tr className="bg-white border-b dark:bg-gray-800 dark:border-gray-700"><td colSpan={7} className="px-6 py-4 text-center">No episodes found</td></tr>
               )}
             </tbody>
           </table>

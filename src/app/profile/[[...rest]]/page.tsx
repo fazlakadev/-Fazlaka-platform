@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
-import { User, Mail, Calendar, Settings, Lock, MailPlus, MessageCircle, Users, UserPlus, Check, X, Copy, UserCheck, Link2 } from "lucide-react"
+import { User, Mail, Calendar, Settings, Lock, MailPlus, MessageCircle, Users, UserPlus, Check, X, Copy, UserCheck, Link2, History, Trash2, Play, FileText, Eye } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { useLanguage } from "@/components/Language/LanguageProvider"
@@ -52,6 +52,13 @@ const translations = {
     newsletterNotSubscribed: "غير مشترك",
     unsubscribe: "إلغاء الاشتراك",
     newsletterStatus: "حالة الاشتراك",
+    viewHistory: "سجل المشاهدات",
+    noViewHistory: "لا يوجد سجل مشاهدات",
+    viewAllHistory: "عرض الكل",
+    deleteView: "حذف",
+    episode: "حلقة",
+    article: "مقال",
+    viewed: "تمت المشاهدة",
     formatDate: (date: Date) => {
       const months = [
         "يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو",
@@ -103,6 +110,13 @@ const translations = {
     newsletterNotSubscribed: "Not subscribed",
     unsubscribe: "Unsubscribe",
     newsletterStatus: "Subscription Status",
+    viewHistory: "View History",
+    noViewHistory: "No view history",
+    viewAllHistory: "View All",
+    deleteView: "Delete",
+    episode: "Episode",
+    article: "Article",
+    viewed: "Viewed",
     formatDate: (date: Date) => {
       return new Intl.DateTimeFormat('en-US', {
         year: 'numeric',
@@ -140,6 +154,9 @@ export default function ProfilePage() {
   // Friends State
   const [pendingRequests, setPendingRequests] = useState<Friendship[]>([])
   const [friends, setFriends] = useState<Friendship[]>([])
+  // View History State
+  const [viewHistory, setViewHistory] = useState<Array<{id: string; contentId: string; contentType: string; slug: string | null; title: string | null; createdAt: string}>>([])
+  const [historyLoading, setHistoryLoading] = useState(false)
 
   const [copiedCode, setCopiedCode] = useState(false)
   const [copiedLink, setCopiedLink] = useState(false) // New: for profile link
@@ -161,6 +178,17 @@ export default function ProfilePage() {
       console.error("Error fetching friends data")
     }
   }, [session])
+
+  const fetchViewHistory = useCallback(async () => {
+    setHistoryLoading(true);
+    try {
+      const res = await fetch('/api/user/view-history');
+      if (res.ok) {
+        const json = await res.json();
+        setViewHistory(json.data || []);
+      }
+    } catch {} finally { setHistoryLoading(false); }
+  }, []);
 
   useEffect(() => {
     if (status === "loading") return
@@ -200,7 +228,8 @@ export default function ProfilePage() {
     fetchUserData()
     fetchFriendsData()
     fetchNLStatus()
-  }, [session, status, router, fetchFriendsData])
+    fetchViewHistory()
+  }, [session, status, router, fetchFriendsData, fetchViewHistory])
 
   // Copy User Code Function
   const handleCopyCode = () => {
@@ -684,6 +713,65 @@ export default function ProfilePage() {
                 )}
               </GlassCard>
           </div>
+        )}
+
+        {/* View History Section */}
+        {!isBanned && (
+          <GlassCard
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.5 }}
+            className="bg-white/10 backdrop-blur-lg rounded-[2rem] p-8 shadow-xl border border-white/20 mt-8"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-2">
+                <div className="w-1 h-6 rounded-full bg-purple-500"></div>
+                <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                  <History className="w-5 h-5 text-purple-400" />
+                  {t.viewHistory} ({viewHistory.length})
+                </h3>
+              </div>
+              {viewHistory.length > 0 && (
+                <Link href="/view-history" className="flex items-center gap-2 px-4 py-1.5 bg-purple-600/20 hover:bg-purple-600/40 text-purple-400 rounded-full text-xs font-semibold transition-all">
+                  <Eye className="w-3 h-3" /> {t.viewAllHistory}
+                </Link>
+              )}
+            </div>
+
+            {historyLoading ? (
+              <div className="flex justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-500"></div>
+              </div>
+            ) : viewHistory.length === 0 ? (
+              <p className="text-gray-500 text-center py-4">{t.noViewHistory}</p>
+            ) : (
+              <div className="space-y-2 max-h-80 overflow-y-auto">
+                {viewHistory.slice(0, 5).map((item) => (
+                  <div key={item.id} className="flex items-center justify-between p-3 bg-white/5 rounded-xl hover:bg-white/10 transition-colors">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="p-2 rounded-lg bg-white/10 shrink-0">
+                        {item.contentType === 'EPISODE' ? <Play className="w-4 h-4 text-blue-400" /> : <FileText className="w-4 h-4 text-green-400" />}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-medium text-white text-sm truncate">{item.title || 'Untitled'}</p>
+                        <div className="flex items-center gap-2 text-xs text-gray-500">
+                          <span className={`px-1.5 py-0.5 rounded ${item.contentType === 'EPISODE' ? 'bg-blue-600/20 text-blue-400' : 'bg-green-600/20 text-green-400'}`}>
+                            {item.contentType === 'EPISODE' ? t.episode : t.article}
+                          </span>
+                          <span>{t.viewed} {new Date(item.createdAt).toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-US')}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <a href={`/${item.contentType === 'EPISODE' ? 'episodes' : 'articles'}/${item.slug}`} target="_blank" className="p-2 bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-400 rounded-lg transition-colors">
+                        <Eye className="w-4 h-4" />
+                      </a>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </GlassCard>
         )}
       </div>
       <style jsx global>{`

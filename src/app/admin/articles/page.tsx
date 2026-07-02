@@ -13,7 +13,8 @@ import {
   Download, 
   Upload,
   ChevronDown,
-  X
+  X,
+  BarChart3
 } from 'lucide-react';
 import Select from 'react-select';
 import type { SingleValue } from 'react-select';
@@ -59,6 +60,7 @@ interface Article {
   publishedAt?: string;
   createdAt: string;
   updatedAt: string;
+  views?: number;
 }
 
 interface Season {
@@ -489,6 +491,7 @@ export default function ArticlesPage() {
                 <th scope="col" className="px-6 py-3">Title</th>
                 <th scope="col" className="px-6 py-3">Slug</th>
                 <th scope="col" className="px-6 py-3">Season/Episode</th>
+                <th scope="col" className="px-6 py-3">Views</th>
                 <th scope="col" className="px-6 py-3">Published</th>
                 <th scope="col" className="px-6 py-3">Actions</th>
               </tr>
@@ -526,11 +529,19 @@ export default function ArticlesPage() {
                         {!article.season && !article.episode && <span className="text-gray-400">-</span>}
                       </div>
                     </td>
+                    <td className="px-6 py-4">
+                      <span className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
+                        <Eye size={14} /> {article.views || 0}
+                      </span>
+                    </td>
                     <td className="px-6 py-4">{article.publishedAt ? formatDate(article.publishedAt) : 'No'}</td>
                     <td className="px-6 py-4">
                       <div className="flex space-x-2">
                         <Link href={`/articles/${article.slug}`} className="font-medium text-green-600 dark:text-green-500 hover:underline flex items-center gap-1" target="_blank">
                           <Eye size={16} /> Preview
+                        </Link>
+                        <Link href={`/admin/articles/${article.slug}/analytics`} className="font-medium text-purple-600 dark:text-purple-500 hover:underline flex items-center gap-1">
+                          <BarChart3 size={16} /> Analytics
                         </Link>
                         <Link href={`/admin/articles/${article.slug}/edit`} className="font-medium text-blue-600 dark:text-blue-500 hover:underline flex items-center gap-1">
                           <Edit size={16} /> Edit

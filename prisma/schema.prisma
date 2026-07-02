@@ -186,7 +186,9 @@ model User {
   passwordResetAttempts   PasswordResetAttempt[]
   emailChangeHistories    EmailChangeHistory[]
   playlists               Playlist[]
-  
+  contentViews            ContentView[]
+  viewHistory             ViewHistory[]
+
   // --- علاقات الصداقة والمحادثة ---
   sentFriendRequests     Friendship[]      @relation("FriendRequestSender")
   receivedFriendRequests Friendship[]      @relation("FriendRequestReceiver")
@@ -660,6 +662,7 @@ model Episode {
   playlists       Playlist[] @relation("EpisodeToPlaylist")
   favorites       Favorite[]
   comments        Comment[]
+  views           Int        @default(0)
 
   @@index([slug])
   @@index([seasonId])
@@ -694,6 +697,7 @@ model Article {
   playlists         Playlist[] @relation("ArticleToPlaylist")
   favorites         Favorite[]
   comments          Comment[]
+  views             Int        @default(0)
 
   @@index([slug])
   @@index([seasonId])
@@ -1013,22 +1017,44 @@ model NewsletterUnsubscribeToken {
   @@map("newsletter_unsubscribe_tokens")
 }
 
-// --- Content View Model ---
+// --- Content View Model (aggregated views) ---
 
 model ContentView {
-  id        String   @id @default(cuid())
-  userId    String?  @map("user_id")
-  contentId String   @map("content_id")
-  contentType String @map("content_type") // "EPISODE" or "ARTICLE"
-  slug      String?
-  title     String?
-  count     Int      @default(1)
-  createdAt DateTime @default(now()) @map("created_at")
+  id          String   @id @default(cuid())
+  userId      String?  @map("user_id")
+  contentId   String   @map("content_id")
+  contentType String   @map("content_type") // "EPISODE" or "ARTICLE"
+  slug        String?
+  title       String?
+  count       Int      @default(1)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([contentId, contentType, userId])
   @@index([contentType, count(sort: Desc)])
   @@index([createdAt(sort: Desc)])
   @@map("content_views")
+}
+
+// --- View History Model (individual view records) ---
+
+model ViewHistory {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  contentId   String   @map("content_id")
+  contentType String   @map("content_type") // "EPISODE" or "ARTICLE"
+  slug        String?
+  title       String?
+  thumbnailUrl String?  @map("thumbnail_url")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, contentId, contentType])
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([contentType, contentId])
+  @@map("view_history")
 }
 
 // --- Automation Sequence Models ---

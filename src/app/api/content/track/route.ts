@@ -5,7 +5,7 @@ import { authOptions } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   try {
-    const { contentId, contentType, slug, title } = await request.json();
+    const { contentId, contentType, slug, title, thumbnailUrl } = await request.json();
     if (!contentId || !contentType) {
       return NextResponse.json({ success: false, error: 'MissingRequired' }, { status: 400 });
     }
@@ -13,9 +13,14 @@ export async function POST(request: NextRequest) {
     const session = await getServerSession(authOptions);
     const userId = session?.user?.id || null;
 
-    const existing = await prisma.contentView.findUnique({
-      where: { contentId_contentType_userId: { contentId, contentType, userId: userId || '' } },
-    });
+    // 1. Increment ContentView (aggregated)
+    const existing = userId
+      ? await prisma.contentView.findUnique({
+          where: { contentId_contentType_userId: { contentId, contentType, userId } },
+        })
+      : await prisma.contentView.findFirst({
+          where: { contentId, contentType, userId: null },
+        });
 
     if (existing) {
       await prisma.contentView.update({
@@ -25,6 +30,22 @@ export async function POST(request: NextRequest) {
     } else {
       await prisma.contentView.create({
         data: { contentId, contentType, slug, title, userId, count: 1 },
+      });
+    }
+
+    // 2. Increment views on the content model and create ViewHistory for logged-in users
+    if (userId) {
+      const contentTypeUpper = contentType.toUpperCase();
+      if (contentTypeUpper === 'EPISODE') {
+        await prisma.episode.update({ where: { id: contentId }, data: { views: { increment: 1 } } });
+      } else if (contentTypeUpper === 'ARTICLE') {
+        await prisma.article.update({ where: { id: contentId }, data: { views: { increment: 1 } } });
+      }
+
+      await prisma.viewHistory.upsert({
+        where: { userId_contentId_contentType: { userId, contentId, contentType: contentTypeUpper } },
+        create: { userId, contentId, contentType: contentTypeUpper, slug, title, thumbnailUrl },
+        update: { slug, title, thumbnailUrl, createdAt: new Date() },
       });
     }
 

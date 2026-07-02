@@ -28,6 +28,7 @@ const translations = {
     signUp: "إنشاء حساب",
     manageAccount: " الملف الشخصي",
     favorites: "مفضلاتي",
+    viewHistory: "سجل المشاهدات",
     signOut: "تسجيل الخروج",
     terms: "شروط وأحكام",
     privacy: "سياسة الخصوصية",
@@ -78,6 +79,7 @@ const translations = {
     signUp: "Sign Up",
     manageAccount: " profile",
     favorites: "My Favorites",
+    viewHistory: "View History",
     signOut: "Sign Out",
     terms: "Terms & Conditions",
     privacy: "Privacy Policy",
@@ -1468,6 +1470,20 @@ export default function Navbar() {
                             </svg>
                             <span className="text-sm font-medium">{t.favorites}</span>
                           </Link>
+                          <Link
+                            href="/view-history"
+                            onClick={() => setProfileOpen(false)}
+                            className={`flex items-center gap-2 px-4 py-3 rounded-lg transition-all duration-300 ${
+                              isActive("/view-history")
+                                ? "bg-indigo-100/50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400" 
+                                : "hover:bg-gray-50/30 dark:hover:bg-gray-700/30"
+                            }`}
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${isActive("/view-history") ? "text-indigo-600 dark:text-indigo-400" : "text-purple-500"}`} viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                            </svg>
+                            <span className="text-sm font-medium">{t.viewHistory}</span>
+                          </Link>
                           <div className="border-t border-gray-200/30 dark:border-gray-700/30 my-1"></div>
                           <button
                             onClick={handleSignOut}
@@ -1862,11 +1878,39 @@ export default function Navbar() {
                           </div>
                         </Link>
                       </motion.div>
+
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.38 }}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        <Link
+                          href="/view-history"
+                          onClick={() => setMobileMenuOpen(false)}
+                          className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group ${
+                            isActive("/view-history")
+                              ? "bg-indigo-100/50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400" 
+                              : "hover:bg-gray-50/30 dark:hover:bg-gray-800/30"
+                          }`}
+                        >
+                          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-400/60 to-purple-600/60 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-md group-hover:shadow-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                            </svg>
+                          </div>
+                          <div className="flex-1">
+                            <span className={`text-lg font-medium ${isActive("/view-history") ? "text-indigo-600 dark:text-indigo-400" : "text-gray-900 dark:text-white"}`}>{t.viewHistory}</span>
+                            <div className={`h-0.5 w-0 bg-gradient-to-r ${isActive("/view-history") ? "from-indigo-400 to-indigo-600" : "from-purple-400/50 to-purple-600/50"} group-hover:w-full transition-all duration-300`}></div>
+                          </div>
+                        </Link>
+                      </motion.div>
                       
                       <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.4 }}
+                        transition={{ delay: 0.45 }}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                       >

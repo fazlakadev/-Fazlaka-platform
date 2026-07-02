@@ -1,15 +1,15 @@
 import { useEffect } from 'react';
 
-export function useTrackView(contentId: string, contentType: string, slug?: string, title?: string) {
+export function useTrackView(contentId: string, contentType: string, slug?: string, title?: string, thumbnailUrl?: string) {
   useEffect(() => {
     if (!contentId) return;
     const controller = new AbortController();
     fetch('/api/content/track', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contentId, contentType, slug, title }),
+      body: JSON.stringify({ contentId, contentType, slug, title, thumbnailUrl }),
       signal: controller.signal,
     }).catch(() => {});
     return () => controller.abort();
-  }, [contentId, contentType, slug, title]);
+  }, [contentId, contentType, slug, title, thumbnailUrl]);
 }

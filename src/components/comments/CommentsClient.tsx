@@ -24,7 +24,6 @@ export default function CommentsClient({ contentId, type }: CommentsClientProps)
   const [comments, setComments] = useState<Comment[]>([]);
   const [content, setContent] = useState("");
   const [loading, setLoading] = useState(false);
-  const [isConnected, setIsConnected] = useState(false);
 
   // جلب التعليقات من السيرفر
   const fetchComments = useCallback(async () => {
@@ -48,12 +47,10 @@ export default function CommentsClient({ contentId, type }: CommentsClientProps)
 
     channel.bind('pusher:subscription_succeeded', () => {
       console.log('✅ Pusher Connected!');
-      setIsConnected(true);
     });
 
     channel.bind('pusher:subscription_error', (status: unknown) => {
       console.error('❌ Pusher Connection Failed:', status);
-      setIsConnected(false);
     });
 
     channel.bind('new-comment', (data: unknown) => {
@@ -201,10 +198,7 @@ export default function CommentsClient({ contentId, type }: CommentsClientProps)
                 <p className="text-xs text-gray-500">{comments.length} مشاركة</p>
             </div>
         </div>
-        <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-xs">
-            <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-red-400'}`}></span>
-            <span className="text-gray-500">{isConnected ? 'مباشر' : 'محلي'}</span>
-        </div>
+
       </div>
 
       {/* Form */}
