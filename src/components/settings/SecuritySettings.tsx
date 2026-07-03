@@ -882,7 +882,7 @@ export default function SecuritySettings() {
 
     try {
       const response = await fetch("/api/user/delete-account", {
-        method: "DELETE",
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
