@@ -1,27 +1,14 @@
 // src/app/api/user/add-secondary-email/route.ts
 import { NextRequest, NextResponse } from "next/server"
-import { getServerSession } from "next-auth/next"
-import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { getUserIdFromRequest } from "@/lib/auth-helper"
 import nodemailer from "nodemailer"
-
-// تعريف واجهة للجلسة
-interface Session {
-  user?: {
-    id?: string;
-    email?: string;
-    name?: string;
-    image?: string;
-  };
-}
 
 export async function POST(request: NextRequest) {
   try {
-    // استخدام تعليق ESLint وتحويل مزدوج لتجنب مشاكل TypeScript
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const session = await getServerSession(authOptions as unknown as any) as Session
-    
-    if (!session?.user?.id) {
+    const userId = await getUserIdFromRequest(request)
+
+    if (!userId) {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 401 }
@@ -39,7 +26,7 @@ export async function POST(request: NextRequest) {
     
     // التحقق من وجود المستخدم باستخدام Prisma
     const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: userId },
       include: { secondaryEmails: true }
     });
 
@@ -189,7 +176,7 @@ export async function POST(request: NextRequest) {
         isVerified: false,
         verificationCode,
         verificationCodeExpiry,
-        userId: session.user.id
+        userId: userId
       }
     });
 

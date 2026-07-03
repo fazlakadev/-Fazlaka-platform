@@ -1,26 +1,19 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getServerSession } from "next-auth/next"
 import bcrypt from "bcryptjs"
-import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { findUserByIdentity, publicUser } from "@/lib/user-resolver"
+import { publicUser } from "@/lib/user-resolver"
+import { getUserIdFromRequest } from "@/lib/auth-helper"
 
-type Session = {
-  user?: {
-    id?: string
-    email?: string | null
-  }
-}
-
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions) as Session | null
-
-    if (!session?.user?.id && !session?.user?.email) {
+    const userId = await getUserIdFromRequest(request)
+    if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const user = await findUserByIdentity(session.user)
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    })
 
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 })
@@ -38,13 +31,15 @@ export async function GET() {
 
 export async function PUT(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions) as Session | null
-
-    if (!session?.user?.id && !session?.user?.email) {
+    const userId = await getUserIdFromRequest(request)
+    if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const user = await findUserByIdentity(session.user)
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true },
+    })
 
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 })

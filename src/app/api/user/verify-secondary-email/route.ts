@@ -1,26 +1,13 @@
 // src/app/api/user/verify-secondary-email/route.ts
 import { NextRequest, NextResponse } from "next/server"
-import { getServerSession } from "next-auth/next"
-import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-
-// تعريف واجهة للجلسة
-interface Session {
-  user?: {
-    id?: string;
-    email?: string;
-    name?: string;
-    image?: string;
-  };
-}
+import { getUserIdFromRequest } from "@/lib/auth-helper"
 
 export async function POST(request: NextRequest) {
   try {
-    // استخدام تعليق ESLint وتحويل مزدوج لتجنب مشاكل TypeScript
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const session = await getServerSession(authOptions as unknown as any) as Session
-    
-    if (!session?.user?.id) {
+    const userId = await getUserIdFromRequest(request)
+
+    if (!userId) {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 401 }
@@ -41,7 +28,7 @@ export async function POST(request: NextRequest) {
     const secondaryEmail = await prisma.secondaryEmail.findFirst({
       where: {
         email: email,
-        userId: session.user.id, // التأكد من أن البريد ينتمي للمستخدم الحالي
+        userId: userId, // التأكد من أن البريد ينتمي للمستخدم الحالي
       },
     });
 

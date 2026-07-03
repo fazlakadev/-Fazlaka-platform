@@ -1,34 +1,18 @@
 // src/app/api/user/make-primary/route.ts
 import { NextRequest, NextResponse } from "next/server"
-import { getServerSession } from "next-auth/next"
-import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-
-// تعريف واجهة للجلسة
-interface Session {
-  user?: {
-    id?: string;
-    email?: string;
-    name?: string;
-    image?: string;
-  };
-}
+import { getUserIdFromRequest } from "@/lib/auth-helper"
 
 export async function POST(request: NextRequest) {
   try {
-    // استخدام تعليق ESLint وتحويل مزدوج لتجنب مشاكل TypeScript
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const session = await getServerSession(authOptions as unknown as any) as Session
-    
-    if (!session?.user?.id) {
+    const userId = await getUserIdFromRequest(request)
+
+    if (!userId) {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 401 }
       )
     }
-
-    // تم الإصلاح: تخزين المعرف في متغير ثابت لضمان توفره داخل الـ Transaction
-    const userId = session.user.id;
 
     const { email } = await request.json()
 
