@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
+import { getUserIdFromRequest } from '@/lib/auth-helper';
 import { 
   fetchUserNotifications, 
   fetchUnreadNotificationsCount,
@@ -9,8 +8,8 @@ import {
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    const userId = await getUserIdFromRequest(request);
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -19,8 +18,8 @@ export async function GET(request: NextRequest) {
     const skip = parseInt(searchParams.get('skip') || '0');
     const language = searchParams.get('language') || 'ar';
     
-    const notifications = await fetchUserNotifications(session.user.id, language, limit, skip);
-    const unreadCount = await fetchUnreadNotificationsCount(session.user.id);
+    const notifications = await fetchUserNotifications(userId, language, limit, skip);
+    const unreadCount = await fetchUnreadNotificationsCount(userId);
     
     return NextResponse.json({ success: true, notifications, unreadCount });
   } catch (error) {
@@ -31,8 +30,8 @@ export async function GET(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    const userId = await getUserIdFromRequest(request);
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -40,7 +39,7 @@ export async function PATCH(request: NextRequest) {
     const { markAllAsRead } = body;
     
     if (markAllAsRead) {
-      const success = await markAllNotificationsAsRead(session.user.id);
+      const success = await markAllNotificationsAsRead(userId);
       if (success) {
         return NextResponse.json({ success: true, message: 'All notifications marked as read' });
       }
