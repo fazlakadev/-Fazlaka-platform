@@ -1,29 +1,19 @@
 "use client";
 
 import Image from 'next/image';
-import React, { useState, useEffect, useRef, ReactNode } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { Swiper, SwiperSlide } from 'swiper/react';
-import { Autoplay, Pagination } from 'swiper/modules';
-import "swiper/css";
-import "swiper/css/pagination";
+import { motion, useScroll, useSpring } from 'framer-motion';
 import { useLanguage } from '@/components/Language/LanguageProvider';
 import { useSession } from 'next-auth/react';
 import FavoriteButton from '@/components/Favorites/FavoriteButton';
+import HeroSection from '@/components/home/HeroSection';
+import StatsSection from '@/components/home/StatsSection';
+import MarqueeSection from '@/components/home/MarqueeSection';
+import FeaturedSection from '@/components/home/FeaturedSection';
+import TopicsMap, { type TopicItem } from '@/components/home/TopicsMap';
 
 // --- Interfaces ---
-interface HeroSlider { 
-  id: string; 
-  mediaType: 'IMAGE' | 'VIDEO'; 
-  image?: string; 
-  imageEn?: string; 
-  videoUrl?: string; 
-  title?: string; 
-  titleEn?: string; 
-  linkUrl?: string; 
-  linkText?: string; 
-  linkTextEn?: string; 
-}
 interface Episode { id: string; slug: string; localizedTitle?: string; localizedThumbnailUrl?: string; publishedAt?: string | Date | null; }
 interface Article { id: string; slug: string; localizedTitle?: string; localizedExcerpt?: string; localizedFeaturedImageUrl?: string; publishedAt?: string | Date | null; }
 interface FAQ { id: string; localizedQuestion?: string; localizedAnswer?: string; }
@@ -35,6 +25,7 @@ const translations = {
     slogan: "نُبسّط المعرفة.. لنصنع عقولاً واعية.",
     subSlogan: "منصة علمية عربية تقدم المحتوى العميق بأسلوب مبسط وجذاب.",
     explore: "استكشف المحتوى",
+    learnMore: "اعرف المزيد",
     latestEpisodes: "أحدث الحلقات",
     latestArticles: "أحدث المقالات",
     faqs: "الأسئلة الشائعة",
@@ -46,6 +37,46 @@ const translations = {
     why_quality_desc: "مصادر علمية دقيقة ومراجع واضحة لكل معلومة.",
     why_community: "مجتمع واعي",
     why_community_desc: "نقاشات هادفة وبيئة تعليمية محفزة.",
+    // إحصائيات
+    stats_episodes: "حلقة",
+    stats_articles: "مقال",
+    stats_members: "عضو",
+    stats_views: "مشاهدة",
+    // Marquee
+    marquee: [
+      { text: "علوم", icon: "🔬" },
+      { text: "تكنولوجيا", icon: "💡" },
+      { text: "فكر", icon: "🧠" },
+      { text: "تاريخ", icon: "📜" },
+      { text: "فلسفة", icon: "⚖️" },
+      { text: "مجتمع", icon: "🌍" },
+      { text: "فضاء", icon: "🚀" },
+      { text: "طبيعة", icon: "🌿" },
+    ],
+    // خريطة المواضيع
+    topics_title: "اكتشف عوالماً جديدة",
+    topics_subtitle: "انتقل بين مجالات المعرفة المختلفة وابدأ رحلتك في أي ميدان يثير فضولك.",
+    topics: [
+      { title: "العلوم", desc: "من الكم إلى الكون، أبسط أعقد الظواهر.", icon: "🔬", href: "/search?q=علوم", gradient: "from-cyan-500 to-blue-600" },
+      { title: "التكنولوجيا", desc: "الذكاء الاصطناعي، البرمجة ومستقبل التقنية.", icon: "💡", href: "/search?q=تكنولوجيا", gradient: "from-indigo-500 to-violet-600" },
+      { title: "الفكر والفلسفة", desc: "أسئلة وجودية ونقاشات تثري العقل.", icon: "🧠", href: "/search?q=فلسفة", gradient: "from-purple-500 to-fuchsia-600" },
+      { title: "التاريخ", desc: "محطات وحضارات شكّلت عالمنا اليوم.", icon: "📜", href: "/search?q=تاريخ", gradient: "from-amber-500 to-orange-600" },
+      { title: "الفضاء", desc: "كواكب، نجوم وأسرار الكون البعيد.", icon: "🚀", href: "/search?q=فضاء", gradient: "from-sky-500 to-cyan-600" },
+      { title: "المجتمع", desc: "قضايا إنسانية وعلاقات تشكّل حياتنا.", icon: "🌍", href: "/search?q=مجتمع", gradient: "from-emerald-500 to-teal-600" },
+    ] as TopicItem[],
+    // Featured
+    featured_title: "الأكثر مشاهدة",
+    featured_subtitle: "حلقة أثارت اهتمام جمهورنا",
+    featured_desc: "ابدأ بأكثر المحتوى تأثيراً على المنصة.",
+    play: "شاهد الآن",
+    views: "مشاهدة",
+    testimonials_title: "ماذا يقول جمهورنا؟",
+    testimonials: [
+      { name: "أحمد المصري", role: "طالب طب", text: "فذلكة غيّرت طريقة فهمي للعلم. محتوى عميق بس مبسّط جداً، صار جزء من يومي." },
+      { name: "سارة عبد الله", role: "مهندسة برمجيات", text: "أفضل منصة عربية للمحتوى العلمي الجاد. الجودة والتنظيم مذهلان فعلاً." },
+      { name: "خالد العتيبي", role: "أستاذ فيزياء", text: "أرشح حلقات فذلكة لطلابي دائماً. تشرح المفاهيم الصعبة بأسلوب آسر." },
+    ],
+    // النشرة
     newsletter_title: "ابقَ على اطلاع",
     newsletter_desc: "اشترك في نشرتنا البريدية ليصلك كل جديد فوراً.",
     newsletter_placeholder: "بريدك الإلكتروني",
@@ -57,6 +88,7 @@ const translations = {
     slogan: "Simplifying Knowledge.. Creating Conscious Minds.",
     subSlogan: "An Arabic scientific platform delivering deep content in a simplified and engaging way.",
     explore: "Explore Content",
+    learnMore: "Learn More",
     latestEpisodes: "Latest Episodes",
     latestArticles: "Latest Articles",
     faqs: "FAQs",
@@ -68,16 +100,50 @@ const translations = {
     why_quality_desc: "Accurate scientific sources and clear references.",
     why_community: "Conscious Community",
     why_community_desc: "Meaningful discussions and a stimulating environment.",
+    stats_episodes: "Episodes",
+    stats_articles: "Articles",
+    stats_members: "Members",
+    stats_views: "Views",
+    marquee: [
+      { text: "Science", icon: "🔬" },
+      { text: "Tech", icon: "💡" },
+      { text: "Ideas", icon: "🧠" },
+      { text: "History", icon: "📜" },
+      { text: "Philosophy", icon: "⚖️" },
+      { text: "Society", icon: "🌍" },
+      { text: "Space", icon: "🚀" },
+      { text: "Nature", icon: "🌿" },
+    ],
+    topics_title: "Discover New Worlds",
+    topics_subtitle: "Navigate across different fields of knowledge and start your journey in any area that sparks your curiosity.",
+    topics: [
+      { title: "Science", desc: "From quantum to cosmos, simplifying the complex.", icon: "🔬", href: "/search?q=science", gradient: "from-cyan-500 to-blue-600" },
+      { title: "Technology", desc: "AI, programming and the future of tech.", icon: "💡", href: "/search?q=technology", gradient: "from-indigo-500 to-violet-600" },
+      { title: "Thought & Philosophy", desc: "Existential questions and mind-enriching debates.", icon: "🧠", href: "/search?q=philosophy", gradient: "from-purple-500 to-fuchsia-600" },
+      { title: "History", desc: "Milestones and civilizations that shaped our world.", icon: "📜", href: "/search?q=history", gradient: "from-amber-500 to-orange-600" },
+      { title: "Space", desc: "Planets, stars and the secrets of the universe.", icon: "🚀", href: "/search?q=space", gradient: "from-sky-500 to-cyan-600" },
+      { title: "Society", desc: "Human issues and relationships that shape our lives.", icon: "🌍", href: "/search?q=society", gradient: "from-emerald-500 to-teal-600" },
+    ] as TopicItem[],
+    featured_title: "Most Watched",
+    featured_subtitle: "An episode that captured our audience",
+    featured_desc: "Start with the most impactful content on the platform.",
+    play: "Watch Now",
+    views: "views",
+    testimonials_title: "What Our Audience Says",
+    testimonials: [
+      { name: "Ahmed M.", role: "Medical Student", text: "Fazlaka changed how I understand science. Deep content but so simplified — it's part of my daily routine." },
+      { name: "Sarah A.", role: "Software Engineer", text: "The best Arabic platform for serious scientific content. The quality and organization are truly amazing." },
+      { name: "Khaled O.", role: "Physics Teacher", text: "I always recommend Fazlaka episodes to my students. They explain hard concepts in a captivating way." },
+    ],
     newsletter_title: "Stay Updated",
     newsletter_desc: "Subscribe to our newsletter to receive updates instantly.",
     newsletter_placeholder: "Your email",
     newsletter_btn: "Subscribe",
     footer_rights: "All rights reserved",
   }
-};
+} as const;
 
 const getT = (lang: string) => translations[lang as keyof typeof translations] || translations.ar;
-const getText = (ar?: string, en?: string, lang?: string) => lang === 'en' ? (en || ar || '') : (ar || en || '');
 
 const formatContentDate = (date?: string | Date | null, language = 'ar') => {
   if (!date) return '';
@@ -88,201 +154,116 @@ const formatContentDate = (date?: string | Date | null, language = 'ar') => {
   });
 };
 
-// --- Custom Hook for Scroll Animation ---
-function useScrollAnimation() {
-  const ref = useRef<HTMLDivElement>(null);
-  const [isVisible, setIsVisible] = useState(false);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true);
-          observer.unobserve(entry.target);
-        }
-      },
-      { threshold: 0.1, rootMargin: '0px 0px -50px 0px' }
-    );
-
-    if (ref.current) {
-      observer.observe(ref.current);
-    }
-
-    return () => {
-      if (ref.current) observer.unobserve(ref.current);
-    };
-  }, []);
-
-  return [ref, isVisible] as const;
-}
-
 // --- Icons ---
 const SimplifyIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
 );
 const QualityIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" /></svg>
 );
 const CommunityIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
 );
 
-// --- Skeleton Components ---
+// --- Skeleton ---
 const Skeleton = ({ className }: { className: string }) => (
-  <div className={`bg-slate-800/50 rounded-lg animate-pulse ${className}`}></div>
+  <div className={`bg-slate-800/50 rounded-lg animate-pulse ${className}`} />
 );
 
-// --- Main Components ---
+// --- مؤشر التقدم عند التمرير ---
+const ScrollProgress = () => {
+  const { scrollYProgress } = useScroll();
+  const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30 });
+  return (
+    <motion.div
+      style={{ scaleX }}
+      className="fixed top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-cyan-500 via-indigo-500 to-purple-600 origin-left z-[100]"
+    />
+  );
+};
 
-const HeroSection = () => {
-  const { language, isRTL } = useLanguage();
-  const t = getT(language);
-  const [sliders, setSliders] = useState<HeroSlider[]>([]);
-  const [loading, setLoading] = useState(true);
+// --- زر العودة للأعلى ---
+const ScrollToTop = () => {
+  const [visible, setVisible] = useState(false);
+  const { scrollY } = useScroll();
 
   useEffect(() => {
-    fetch(`/api/hero-slider?lang=${language}`)
-      .then(res => res.json())
-      .then(data => { setSliders(data || []); setLoading(false); })
-      .catch(() => setLoading(false));
-  }, [language]);
+    const unsubscribe = scrollY.on('change', (v) => setVisible(v > 400));
+    return () => unsubscribe();
+  }, [scrollY]);
+
+  const scrollToTop = useCallback(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
 
   return (
-    <section className="relative min-h-screen w-full flex items-center justify-center bg-[#030712] overflow-hidden">
-      {/* Advanced Background Effects */}
-      <div className="absolute inset-0 z-0">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-[radial-gradient(ellipse_at_center,rgba(6,182,212,0.15),transparent_70%)]"></div>
-        <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-[#030712] to-transparent"></div>
-        
-        {/* Floating Orbs */}
-        <div className="absolute top-1/4 left-1/4 w-4 h-4 bg-cyan-500 rounded-full blur-sm opacity-60 animate-bounce"></div>
-        <div className="absolute bottom-1/3 right-1/4 w-3 h-3 bg-indigo-500 rounded-full blur-sm opacity-40 animate-bounce delay-1000"></div>
-        
-        {/* Grid */}
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_0%,#000,transparent)]"></div>
-      </div>
-
-      <div className="relative z-10 container mx-auto px-4 py-24 lg:py-0">
-        <div className="flex flex-col lg:flex-row items-center gap-16 lg:gap-24 h-full">
-          
-          {/* Text Content */}
-          <div className={`flex-1 flex flex-col justify-center text-center lg:text-left ${isRTL ? 'lg:order-2' : 'lg:order-1'}`}>
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 mb-8 self-center lg:self-start backdrop-blur-sm animate-fade-in-down">
-              <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
-              <span className="text-sm text-cyan-300 font-medium">{t.platformName}</span>
-            </div>
-
-            <h1 className="text-4xl sm:text-5xl lg:text-7xl font-extrabold text-white leading-tight tracking-tight mb-6 animate-fade-in-up">
-              <span className="bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
-                {t.slogan.split('..')[0]}
-              </span>
-              <br />
-              <span className="bg-gradient-to-r from-cyan-400 via-sky-400 to-indigo-500 bg-clip-text text-transparent">
-                {t.slogan.split('..')[1]}
-              </span>
-            </h1>
-            
-            <p className="text-lg md:text-xl text-slate-400 max-w-2xl mb-10 leading-relaxed font-light animate-fade-in-up delay-100">
-              {t.subSlogan}
-            </p>
-
-            <div className="flex gap-4 justify-center lg:justify-start animate-fade-in-up delay-200">
-              <Link href="/episodes" className="group relative px-8 py-4 bg-gradient-to-r from-cyan-500 to-indigo-600 text-white rounded-xl font-bold shadow-lg shadow-indigo-500/25 transition-all hover:shadow-indigo-500/40 hover:-translate-y-0.5 flex items-center gap-2 overflow-hidden">
-                <span className="relative z-10">{t.explore}</span>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 relative z-10 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
-              </Link>
-            </div>
-          </div>
-
-          {/* Slider Section */}
-          <div className={`flex-1 w-full relative ${isRTL ? 'lg:order-1' : 'lg:order-2'}`}>
-            <div className="relative w-full max-w-xl mx-auto">
-              {/* Glow Effect Behind Card */}
-              <div className="absolute -inset-4 bg-gradient-to-tr from-cyan-500 to-indigo-600 rounded-[2.5rem] blur-3xl opacity-20 scale-95 group-hover:scale-100 transition-transform duration-500"></div>
-              
-              <div className="relative aspect-video rounded-3xl overflow-hidden shadow-2xl border border-white/10 bg-black/40 backdrop-blur-xl">
-                
-                {loading ? (
-                  <Skeleton className="w-full h-full" />
-                ) : sliders.length > 0 ? (
-                  <Swiper modules={[Autoplay, Pagination]} spaceBetween={0} slidesPerView={1} autoplay={{ delay: 6000 }} pagination={{ clickable: true, dynamicBullets: true }} className="w-full h-full">
-                    {sliders.map((slide) => (
-                      <SwiperSlide key={slide.id} className="relative w-full h-full">
-                        {slide.mediaType === 'VIDEO' && slide.videoUrl ? (
-                          <video src={slide.videoUrl} className="w-full h-full object-cover" autoPlay muted loop playsInline />
-                        ) : (
-                          <Image src={language === 'ar' ? slide.image! : slide.imageEn || slide.image!} alt={getText(slide.title, slide.titleEn, language)} fill className="object-cover" sizes="(max-width: 1024px) 100vw, 50vw" />
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-90"></div>
-                        <div className="absolute inset-0 flex flex-col justify-end p-6 md:p-8">
-                          <h3 className="text-xl md:text-2xl font-bold text-white mb-2">{getText(slide.title, slide.titleEn, language)}</h3>
-                          {slide.linkUrl && (
-                            <Link href={slide.linkUrl} className="inline-flex items-center gap-2 text-cyan-300 text-sm font-semibold hover:text-cyan-200 transition-colors self-start">
-                              {getText(slide.linkText, slide.linkTextEn, language)}
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
-                            </Link>
-                          )}
-                        </div>
-                      </SwiperSlide>
-                    ))}
-                  </Swiper>
-                ) : (
-                  <div className="w-full h-full bg-slate-900 flex items-center justify-center text-gray-500">No Content</div>
-                )}
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </div>
-    </section>
+    <motion.button
+      initial={false}
+      animate={visible ? { scale: 1, opacity: 1 } : { scale: 0, opacity: 0 }}
+      onClick={scrollToTop}
+      className="fixed bottom-6 right-6 z-50 w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500 to-indigo-600 text-white shadow-2xl shadow-indigo-500/30 flex items-center justify-center hover:scale-110 transition-transform cursor-pointer"
+    >
+      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
+      </svg>
+    </motion.button>
   );
 };
 
-// Wrapper for Section Animation
-const AnimatedSection = ({ children, className }: { children: ReactNode, className?: string }) => {
-  const [ref, isVisible] = useScrollAnimation();
-  return (
-    <div ref={ref} className={`transition-all duration-1000 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'} ${className}`}>
-      {children}
-    </div>
-  );
-};
+// --- غلاف الأنيميشن عند الظهور (فريمير موشن) ---
+const AnimatedSection = ({ children, className }: { children: React.ReactNode, className?: string }) => (
+  <motion.section
+    initial={{ opacity: 0, y: 40 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    viewport={{ once: true, margin: '-80px' }}
+    transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
+    className={className}
+  >
+    {children}
+  </motion.section>
+);
 
 const WhyUsSection = () => {
   const { language } = useLanguage();
   const t = getT(language);
 
   const features = [
-    { key: 'why_simplified', Icon: SimplifyIcon, color: 'text-cyan-400', bgGradient: 'from-cyan-500/10 to-transparent' },
-    { key: 'why_quality', Icon: QualityIcon, color: 'text-indigo-400', bgGradient: 'from-indigo-500/10 to-transparent' },
-    { key: 'why_community', Icon: CommunityIcon, color: 'text-purple-400', bgGradient: 'from-purple-500/10 to-transparent' },
+    { key: 'why_simplified', Icon: SimplifyIcon, color: 'text-cyan-400', bgGradient: 'from-cyan-500/10 to-transparent', glow: 'from-cyan-500/20' },
+    { key: 'why_quality', Icon: QualityIcon, color: 'text-indigo-400', bgGradient: 'from-indigo-500/10 to-transparent', glow: 'from-indigo-500/20' },
+    { key: 'why_community', Icon: CommunityIcon, color: 'text-purple-400', bgGradient: 'from-purple-500/10 to-transparent', glow: 'from-purple-500/20' },
   ];
 
   return (
     <AnimatedSection className="py-24 bg-[#030712] relative overflow-hidden">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-16">
+      <div className="container mx-auto px-4 lg:px-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-16"
+        >
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">{t.whyUs}</h2>
-          <div className="w-20 h-1.5 bg-gradient-to-r from-cyan-500 to-indigo-500 mx-auto rounded-full"></div>
-        </div>
-        
+          <div className="w-20 h-1.5 bg-gradient-to-r from-cyan-500 to-indigo-500 mx-auto rounded-full animate-gradient-shift" />
+        </motion.div>
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {features.map((f, i) => (
-            <div key={f.key} className={`group relative p-8 rounded-3xl border border-white/5 backdrop-blur-sm transition-all duration-500 hover:-translate-y-3 hover:border-white/10 overflow-hidden`}
-                 style={{ transitionDelay: `${i * 100}ms` }}>
-              
-              {/* Shine effect on hover */}
-              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-tr from-white/5 to-transparent"></div>
-              
-              <div className={`relative z-10`}>
+            <motion.div
+              key={f.key}
+              initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: i * 0.12 }}
+              className={`group relative p-8 rounded-3xl border border-white/5 backdrop-blur-sm transition-all duration-500 hover:-translate-y-3 hover:border-white/15 overflow-hidden bg-white/[0.02] ${i === 1 ? 'animate-float' : ''}`}
+            >
+              <div className={`absolute -inset-0.5 rounded-3xl bg-gradient-to-tr ${f.glow} to-transparent opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-500`} />
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-tr from-white/5 to-transparent" />
+
+              <div className="relative z-10">
                 <div className={`inline-flex p-4 rounded-2xl bg-gradient-to-br ${f.bgGradient} ${f.color} mb-6`}>
                   <f.Icon />
                 </div>
-                <h3 className="text-2xl font-bold text-white mb-3">{t[f.key as keyof typeof t]}</h3>
-                <p className="text-slate-400 leading-relaxed">{t[`${f.key}_desc` as keyof typeof t]}</p>
+                <h3 className="text-2xl font-bold text-white mb-3">{t[f.key as keyof typeof t] as string}</h3>
+                <p className="text-slate-400 leading-relaxed">{t[`${f.key}_desc` as keyof typeof t] as string}</p>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>
@@ -306,39 +287,43 @@ const LatestEpisodes = () => {
 
   return (
     <AnimatedSection className="py-24 bg-[#030712] relative">
-      <div className="container mx-auto px-4 relative z-10">
+      <div className="container mx-auto px-4 lg:px-8 relative z-10">
         <div className="flex justify-between items-end mb-12">
           <div>
             <h2 className="text-4xl font-bold text-white mb-2">{t.latestEpisodes}</h2>
-            <div className="w-16 h-1 bg-cyan-500 rounded-full"></div>
+            <div className="w-16 h-1 bg-cyan-500 rounded-full" />
           </div>
           <Link href="/episodes" className="text-cyan-400 hover:text-cyan-300 text-sm font-semibold flex items-center gap-2 group">
-            {t.viewAll} 
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+            {t.viewAll}
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 group-hover:translate-x-1 rtl:rotate-180 rtl:group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {loading ? (
-            // Skeletons
             [...Array(4)].map((_, i) => (
-              <div key={i} className="block">
+              <div key={i}>
                 <Skeleton className="aspect-video mb-4" />
                 <Skeleton className="h-6 w-3/4" />
               </div>
             ))
           ) : (
-            eps.slice(0, 4).map((ep) => (
-              <article key={ep.id} className="group rounded-2xl border border-white/5 bg-white/[0.03] overflow-hidden transition-all duration-500 hover:-translate-y-2 hover:border-cyan-500/35 hover:bg-white/[0.06]">
+            eps.slice(0, 4).map((ep, i) => (
+              <motion.article
+                key={ep.id}
+                initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: i * 0.08 }}
+                className="group rounded-2xl border border-white/5 bg-white/[0.03] overflow-hidden transition-all duration-500 hover:-translate-y-2 hover:border-cyan-500/35 hover:bg-white/[0.06]"
+              >
                 <Link href={`/episodes/${ep.slug}`} className="block">
                   <div className="relative aspect-video overflow-hidden bg-slate-800">
                     {ep.localizedThumbnailUrl && (
-                      <Image src={ep.localizedThumbnailUrl} alt={ep.localizedTitle || ''} fill className="object-cover opacity-80 group-hover:scale-110 group-hover:opacity-100 transition-all duration-700" />
+                      <Image src={ep.localizedThumbnailUrl} alt={ep.localizedTitle || ''} fill className="object-cover opacity-80 group-hover:scale-110 group-hover:opacity-100 transition-all duration-700" sizes="(max-width: 768px) 100vw, 25vw" />
                     )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#030712] via-black/10 to-transparent"></div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#030712] via-black/10 to-transparent" />
                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
                       <div className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center shadow-xl transform scale-50 group-hover:scale-100 transition-transform border border-white/30">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white ms-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
                       </div>
                     </div>
                   </div>
@@ -350,7 +335,7 @@ const LatestEpisodes = () => {
                   <span>{formatContentDate(ep.publishedAt, language)}</span>
                   <FavoriteButton contentId={ep.id} contentType="episode" />
                 </div>
-              </article>
+              </motion.article>
             ))
           )}
         </div>
@@ -375,38 +360,43 @@ const LatestArticles = () => {
 
   return (
     <AnimatedSection className="py-24 bg-[#030712]">
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto px-4 lg:px-8">
         <div className="flex justify-between items-end mb-12">
           <div>
             <h2 className="text-4xl font-bold text-white mb-2">{t.latestArticles}</h2>
-            <div className="w-16 h-1 bg-indigo-500 rounded-full"></div>
+            <div className="w-16 h-1 bg-indigo-500 rounded-full" />
           </div>
           <Link href="/articles" className="text-indigo-400 hover:text-indigo-300 text-sm font-semibold flex items-center gap-2 group">
             {t.viewAll}
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 group-hover:translate-x-1 rtl:rotate-180 rtl:group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
           </Link>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {loading ? (
-             [...Array(3)].map((_, i) => (
-               <div key={i} className="rounded-3xl overflow-hidden border border-white/5">
-                 <Skeleton className="h-56 w-full" />
-                 <div className="p-6 space-y-3">
-                   <Skeleton className="h-6 w-3/4" />
-                   <Skeleton className="h-4 w-full" />
-                   <Skeleton className="h-4 w-5/6" />
-                 </div>
-               </div>
-             ))
+            [...Array(3)].map((_, i) => (
+              <div key={i} className="rounded-3xl overflow-hidden border border-white/5">
+                <Skeleton className="h-56 w-full" />
+                <div className="p-6 space-y-3">
+                  <Skeleton className="h-6 w-3/4" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-5/6" />
+                </div>
+              </div>
+            ))
           ) : (
-            articles.slice(0, 3).map(article => (
-              <article key={article.id} className="group relative rounded-2xl overflow-hidden border border-white/5 hover:border-indigo-500/35 transition-all duration-500 hover:-translate-y-2 bg-white/[0.03]">
+            articles.slice(0, 3).map((article, i) => (
+              <motion.article
+                key={article.id}
+                initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: i * 0.1 }}
+                className="group relative rounded-2xl overflow-hidden border border-white/5 hover:border-indigo-500/35 transition-all duration-500 hover:-translate-y-2 bg-white/[0.03]"
+              >
                 <Link href={`/articles/${article.slug}`} className="block">
                   <div className="relative h-56 bg-slate-800 overflow-hidden">
                     {article.localizedFeaturedImageUrl && (
-                      <Image src={article.localizedFeaturedImageUrl} alt={article.localizedTitle || ''} fill className="object-cover opacity-80 group-hover:scale-110 group-hover:opacity-100 transition-all duration-700" />
+                      <Image src={article.localizedFeaturedImageUrl} alt={article.localizedTitle || ''} fill className="object-cover opacity-80 group-hover:scale-110 group-hover:opacity-100 transition-all duration-700" sizes="(max-width: 768px) 100vw, 33vw" />
                     )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#030712] via-transparent to-transparent"></div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#030712] via-transparent to-transparent" />
                   </div>
                   <div className="p-6 pb-3 relative">
                     <h3 className="text-xl font-bold text-white group-hover:text-indigo-400 transition-colors line-clamp-2">{article.localizedTitle}</h3>
@@ -416,7 +406,7 @@ const LatestArticles = () => {
                   <span>{formatContentDate(article.publishedAt, language)}</span>
                   <FavoriteButton contentId={article.id} contentType="article" />
                 </div>
-              </article>
+              </motion.article>
             ))
           )}
         </div>
@@ -437,7 +427,7 @@ const MostViewed = () => {
         const res = await fetch('/api/content/popular?type=EPISODE&limit=4');
         const data = await res.json();
         if (data.success) setPopularItems(data.data);
-      } catch (err) {}
+      } catch { /* تجاهل */ }
       setLoading(false);
     };
     fetchPopular();
@@ -447,15 +437,19 @@ const MostViewed = () => {
 
   return (
     <AnimatedSection className="py-24 bg-[#030712]">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-12" data-aos="fade-up">
+      <div className="container mx-auto px-4 lg:px-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-12"
+        >
           <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-l from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
             {language === 'ar' ? 'الأكثر مشاهدة' : 'Most Viewed'}
           </h2>
           <p className="text-gray-400 mt-3 text-lg">
             {language === 'ar' ? 'أكثر الحلقات مشاهدة على المنصة' : 'Most watched episodes on the platform'}
           </p>
-        </div>
+        </motion.div>
 
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -468,29 +462,40 @@ const MostViewed = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {popularItems.map((item: PopularItem) => (
-              <a
+            {popularItems.map((item: PopularItem, i: number) => (
+              <motion.div
                 key={item.contentId}
-                href={`/episodes/${item.slug}`}
-                className="group relative rounded-xl overflow-hidden bg-gray-800/50 border border-gray-700/50 hover:border-indigo-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-indigo-500/10 hover:-translate-y-1"
+                initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: i * 0.08 }}
               >
-                <div className="aspect-video relative overflow-hidden">
-                  <img
-                    src={item.item?.thumbnailUrl || '/placeholder.jpg'}
-                    alt={item.title || ''}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-transparent to-transparent" />
-                  <div className="absolute top-2 right-2 bg-indigo-500/80 text-white text-xs px-2 py-1 rounded-full backdrop-blur-sm">
-                    {item._sum?.count || 0} {language === 'ar' ? 'مشاهدة' : 'views'}
+                <Link
+                  href={`/episodes/${item.slug}`}
+                  className="group relative block rounded-xl overflow-hidden bg-gray-800/50 border border-gray-700/50 hover:border-indigo-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-indigo-500/10 hover:-translate-y-1"
+                >
+                  <div className="aspect-video relative overflow-hidden bg-slate-800">
+                    {item.item?.thumbnailUrl ? (
+                      <Image
+                        src={item.item.thumbnailUrl}
+                        alt={item.title || ''}
+                        fill
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        sizes="(max-width: 640px) 100vw, 25vw"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-indigo-900/40 to-cyan-900/40" />
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-transparent to-transparent" />
+                    <div className="absolute top-2 end-2 bg-indigo-500/80 text-white text-xs px-2 py-1 rounded-full backdrop-blur-sm">
+                      {item._sum?.count || 0} {language === 'ar' ? 'مشاهدة' : 'views'}
+                    </div>
                   </div>
-                </div>
-                <div className="p-4">
-                  <h3 className="text-white font-semibold line-clamp-2 group-hover:text-indigo-400 transition-colors">
-                    {language === 'ar' ? item.title : item.titleEn || item.title}
-                  </h3>
-                </div>
-              </a>
+                  <div className="p-4">
+                    <h3 className="text-white font-semibold line-clamp-2 group-hover:text-indigo-400 transition-colors">
+                      {language === 'ar' ? item.title : item.titleEn || item.title}
+                    </h3>
+                  </div>
+                </Link>
+              </motion.div>
             ))}
           </div>
         )}
@@ -565,35 +570,31 @@ const NewsletterSection = () => {
       setNlSubscribed(false);
       setNlMsg(language === 'ar' ? 'تم إلغاء الاشتراك' : 'Unsubscribed');
       setNlStatus('success');
-    } catch {}
+    } catch { /* تجاهل */ }
     setNlUnsubscribing(false);
   };
 
   return (
     <AnimatedSection className="py-24 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-cyan-600 to-cyan-500"></div>
-      <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-20 mix-blend-overlay"></div>
-      
-      <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl"></div>
-      <div className="absolute bottom-0 left-0 w-80 h-80 bg-indigo-900/50 rounded-full translate-y-1/2 -translate-x-1/2 blur-3xl"></div>
+      <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-cyan-600 to-cyan-500 animate-gradient-shift" />
+      <div className="absolute inset-0 opacity-20 mix-blend-overlay" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.1) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.1) 1px,transparent 1px)", backgroundSize: '40px 40px' }} />
 
-      <div className="container mx-auto px-4 relative z-10 text-center">
+      <div className="absolute top-0 end-0 w-96 h-96 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 rtl:translate-x-[-50%] blur-3xl" />
+      <div className="absolute bottom-0 start-0 w-80 h-80 bg-indigo-900/50 rounded-full translate-y-1/2 rtl:translate-x-1/2 blur-3xl" />
+
+      <div className="container mx-auto px-4 lg:px-8 relative z-10 text-center">
         {nlSubscribed === true ? (
           <div className="flex flex-col items-center gap-4">
             <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center">
               <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
             </div>
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-2 drop-shadow-lg">
-              {language === 'ar' ? 'أنت مشترك!' : 'You\'re subscribed!'}
+              {language === 'ar' ? 'أنت مشترك!' : "You're subscribed!"}
             </h2>
             <p className="text-white/80 max-w-lg mx-auto text-lg">
               {language === 'ar' ? 'أنت مشترك في نشرتنا البريدية' : 'You are subscribed to our newsletter'}
             </p>
-            <button
-              onClick={handleNLUnsubscribe}
-              disabled={nlUnsubscribing}
-              className="mt-2 px-6 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl text-sm transition-all border border-white/20 disabled:opacity-50"
-            >
+            <button onClick={handleNLUnsubscribe} disabled={nlUnsubscribing} className="mt-2 px-6 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl text-sm transition-all border border-white/20 disabled:opacity-50">
               {nlUnsubscribing ? '...' : (language === 'ar' ? 'إلغاء الاشتراك' : 'Unsubscribe')}
             </button>
           </div>
@@ -603,8 +604,8 @@ const NewsletterSection = () => {
             <p className="text-white/90 mb-10 max-w-lg mx-auto text-lg">{t.newsletter_desc}</p>
 
             <form onSubmit={handleNLSubmit} className="flex flex-col sm:flex-row gap-4 max-w-xl mx-auto">
-              <input 
-                type="email" 
+              <input
+                type="email"
                 value={email}
                 onChange={e => { setEmail(e.target.value); setNlStatus('idle'); }}
                 placeholder={t.newsletter_placeholder}
@@ -616,9 +617,7 @@ const NewsletterSection = () => {
             </form>
 
             {nlStatus !== 'idle' && nlStatus !== 'loading' && (
-              <p className={`mt-4 text-sm ${nlStatus === 'success' || nlStatus === 'existing' ? 'text-green-200' : 'text-red-200'}`}>
-                {nlMsg}
-              </p>
+              <p className={`mt-4 text-sm ${nlStatus === 'success' || nlStatus === 'existing' ? 'text-green-200' : 'text-red-200'}`}>{nlMsg}</p>
             )}
           </>
         )}
@@ -633,24 +632,24 @@ const FAQSection = () => {
   const [faqs, setFaqs] = useState<FAQ[]>([]);
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
-  useEffect(() => { 
+  useEffect(() => {
     fetch(`/api/faqs?language=${language}`)
       .then(res => res.json())
-      .then(data => setFaqs(data.data || [])); 
+      .then(data => setFaqs(data.data || []));
   }, [language]);
 
   return (
     <AnimatedSection className="py-24 bg-[#030712]">
-      <div className="container mx-auto px-4 max-w-4xl">
+      <div className="container mx-auto px-4 lg:px-8 max-w-4xl">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold text-white mb-4">{t.faqs}</h2>
-          <div className="w-20 h-1.5 bg-gradient-to-r from-cyan-500 to-indigo-500 mx-auto rounded-full"></div>
+          <div className="w-20 h-1.5 bg-gradient-to-r from-cyan-500 to-indigo-500 mx-auto rounded-full" />
         </div>
         <div className="space-y-4">
           {faqs.map((faq, index) => (
             <div key={faq.id} className={`bg-white/[0.03] border border-white/5 rounded-2xl overflow-hidden transition-all duration-300 ${openIndex === index ? 'bg-white/[0.05] border-cyan-500/20' : ''}`}>
-              <button 
-                onClick={() => setOpenIndex(prev => prev === index ? null : index)} 
+              <button
+                onClick={() => setOpenIndex(prev => prev === index ? null : index)}
                 className="w-full p-6 flex justify-between items-center text-white font-medium text-lg hover:text-cyan-400 transition-colors text-right"
               >
                 <span>{faq.localizedQuestion}</span>
@@ -676,7 +675,7 @@ const Footer = () => {
   const t = getT(language);
   return (
     <footer className="py-8 border-t border-white/5 bg-[#030712]">
-      <div className="container mx-auto px-4 text-center text-gray-500 text-sm">
+      <div className="container mx-auto px-4 lg:px-8 text-center text-gray-500 text-sm">
         <p>&copy; {new Date().getFullYear()} {t.platformName}. {t.footer_rights}.</p>
       </div>
     </footer>
@@ -685,42 +684,106 @@ const Footer = () => {
 
 // --- Main Page ---
 export default function Home() {
-  const { isRTL } = useLanguage();
+  const { isRTL, language } = useLanguage();
+  const t = getT(language);
+
   return (
     <div className={`min-h-screen bg-[#030712] text-white antialiased selection:bg-cyan-500/30 selection:text-cyan-200 ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
-      <HeroSection />
-      <WhyUsSection />
-      <LatestEpisodes />
-      <LatestArticles />
-      <MostViewed />
-      <NewsletterSection />
-      <FAQSection />
-      <Footer />
-      
-      <style jsx global>{`
-        @keyframes fade-in-up {
-          from { opacity: 0; transform: translate3d(0, 20px, 0); }
-          to { opacity: 1; transform: translate3d(0, 0, 0); }
-        }
-        @keyframes fade-in-down {
-          from { opacity: 0; transform: translate3d(0, -20px, 0); }
-          to { opacity: 1; transform: translate3d(0, 0, 0); }
-        }
-        .animate-fade-in-up { animation: fade-in-up 0.8s ease-out forwards; }
-        .animate-fade-in-down { animation: fade-in-down 0.8s ease-out forwards; }
-        
-        .delay-100 { animation-delay: 0.1s; }
-        .delay-200 { animation-delay: 0.2s; }
-        .delay-300 { animation-delay: 0.3s; }
-        .delay-1000 { animation-delay: 1s; animation-duration: 3s; }
+      {/* ===== مؤشر التقدم عند التمرير ===== */}
+      <ScrollProgress />
 
-        ::-webkit-scrollbar { width: 8px; }
+      {/* ===== زر العودة للأعلى ===== */}
+      <ScrollToTop />
+
+      {/* ===== الهيرو السينمائي ===== */}
+      <HeroSection texts={{
+        platformName: t.platformName,
+        slogan: t.slogan,
+        subSlogan: t.subSlogan,
+        explore: t.explore,
+        learnMore: t.learnMore,
+      }} />
+
+      {/* ===== شريط المواضيع المتحرك ===== */}
+      <MarqueeSection items={[...t.marquee]} />
+
+      {/* ===== لماذا فذلكة ===== */}
+      <WhyUsSection />
+
+      {/* ===== أحدث الحلقات ===== */}
+      <LatestEpisodes />
+
+      {/* ===== عدّاد الإحصائيات ===== */}
+      <StatsSection texts={{
+        episodes: t.stats_episodes,
+        articles: t.stats_articles,
+        members: t.stats_members,
+        views: t.stats_views,
+      }} />
+
+      {/* ===== حلقة مميّزة + آراء ===== */}
+      <FeaturedSection
+        texts={{
+          featuredTitle: t.featured_title,
+          featuredSubtitle: t.featured_subtitle,
+          play: t.play,
+          views: t.views,
+          testimonialsTitle: t.testimonials_title,
+        }}
+        testimonials={[...t.testimonials]}
+      />
+
+      {/* ===== خريطة المواضيع التفاعلية ===== */}
+      <TopicsMap
+        texts={{ title: t.topics_title, subtitle: t.topics_subtitle }}
+        topics={[...t.topics]}
+      />
+
+      {/* ===== أحدث المقالات ===== */}
+      <LatestArticles />
+
+      {/* ===== الأكثر مشاهدة ===== */}
+      <MostViewed />
+
+      {/* ===== النشرة البريدية ===== */}
+      <NewsletterSection />
+
+      {/* ===== الأسئلة الشائعة ===== */}
+      <FAQSection />
+
+      <Footer />
+
+      <style jsx global>{`
+        html { scroll-behavior: smooth; }
+
+        ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #030712; }
-        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #334155; }
-        
+        ::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #06b6d4, #6366f1); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: linear-gradient(180deg, #22d3ee, #818cf8); }
+
         .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         .line-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-10px); }
+        }
+        .animate-float { animation: float 4s ease-in-out infinite; }
+
+        @keyframes glow-pulse {
+          0%, 100% { box-shadow: 0 0 20px rgba(6, 182, 212, 0.2); }
+          50% { box-shadow: 0 0 40px rgba(6, 182, 212, 0.4); }
+        }
+        .animate-glow-pulse { animation: glow-pulse 3s ease-in-out infinite; }
+
+        @keyframes gradient-shift {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+        .animate-gradient-shift { background-size: 200% 200%; animation: gradient-shift 8s ease infinite; }
+
+        ::selection { background: rgba(6, 182, 212, 0.3); color: #a5f3fc; }
       `}</style>
     </div>
   );
