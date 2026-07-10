@@ -1,5 +1,6 @@
 // src/app/layout.tsx
 import './globals.css'
+import 'leaflet/dist/leaflet.css'
 import { Inter } from 'next/font/google'
 import { Toaster } from 'react-hot-toast'
 import { AuthProvider } from "@/components/AuthProvider/AuthProvider"

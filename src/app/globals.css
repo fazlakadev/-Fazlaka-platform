@@ -3,8 +3,6 @@
 @tailwind components;
 @tailwind utilities;
 
-@import "leaflet/dist/leaflet.css";
-
 /* متغيرات الألوان الجديدة */
 :root {
   --glass-bg: rgba(255, 255, 255, 0.25);

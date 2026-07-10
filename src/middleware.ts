@@ -4,7 +4,7 @@ import { getToken } from "next-auth/jwt";
 
 // 1. المسارات التي تتطلب تسجيل دخول (للمستخدمين العاديين)
 // أضف هنا المسارات التي تريد حمايتها فقط
-const protectedPaths = ["/profile", "/orders", "/settings"]; // مثال
+const protectedPaths = ["/profile", "/orders"]; // مثال
 
 // 2. المسارات المسموح بها للمستخدمين المحظورين فقط
 const BANNED_USER_ALLOWED_PATHS = [

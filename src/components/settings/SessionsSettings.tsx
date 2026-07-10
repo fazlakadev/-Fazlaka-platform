@@ -597,32 +597,51 @@ function SessionCard({
                 />
               </div>
 
-              {/* Location Map Section */}
-              {session.location && session.location.lat && session.location.lng && (
-                <div className="rounded-2xl border border-gray-200 dark:border-gray-700/50 overflow-hidden">
-                  <div className={`flex items-center justify-between px-4 py-3 bg-gray-50 dark:bg-gray-800/60 border-b border-gray-200 dark:border-gray-700/50 ${isRTL ? "flex-row-reverse" : ""}`}>
-                    <div className={`flex items-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}>
-                      <MapPin className="w-4 h-4 text-gray-400 dark:text-gray-500" />
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t.locationMap}</span>
+              {/* Location Map Section — always visible */}
+              <div className="rounded-2xl border border-gray-200 dark:border-gray-700/50 overflow-hidden shadow-sm">
+                <div className={`flex items-center justify-between px-4 py-3 bg-gradient-to-r from-gray-50 to-gray-100/50 dark:from-gray-800/80 dark:to-gray-800/40 border-b border-gray-200 dark:border-gray-700/50 ${isRTL ? "flex-row-reverse" : ""}`}>
+                  <div className={`flex items-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}>
+                    <div className="p-1.5 rounded-lg bg-blue-100 dark:bg-blue-500/15">
+                      <MapPin className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                     </div>
+                    <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{t.locationMap}</span>
+                  </div>
+                  {session.location ? (
                     <div className={`flex items-center gap-1.5 ${isRTL ? "flex-row-reverse" : ""}`}>
                       <span className="text-sm">{session.location.flag}</span>
-                      <span className="text-sm text-gray-600 dark:text-gray-400">
-                        {session.location.city}, {session.location.country}
+                      <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                        {session.location.city}{session.location.city && session.location.country ? ", " : ""}{session.location.country}
                       </span>
                     </div>
-                  </div>
-                  <div className="h-[200px]">
+                  ) : session.ip ? (
+                    <span className="text-xs text-gray-400 dark:text-gray-500 font-mono">{session.ip}</span>
+                  ) : (
+                    <span className="text-xs text-gray-400 dark:text-gray-500">—</span>
+                  )}
+                </div>
+                {session.location && session.location.lat && session.location.lng ? (
+                  <div className="h-[220px]">
                     <SessionMap
                       lat={session.location.lat}
                       lng={session.location.lng}
                       city={session.location.city}
                       country={session.location.country}
+                      flag={session.location.flag}
                       isDark={isDark}
                     />
                   </div>
-                </div>
-              )}
+                ) : (
+                  <div className="h-[140px] flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800/60 dark:to-gray-900/40">
+                    <div className="w-12 h-12 rounded-2xl bg-gray-200 dark:bg-gray-700/60 flex items-center justify-center mb-3">
+                      <MapPin className="w-6 h-6 text-gray-400 dark:text-gray-500" />
+                    </div>
+                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t.localDev}</p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                      {session.ip ? session.ip : t.unknown}
+                    </p>
+                  </div>
+                )}
+              </div>
 
               {/* Revoke button */}
               <div className={`flex justify-end ${isRTL ? "flex-row-reverse" : ""}`}>

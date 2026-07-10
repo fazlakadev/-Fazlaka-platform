@@ -1,4 +1,5 @@
 /** @type {import('tailwindcss').Config} */
+/* eslint-disable @typescript-eslint/no-require-imports */
 module.exports = {
   content: [
     "./src/app/**/*.{js,ts,jsx,tsx}",

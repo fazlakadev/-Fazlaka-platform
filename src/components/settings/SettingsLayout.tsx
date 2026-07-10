@@ -4,7 +4,7 @@
 
 import { signOut } from "next-auth/react"
 import { useRouter } from "next/navigation" // ← أضفنا useRouter
-import { Edit, Shield, Monitor, Globe, HelpCircle, LogOut, LogIn } from "lucide-react" // ← أضفنا LogIn
+import { Edit, Shield, Monitor, Globe, HelpCircle, LogOut, LogIn, Sparkles } from "lucide-react" // ← أضفنا LogIn
 import { motion } from "framer-motion"
 
 import { useLanguage } from "@/components/Language/LanguageProvider"
@@ -21,6 +21,8 @@ const translations = {
     aboutSettings: "حول",
     signOut: "تسجيل الخروج",
     signIn: "تسجيل الدخول",
+    signInPrompt: "سجّل دخولك للوصول لكل المزايا",
+    signInDesc: "الجلسات، إعدادات الحساب، تعديل الملف وأكثر",
   },
   en: {
     settings: "Settings",
@@ -32,6 +34,8 @@ const translations = {
     aboutSettings: "About",
     signOut: "Sign Out",
     signIn: "Sign In",
+    signInPrompt: "Sign in to unlock everything",
+    signInDesc: "Sessions, account settings, profile editing and more",
   }
 };
 
@@ -154,13 +158,26 @@ export default function SettingsLayout({ children, activeTab, setActiveTab, auth
                       {t.signOut}
                     </button>
                   ) : (
-                    <button
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
                       onClick={() => router.push("/sign-in")}
-                      className="w-full flex items-center px-4 py-3 rounded-lg text-left text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                      className="w-full text-left rounded-xl p-3 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/25 transition-all"
                     >
-                      <LogIn className="h-5 w-5 mr-3" />
-                      {t.signIn}
-                    </button>
+                      <div className={`flex items-center gap-2.5 ${isRTL ? "flex-row-reverse" : ""}`}>
+                        <div className="p-1.5 bg-white/20 rounded-lg">
+                          <LogIn className="h-4 w-4" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold">{t.signIn}</p>
+                          <p className="text-xs text-blue-100/80 mt-0.5">{t.signInPrompt}</p>
+                        </div>
+                      </div>
+                      <div className={`flex items-center gap-1.5 mt-2 pt-2 border-t border-white/15 ${isRTL ? "flex-row-reverse" : ""}`}>
+                        <Sparkles className="w-3 h-3 text-blue-100/70" />
+                        <p className="text-[11px] text-blue-100/70">{t.signInDesc}</p>
+                      </div>
+                    </motion.button>
                   )}
                 </div>
               </motion.div>

@@ -139,13 +139,15 @@ export async function GET(request: NextRequest) {
     orderBy: { lastActive: "desc" },
   })
 
-  // Collect unique IPs for geo lookup
-  const uniqueIps = [...new Set(rows.map((r) => r.ip).filter(Boolean))] as string[]
+  // Collect unique IPs for geo lookup (include current request IP too)
+  const allIps = new Set(rows.map((r) => r.ip).filter(Boolean) as string[])
+  if (ip) allIps.add(ip)
+  const uniqueIps = [...allIps]
   const geoMap = new Map<string, { country: string; city: string; flag: string; lat: number; lng: number } | null>()
   await Promise.all(
-    uniqueIps.map(async (ip) => {
-      const geo = await getGeoFromIp(ip)
-      geoMap.set(ip, geo)
+    uniqueIps.map(async (geoIp) => {
+      const geo = await getGeoFromIp(geoIp)
+      geoMap.set(geoIp, geo)
     }),
   )
 

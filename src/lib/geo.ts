@@ -26,7 +26,7 @@ export async function getGeoFromIp(ip: string | null): Promise<GeoInfo | null> {
   if (cached) return cached
 
   try {
-    const res = await fetch(`https://ipwho.io/${ip}`, {
+    const res = await fetch(`https://ipwho.is/${ip}`, {
       signal: AbortSignal.timeout(3000),
     })
     if (!res.ok) return null
