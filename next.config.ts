@@ -10,6 +10,9 @@ const nextConfig = {
     ],
   },
   serverExternalPackages: ['bcryptjs'],
+  outputFileTracingIncludes: {
+    '/api/**/*': ['./node_modules/prisma', './node_modules/.prisma'],
+  },
   async headers() {
     return [
       {
