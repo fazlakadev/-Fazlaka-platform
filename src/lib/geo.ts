@@ -32,38 +32,41 @@ export async function getGeoFromIp(ip: string | null): Promise<GeoInfo | null> {
   if (cached) return cached
 
   try {
-    const res = await fetch(`https://ipwho.is/${ip}`, {
-      signal: AbortSignal.timeout(3000),
-    })
+    const res = await fetch(
+      `https://ip-api.com/json/${ip}?fields=status,country,countryCode,region,regionName,city,zip,lat,lon,timezone,isp,org,continent`,
+      { signal: AbortSignal.timeout(3000) },
+    )
     if (!res.ok) return null
     const data = (await res.json()) as {
-      success: boolean
+      status: string
       country?: string
-      country_code?: string
-      city?: string
+      countryCode?: string
       region?: string
-      latitude?: number
-      longitude?: number
-      postal?: string
+      regionName?: string
+      city?: string
+      zip?: string
+      lat?: number
+      lon?: number
+      timezone?: string
+      isp?: string
+      org?: string
       continent?: string
-      timezone?: { id?: string }
-      connection?: { isp?: string; org?: string }
     }
-    if (!data.success || !data.country) return null
-    if (data.latitude == null || data.longitude == null) return null
+    if (data.status !== "success" || !data.country) return null
+    if (data.lat == null || data.lon == null) return null
 
     const geo: GeoInfo = {
       country: data.country,
-      countryCode: data.country_code ?? "",
+      countryCode: data.countryCode ?? "",
       city: data.city ?? "",
-      region: data.region ?? "",
-      flag: countryCodeToFlag(data.country_code ?? ""),
-      lat: data.latitude,
-      lng: data.longitude,
-      postal: data.postal ?? "",
-      isp: data.connection?.isp ?? "",
-      org: data.connection?.org ?? "",
-      timezone: data.timezone?.id ?? "",
+      region: data.regionName ?? data.region ?? "",
+      flag: countryCodeToFlag(data.countryCode ?? ""),
+      lat: data.lat,
+      lng: data.lon,
+      postal: data.zip ?? "",
+      isp: data.isp ?? "",
+      org: data.org ?? "",
+      timezone: data.timezone ?? "",
       continent: data.continent ?? "",
     }
     cache.set(ip, geo)
