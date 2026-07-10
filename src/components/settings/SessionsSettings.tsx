@@ -1,8 +1,9 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useMemo } from "react"
 import { useSession, signOut } from "next-auth/react"
 import { motion, AnimatePresence } from "framer-motion"
+import dynamic from "next/dynamic"
 import {
   Monitor,
   Smartphone,
@@ -18,12 +19,12 @@ import {
   Trash2,
   RefreshCw,
   Wifi,
+  Signal,
 } from "lucide-react"
 import { useLanguage } from "@/components/Language/LanguageProvider"
+import { useTheme } from "next-themes"
 
-// ─────────────────────────────────────────────
-// Translations
-// ─────────────────────────────────────────────
+const SessionMap = dynamic(() => import("./SessionMap"), { ssr: false })
 
 const translations = {
   ar: {
@@ -57,13 +58,18 @@ const translations = {
     tablet: "تابلت",
     unknown: "غير معروف",
     localDev: "جهاز محلي",
-    minutesAgo: "منذ {n} دقيقة",
-    hoursAgo: "منذ {n} ساعة",
-    daysAgo: "منذ {n} يوم",
     justNow: "الآن",
     securityNote: "سيتم تسجيل الخروج من هذا الجهاز فوراً. سيتعين عليه إعادة تسجيل الدخول للوصول مرة أخرى.",
     confirm: "تأكيد الحذف",
     cancel: "إلغاء",
+    sessionInfo: "معلومات الجلسة",
+    locationMap: "موقع الجلسة",
+    activeSessions: "الجلسات النشطة",
+    otherSessions: "جلسات أخرى",
+    signedIn: "تاريخ التسجيل",
+    lastActivity: "النشاط الأخير",
+    deviceInfo: "معلومات الجهاز",
+    connectionInfo: "معلومات الاتصال",
   },
   en: {
     sessions: "Active Sessions",
@@ -96,19 +102,20 @@ const translations = {
     tablet: "Tablet",
     unknown: "Unknown",
     localDev: "Local",
-    minutesAgo: "{n} minutes ago",
-    hoursAgo: "{n} hours ago",
-    daysAgo: "{n} days ago",
     justNow: "Just now",
     securityNote: "This device will be signed out immediately. You'll need to sign in again to access your account.",
     confirm: "Confirm revoke",
     cancel: "Cancel",
+    sessionInfo: "Session Info",
+    locationMap: "Session Location",
+    activeSessions: "Active Sessions",
+    otherSessions: "Other sessions",
+    signedIn: "Signed in",
+    lastActivity: "Last activity",
+    deviceInfo: "Device Info",
+    connectionInfo: "Connection Info",
   },
 }
-
-// ─────────────────────────────────────────────
-// Types
-// ─────────────────────────────────────────────
 
 interface SessionRow {
   id: string
@@ -120,17 +127,13 @@ interface SessionRow {
   browserVersion: string | null
   os: string | null
   osVersion: string | null
-  location: { country: string; city: string; flag: string } | null
+  location: { country: string; city: string; flag: string; lat: number; lng: number } | null
   createdAt: string
   lastActive: string
   expiresAt: string
   isRevoked: boolean
   isCurrent?: boolean
 }
-
-// ─────────────────────────────────────────────
-// Helpers
-// ─────────────────────────────────────────────
 
 function relativeTime(iso: string, language: "ar" | "en"): string {
   const now = Date.now()
@@ -140,13 +143,17 @@ function relativeTime(iso: string, language: "ar" | "en"): string {
   const min = Math.floor(diffSec / 60)
   if (diffSec < 3600)
     return language === "ar"
-      ? `منذ ${min} دقيقة${min > 2 ? "" : ""}`
+      ? `منذ ${min} دقيقة`
       : `${min} minute${min > 1 ? "s" : ""} ago`
   const hrs = Math.floor(diffSec / 3600)
   if (diffSec < 86400)
     return language === "ar" ? `منذ ${hrs} ساعة` : `${hrs} hour${hrs > 1 ? "s" : ""} ago`
   const days = Math.floor(diffSec / 86400)
   return language === "ar" ? `منذ ${days} يوم` : `${days} day${days > 1 ? "s" : ""} ago`
+}
+
+function isActiveNow(iso: string): boolean {
+  return Date.now() - new Date(iso).getTime() < 2 * 60 * 1000
 }
 
 function deviceIcon(type: string | null) {
@@ -163,28 +170,25 @@ function deviceIcon(type: string | null) {
 
 function browserBadge(browser: string | null) {
   const colorMap: Record<string, string> = {
-    Chrome: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",
-    Firefox: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300",
-    Safari: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300",
-    Edge: "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300",
-    Opera: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300",
-    "Samsung Internet": "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300",
+    Chrome: "bg-blue-50 text-blue-600 dark:bg-blue-500/15 dark:text-blue-400 ring-1 ring-blue-200 dark:ring-blue-500/20",
+    Firefox: "bg-orange-50 text-orange-600 dark:bg-orange-500/15 dark:text-orange-400 ring-1 ring-orange-200 dark:ring-orange-500/20",
+    Safari: "bg-purple-50 text-purple-600 dark:bg-purple-500/15 dark:text-purple-400 ring-1 ring-purple-200 dark:ring-purple-500/20",
+    Edge: "bg-cyan-50 text-cyan-600 dark:bg-cyan-500/15 dark:text-cyan-400 ring-1 ring-cyan-200 dark:ring-cyan-500/20",
+    Opera: "bg-red-50 text-red-600 dark:bg-red-500/15 dark:text-red-400 ring-1 ring-red-200 dark:ring-red-500/20",
+    "Samsung Internet": "bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-400 ring-1 ring-indigo-200 dark:ring-indigo-500/20",
   }
-  const cls = colorMap[browser ?? ""] ?? "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
+  const cls = colorMap[browser ?? ""] ?? "bg-gray-50 text-gray-600 dark:bg-gray-500/15 dark:text-gray-400 ring-1 ring-gray-200 dark:ring-gray-500/20"
   return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${cls}`}>
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium ${cls}`}>
       {browser ?? "Unknown"}
     </span>
   )
 }
 
-// ─────────────────────────────────────────────
-// Component
-// ─────────────────────────────────────────────
-
 export default function SessionsSettings() {
   const { status } = useSession()
   const { isRTL, language } = useLanguage()
+  const { resolvedTheme } = useTheme()
   const t = translations[language]
 
   const [sessions, setSessions] = useState<SessionRow[]>([])
@@ -195,8 +199,8 @@ export default function SessionsSettings() {
   const [revokingId, setRevokingId] = useState<string | null>(null)
   const [confirmRevokeAll, setConfirmRevokeAll] = useState(false)
   const [confirmRevokeId, setConfirmRevokeId] = useState<string | null>(null)
+  const [, setTick] = useState(0)
 
-  // ── Fetch sessions ──
   const fetchSessions = useCallback(async () => {
     if (status !== "authenticated") return
     setIsLoading(true)
@@ -217,7 +221,11 @@ export default function SessionsSettings() {
     fetchSessions()
   }, [fetchSessions])
 
-  // ── Revoke single ──
+  useEffect(() => {
+    const id = setInterval(() => setTick((p) => p + 1), 30000)
+    return () => clearInterval(id)
+  }, [])
+
   const handleRevoke = async (sessionId: string) => {
     setError("")
     setSuccess("")
@@ -239,7 +247,6 @@ export default function SessionsSettings() {
     }
   }
 
-  // ── Revoke all others ──
   const handleRevokeAll = async () => {
     setError("")
     setSuccess("")
@@ -258,7 +265,6 @@ export default function SessionsSettings() {
     }
   }
 
-  // ── Clear messages after delay ──
   useEffect(() => {
     if (success || error) {
       const timer = setTimeout(() => {
@@ -272,21 +278,22 @@ export default function SessionsSettings() {
   const currentSession = sessions.find((s) => s.isCurrent)
   const otherSessions = sessions.filter((s) => !s.isCurrent)
 
+  const isDark = useMemo(() => resolvedTheme === "dark", [resolvedTheme])
+
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">{t.sessions}</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">{t.sessions}</h1>
         <p className="text-sm text-gray-500 dark:text-gray-400">{t.subtitle}</p>
       </div>
 
-      {/* Alerts */}
       <AnimatePresence>
         {error && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className={`p-4 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg border border-red-200 dark:border-red-800/30 flex items-start ${isRTL ? "flex-row-reverse" : ""}`}
+            className={`p-4 bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 rounded-xl border border-red-200 dark:border-red-800/30 flex items-start ${isRTL ? "flex-row-reverse" : ""}`}
           >
             <AlertCircle className="w-5 h-5 mt-0.5 flex-shrink-0" style={isRTL ? { marginLeft: "0.5rem" } : { marginRight: "0.5rem" }} />
             <span>{error}</span>
@@ -297,7 +304,7 @@ export default function SessionsSettings() {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className={`p-4 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 rounded-lg border border-green-200 dark:border-green-800/30 flex items-start ${isRTL ? "flex-row-reverse" : ""}`}
+            className={`p-4 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 rounded-xl border border-emerald-200 dark:border-emerald-800/30 flex items-start ${isRTL ? "flex-row-reverse" : ""}`}
           >
             <CheckCircle className="w-5 h-5 mt-0.5 flex-shrink-0" style={isRTL ? { marginLeft: "0.5rem" } : { marginRight: "0.5rem" }} />
             <span>{success}</span>
@@ -305,15 +312,13 @@ export default function SessionsSettings() {
         )}
       </AnimatePresence>
 
-      {/* Security note */}
-      <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800/30">
+      <div className="p-4 bg-blue-50 dark:bg-blue-950/30 rounded-xl border border-blue-100 dark:border-blue-800/20">
         <div className={`flex items-start ${isRTL ? "flex-row-reverse" : ""}`}>
-          <Shield className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" style={isRTL ? { marginLeft: "0.5rem" } : { marginRight: "0.5rem" }} />
-          <p className="text-sm text-blue-700 dark:text-blue-300">{t.securityNote}</p>
+          <Shield className="w-5 h-5 text-blue-500 dark:text-blue-400 mt-0.5 flex-shrink-0" style={isRTL ? { marginLeft: "0.75rem" } : { marginRight: "0.75rem" }} />
+          <p className="text-sm text-blue-600 dark:text-blue-300">{t.securityNote}</p>
         </div>
       </div>
 
-      {/* Current Session */}
       {currentSession && (
         <SessionCard
           session={currentSession}
@@ -321,24 +326,24 @@ export default function SessionsSettings() {
           t={t}
           isRTL={isRTL}
           language={language}
-                onRevoke={() => setConfirmRevokeId(currentSession.id)}
+          isDark={isDark}
+          onRevoke={() => setConfirmRevokeId(currentSession.id)}
           isRevoking={revokingId === currentSession.id}
         />
       )}
 
-      {/* Other Sessions */}
       {otherSessions.length > 0 && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className={`flex items-center justify-between ${isRTL ? "flex-row-reverse" : ""}`}>
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-              {language === "ar" ? "جلسات أخرى" : "Other sessions"} ({otherSessions.length})
+              {t.otherSessions} ({otherSessions.length})
             </h2>
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => setConfirmRevokeAll(true)}
               disabled={isRevokingAll}
-              className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-xl transition-all bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800/30 hover:bg-red-100 dark:hover:bg-red-900/30 disabled:opacity-50"
+              className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-xl transition-all bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800/30 hover:bg-red-100 dark:hover:bg-red-900/30 disabled:opacity-50 ${isRTL ? "flex-row-reverse" : ""}`}
             >
               {isRevokingAll ? (
                 <RefreshCw className="w-4 h-4 animate-spin" style={isRTL ? { marginLeft: "0.5rem" } : { marginRight: "0.5rem" }} />
@@ -357,6 +362,7 @@ export default function SessionsSettings() {
                 t={t}
                 isRTL={isRTL}
                 language={language}
+                isDark={isDark}
                 onRevoke={() => setConfirmRevokeId(s.id)}
                 isRevoking={revokingId === s.id}
               />
@@ -365,51 +371,35 @@ export default function SessionsSettings() {
         </div>
       )}
 
-      {/* Empty state */}
       {!isLoading && sessions.length === 0 && (
-        <div className="text-center py-12">
-          <Wifi className="w-12 h-12 mx-auto text-gray-300 dark:text-gray-600 mb-4" />
-          <p className="text-gray-500 dark:text-gray-400">{t.noSessions}</p>
+        <div className="text-center py-16">
+          <div className="w-16 h-16 mx-auto rounded-2xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
+            <Wifi className="w-8 h-8 text-gray-300 dark:text-gray-600" />
+          </div>
+          <p className="text-gray-500 dark:text-gray-400 text-sm">{t.noSessions}</p>
         </div>
       )}
 
-      {/* Loading */}
       {isLoading && (
-        <div className="flex justify-center py-12">
+        <div className="flex justify-center py-16">
           <RefreshCw className="w-6 h-6 text-blue-500 animate-spin" />
         </div>
       )}
 
-      {/* Confirm revoke single session modal */}
       <AnimatePresence>
         {confirmRevokeId && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
-            onClick={() => setConfirmRevokeId(null)}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
-              className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 max-w-sm mx-4 border border-gray-200 dark:border-gray-700"
-            >
-              <div className={`flex items-center gap-3 mb-4 ${isRTL ? "flex-row-reverse" : ""}`}>
-                <div className="p-2 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-xl">
+          <ModalOverlay onClose={() => setConfirmRevokeId(null)}>
+            <ModalCard isRTL={isRTL}>
+              <div className={`flex items-center gap-3 mb-5 ${isRTL ? "flex-row-reverse" : ""}`}>
+                <div className="p-2.5 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-xl">
                   <AlertCircle className="w-6 h-6" />
                 </div>
                 <h3 className="text-lg font-bold text-gray-900 dark:text-white">{t.revokeConfirmTitle}</h3>
               </div>
               <p className={`text-sm text-gray-600 dark:text-gray-400 mb-2 ${isRTL ? "text-right" : ""}`}>{t.revokeConfirmMsg}</p>
-              <p className={`text-xs text-red-600 dark:text-red-400 mb-6 ${isRTL ? "text-right" : ""}`}>{t.securityNote}</p>
+              <p className={`text-xs text-red-500 dark:text-red-400 mb-6 ${isRTL ? "text-right" : ""}`}>{t.securityNote}</p>
               <div className={`flex gap-3 ${isRTL ? "flex-row-reverse" : ""}`}>
-                <button
-                  onClick={() => setConfirmRevokeId(null)}
-                  className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-all"
-                >
+                <button onClick={() => setConfirmRevokeId(null)} className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-all">
                   {t.cancel}
                 </button>
                 <button
@@ -417,49 +407,29 @@ export default function SessionsSettings() {
                   disabled={revokingId === confirmRevokeId}
                   className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-red-600 rounded-xl hover:bg-red-700 disabled:opacity-50 transition-all inline-flex items-center justify-center gap-2"
                 >
-                  {revokingId === confirmRevokeId ? (
-                    <RefreshCw className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Trash2 className="w-4 h-4" />
-                  )}
+                  {revokingId === confirmRevokeId ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                   {t.confirm}
                 </button>
               </div>
-            </motion.div>
-          </motion.div>
+            </ModalCard>
+          </ModalOverlay>
         )}
       </AnimatePresence>
 
-      {/* Confirm revoke all modal */}
       <AnimatePresence>
         {confirmRevokeAll && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
-            onClick={() => setConfirmRevokeAll(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
-              className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 max-w-sm mx-4 border border-gray-200 dark:border-gray-700"
-            >
-              <div className={`flex items-center gap-3 mb-4 ${isRTL ? "flex-row-reverse" : ""}`}>
-                <div className="p-2 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-xl">
+          <ModalOverlay onClose={() => setConfirmRevokeAll(false)}>
+            <ModalCard isRTL={isRTL}>
+              <div className={`flex items-center gap-3 mb-5 ${isRTL ? "flex-row-reverse" : ""}`}>
+                <div className="p-2.5 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-xl">
                   <LogOut className="w-6 h-6" />
                 </div>
                 <h3 className="text-lg font-bold text-gray-900 dark:text-white">{t.revokeAllOthers}</h3>
               </div>
               <p className={`text-sm text-gray-600 dark:text-gray-400 mb-2 ${isRTL ? "text-right" : ""}`}>{t.revokeAllConfirm}</p>
-              <p className={`text-xs text-red-600 dark:text-red-400 mb-6 ${isRTL ? "text-right" : ""}`}>{t.revokeAllWarning}</p>
+              <p className={`text-xs text-red-500 dark:text-red-400 mb-6 ${isRTL ? "text-right" : ""}`}>{t.revokeAllWarning}</p>
               <div className={`flex gap-3 ${isRTL ? "flex-row-reverse" : ""}`}>
-                <button
-                  onClick={() => setConfirmRevokeAll(false)}
-                  className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-all"
-                >
+                <button onClick={() => setConfirmRevokeAll(false)} className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-all">
                   {t.cancel}
                 </button>
                 <button
@@ -467,16 +437,12 @@ export default function SessionsSettings() {
                   disabled={isRevokingAll}
                   className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-red-600 rounded-xl hover:bg-red-700 disabled:opacity-50 transition-all inline-flex items-center justify-center gap-2"
                 >
-                  {isRevokingAll ? (
-                    <RefreshCw className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <LogOut className="w-4 h-4" />
-                  )}
+                  {isRevokingAll ? <RefreshCw className="w-4 h-4 animate-spin" /> : <LogOut className="w-4 h-4" />}
                   {t.confirm}
                 </button>
               </div>
-            </motion.div>
-          </motion.div>
+            </ModalCard>
+          </ModalOverlay>
         )}
       </AnimatePresence>
     </div>
@@ -493,6 +459,7 @@ function SessionCard({
   t,
   isRTL,
   language,
+  isDark,
   onRevoke,
   isRevoking,
 }: {
@@ -501,10 +468,12 @@ function SessionCard({
   t: typeof translations.ar
   isRTL: boolean
   language: "ar" | "en"
+  isDark: boolean
   onRevoke: () => void
   isRevoking: boolean
 }) {
   const [expanded, setExpanded] = useState(isCurrent)
+  const active = useMemo(() => isActiveNow(session.lastActive), [session.lastActive])
 
   return (
     <motion.div
@@ -512,43 +481,40 @@ function SessionCard({
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -8 }}
-      className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm border overflow-hidden transition-colors ${
+      className={`rounded-2xl shadow-sm border overflow-hidden transition-all duration-200 ${
         isCurrent
-          ? "border-green-200 dark:border-green-700/50 ring-1 ring-green-100 dark:ring-green-900/30"
-          : "border-gray-200 dark:border-gray-700"
+          ? "bg-gradient-to-br from-emerald-50/80 to-white dark:from-emerald-950/20 dark:to-gray-800 border-emerald-200 dark:border-emerald-800/40"
+          : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700/50 hover:border-gray-300 dark:hover:border-gray-600"
       }`}
     >
-      {/* Header row */}
+      {/* Header */}
       <div
-        className={`flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors ${isRTL ? "flex-row-reverse" : ""}`}
+        className={`flex items-center justify-between p-4 cursor-pointer transition-colors ${isRTL ? "flex-row-reverse" : ""} ${expanded ? "border-b border-gray-100 dark:border-gray-700/40" : ""}`}
         onClick={() => setExpanded(!expanded)}
       >
         <div className={`flex items-center gap-3 ${isRTL ? "flex-row-reverse" : ""}`}>
-          {/* Device icon */}
-          <div
-            className={`flex-shrink-0 p-2 rounded-xl ${
-              isCurrent
-                ? "bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400"
-                : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
-            }`}
-          >
+          <div className={`flex-shrink-0 p-2.5 rounded-xl transition-colors ${
+            isCurrent
+              ? "bg-emerald-100 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+              : "bg-gray-100 dark:bg-gray-700/60 text-gray-500 dark:text-gray-400"
+          }`}>
             {deviceIcon(session.deviceType)}
           </div>
           <div>
             <div className={`flex items-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}>
-              <span className="font-medium text-gray-900 dark:text-white text-sm">
+              <span className="font-semibold text-gray-900 dark:text-white text-sm">
                 {session.device ?? session.os ?? t.unknown}
               </span>
               {isCurrent && (
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">
+                <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 ring-1 ring-emerald-200 dark:ring-emerald-500/20">
                   {t.thisDevice}
                 </span>
               )}
             </div>
-            <div className={`flex items-center gap-2 mt-0.5 ${isRTL ? "flex-row-reverse" : ""}`}>
+            <div className={`flex items-center gap-1.5 mt-1 ${isRTL ? "flex-row-reverse" : ""}`}>
               {browserBadge(session.browser)}
               {session.os && (
-                <span className="text-xs text-gray-500 dark:text-gray-400">
+                <span className="text-xs text-gray-400 dark:text-gray-500">
                   {session.os}
                 </span>
               )}
@@ -557,78 +523,109 @@ function SessionCard({
         </div>
 
         <div className={`flex items-center gap-3 ${isRTL ? "flex-row-reverse" : ""}`}>
-          {/* Active indicator */}
-          <span className={`w-2 h-2 rounded-full ${isCurrent ? "bg-green-500 animate-pulse" : "bg-gray-400 dark:bg-gray-500"}`} />
+          {isCurrent && active ? (
+            <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-500/15 ${isRTL ? "flex-row-reverse" : ""}`}>
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+              </span>
+              <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">{t.activeNow}</span>
+            </div>
+          ) : (
+            <span className="text-xs text-gray-400 dark:text-gray-500">
+              {relativeTime(session.lastActive, language)}
+            </span>
+          )}
           <ChevronDown
-            className={`w-4 h-4 text-gray-400 transition-transform ${expanded ? "rotate-180" : ""}`}
+            className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${expanded ? "rotate-180" : ""}`}
           />
         </div>
       </div>
 
-      {/* Expanded details */}
+      {/* Expanded */}
       <AnimatePresence>
         {expanded && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.25 }}
+            transition={{ duration: 0.25, ease: "easeInOut" }}
             className="overflow-hidden"
           >
-            <div className="px-4 pb-4 border-t border-gray-100 dark:border-gray-700/50">
-              <div className="grid grid-cols-2 gap-3 mt-4 text-sm">
-                <DetailItem
+            <div className="p-5 space-y-5">
+              {/* Info Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                <InfoBlock
                   icon={<Monitor className="w-4 h-4" />}
                   label={t.device}
                   value={session.device ?? t.unknown}
+                  sub={session.os}
                   isRTL={isRTL}
                 />
-                <DetailItem
+                <InfoBlock
                   icon={<Globe className="w-4 h-4" />}
                   label={t.browser}
                   value={session.browser ?? t.unknown}
+                  sub={session.browserVersion}
                   isRTL={isRTL}
                 />
-                <DetailItem
+                <InfoBlock
                   icon={<Wifi className="w-4 h-4" />}
                   label={t.ip}
                   value={session.ip ?? "—"}
                   isRTL={isRTL}
                 />
-                <DetailItem
-                  icon={<MapPin className="w-4 h-4" />}
-                  label={t.location}
-                  value={
-                    session.location
-                      ? `${session.location.flag} ${session.location.city}, ${session.location.country}`
-                      : session.ip
-                        ? t.localDev
-                        : t.unknown
-                  }
-                  isRTL={isRTL}
-                />
-                <DetailItem
-                  icon={<Clock className="w-4 h-4" />}
-                  label={t.lastActive}
-                  value={relativeTime(session.lastActive, language)}
-                  isRTL={isRTL}
-                />
-                <DetailItem
+                <InfoBlock
                   icon={<Clock className="w-4 h-4" />}
                   label={t.signedInAt}
                   value={relativeTime(session.createdAt, language)}
                   isRTL={isRTL}
                 />
-                <DetailItem
-                  icon={<MapPin className="w-4 h-4" />}
+                <InfoBlock
+                  icon={<Signal className="w-4 h-4" />}
+                  label={t.lastActive}
+                  value={active ? t.activeNow : relativeTime(session.lastActive, language)}
+                  highlight={active}
+                  isRTL={isRTL}
+                />
+                <InfoBlock
+                  icon={<Shield className="w-4 h-4" />}
                   label={t.os}
                   value={session.os ?? t.unknown}
+                  sub={session.osVersion}
                   isRTL={isRTL}
                 />
               </div>
 
+              {/* Location Map Section */}
+              {session.location && session.location.lat && session.location.lng && (
+                <div className="rounded-2xl border border-gray-200 dark:border-gray-700/50 overflow-hidden">
+                  <div className={`flex items-center justify-between px-4 py-3 bg-gray-50 dark:bg-gray-800/60 border-b border-gray-200 dark:border-gray-700/50 ${isRTL ? "flex-row-reverse" : ""}`}>
+                    <div className={`flex items-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}>
+                      <MapPin className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t.locationMap}</span>
+                    </div>
+                    <div className={`flex items-center gap-1.5 ${isRTL ? "flex-row-reverse" : ""}`}>
+                      <span className="text-sm">{session.location.flag}</span>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">
+                        {session.location.city}, {session.location.country}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="h-[200px]">
+                    <SessionMap
+                      lat={session.location.lat}
+                      lng={session.location.lng}
+                      city={session.location.city}
+                      country={session.location.country}
+                      isDark={isDark}
+                    />
+                  </div>
+                </div>
+              )}
+
               {/* Revoke button */}
-              <div className="mt-4 flex justify-end">
+              <div className={`flex justify-end ${isRTL ? "flex-row-reverse" : ""}`}>
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
@@ -637,7 +634,7 @@ function SessionCard({
                     onRevoke()
                   }}
                   disabled={isRevoking}
-                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/30 rounded-xl hover:bg-red-100 dark:hover:bg-red-900/30 disabled:opacity-50 transition-all"
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800/30 rounded-xl hover:bg-red-100 dark:hover:bg-red-900/30 disabled:opacity-50 transition-all"
                 >
                   {isRevoking ? (
                     <RefreshCw className="w-4 h-4 animate-spin" style={isRTL ? { marginLeft: "0.5rem" } : { marginRight: "0.5rem" }} />
@@ -656,25 +653,70 @@ function SessionCard({
 }
 
 // ─────────────────────────────────────────────
-// Detail Item (reused inside each card)
+// Info Block (used inside session cards)
 // ─────────────────────────────────────────────
 
-function DetailItem({
+function InfoBlock({
   icon,
   label,
   value,
+  sub,
+  highlight,
   isRTL,
 }: {
   icon: React.ReactNode
   label: string
   value: string
+  sub?: string | null
+  highlight?: boolean
   isRTL: boolean
 }) {
   return (
-    <div className={`flex items-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}>
-      <span className="text-gray-400 dark:text-gray-500 flex-shrink-0">{icon}</span>
-      <span className="text-gray-500 dark:text-gray-400 text-xs">{label}:</span>
-      <span className="text-gray-900 dark:text-white text-xs font-medium truncate">{value}</span>
+    <div className={`space-y-1 ${isRTL ? "text-right" : ""}`}>
+      <div className={`flex items-center gap-1.5 ${isRTL ? "flex-row-reverse" : ""}`}>
+        <span className="text-gray-400 dark:text-gray-500">{icon}</span>
+        <span className="text-xs text-gray-400 dark:text-gray-500 font-medium uppercase tracking-wider">{label}</span>
+      </div>
+      <div>
+        <p className={`text-sm font-semibold ${highlight ? "text-emerald-600 dark:text-emerald-400" : "text-gray-900 dark:text-white"}`}>
+          {value}
+        </p>
+        {sub && (
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{sub}</p>
+        )}
+      </div>
     </div>
+  )
+}
+
+// ─────────────────────────────────────────────
+// Modal Helpers
+// ─────────────────────────────────────────────
+
+function ModalOverlay({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+      onClick={onClose}
+    >
+      {children}
+    </motion.div>
+  )
+}
+
+function ModalCard({ children, isRTL: _isRTL }: { children: React.ReactNode; isRTL: boolean }) {
+  return (
+    <motion.div
+      initial={{ scale: 0.95, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      exit={{ scale: 0.95, opacity: 0 }}
+      onClick={(e) => e.stopPropagation()}
+      className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 max-w-sm w-full border border-gray-200 dark:border-gray-700"
+    >
+      {children}
+    </motion.div>
   )
 }

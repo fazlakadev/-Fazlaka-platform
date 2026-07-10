@@ -3,6 +3,8 @@
 @tailwind components;
 @tailwind utilities;
 
+@import "leaflet/dist/leaflet.css";
+
 /* متغيرات الألوان الجديدة */
 :root {
   --glass-bg: rgba(255, 255, 255, 0.25);
@@ -252,4 +254,16 @@
 @keyframes highlight {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
+}
+
+/* Leaflet marker fix for Next.js */
+.leaflet-container {
+  font-family: inherit;
+  background: #e5e3df;
+}
+.dark .leaflet-container {
+  background: #1a1a2e;
+}
+.leaflet-container img {
+  display: inline;
 }
