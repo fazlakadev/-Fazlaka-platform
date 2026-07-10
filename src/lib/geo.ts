@@ -2,6 +2,7 @@ export interface GeoInfo {
   country: string
   countryCode: string
   city: string
+  region: string
   flag: string
   lat: number
   lng: number
@@ -35,6 +36,7 @@ export async function getGeoFromIp(ip: string | null): Promise<GeoInfo | null> {
       country?: string
       country_code?: string
       city?: string
+      region?: string
       latitude?: number
       longitude?: number
     }
@@ -45,6 +47,7 @@ export async function getGeoFromIp(ip: string | null): Promise<GeoInfo | null> {
       country: data.country,
       countryCode: data.country_code ?? "",
       city: data.city ?? "",
+      region: data.region ?? "",
       flag: countryCodeToFlag(data.country_code ?? ""),
       lat: data.latitude,
       lng: data.longitude,

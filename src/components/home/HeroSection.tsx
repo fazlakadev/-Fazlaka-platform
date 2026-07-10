@@ -70,6 +70,28 @@ const Spinner = () => (
   </svg>
 );
 
+// =============== كشف روابط الفيديو ===============
+function toYouTubeEmbed(url: string): string | null {
+  const patterns = [
+    /(?:youtube\.com\/watch\?.*v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/|youtube\.com\/v\/)([a-zA-Z0-9_-]{11})/,
+  ];
+  for (const p of patterns) {
+    const m = url.match(p);
+    if (m?.[1]) return `https://www.youtube.com/embed/${m[1]}?autoplay=1&mute=1&loop=0&controls=0&modestbranding=1&rel=0&playsinline=1`;
+  }
+  return null;
+}
+
+function toVimeoEmbed(url: string): string | null {
+  const m = url.match(/vimeo\.com\/(\d+)/);
+  if (m?.[1]) return `https://player.vimeo.com/video/${m[1]}?autoplay=1&muted=1&controls=0`;
+  return null;
+}
+
+function getIframeSrc(url: string): string | null {
+  return toYouTubeEmbed(url) || toVimeoEmbed(url);
+}
+
 // =============== مكوّن سلايد واحد (الخلفية) ===============
 function SlideBackground({
   slide,
@@ -92,6 +114,8 @@ function SlideBackground({
 }) {
   const { image, videoUrl } = getMedia(slide, language);
   const isVideo = slide.mediaType === 'VIDEO' && !!videoUrl;
+  const iframeSrc = isVideo && videoUrl ? getIframeSrc(videoUrl) : null;
+  const isDirectVideo = isVideo && !iframeSrc;
 
   return (
     <div
@@ -112,8 +136,20 @@ function SlideBackground({
         </div>
       )}
 
-      {/* طبقة الفيديو — تُركّب فقط للسلايد النشط أو السلايدات السابقة المحفوظة */}
-      {isVideo && mounted && !videoState.error && (
+      {/* طبقة فيديو iframe — يوتيوب / فيميو */}
+      {isVideo && iframeSrc && active && (
+        <iframe
+          key={slide.id}
+          src={iframeSrc}
+          className="absolute inset-0 w-full h-full object-cover border-0"
+          allow="autoplay; encrypted-media; picture-in-picture"
+          allowFullScreen
+          style={{ pointerEvents: 'none' }}
+        />
+      )}
+
+      {/* طبقة فيديو مباشر — ملفات mp4 / webm */}
+      {isDirectVideo && mounted && !videoState.error && (
         <video
           ref={active ? videoRef : undefined}
           key={slide.id}
@@ -137,7 +173,7 @@ function SlideBackground({
       )}
 
       {/* مؤشر التحميل للفيديو */}
-      {isVideo && active && videoState.buffering && !videoState.error && (
+      {isDirectVideo && active && videoState.buffering && !videoState.error && (
         <div className="absolute inset-0 flex items-center justify-center z-10">
           <Spinner />
         </div>
@@ -189,6 +225,7 @@ export default function HeroSection({ texts }: { texts: HeroTexts }) {
 
   const activeSlide = sliders[active];
   const isActiveVideo = !!activeSlide && activeSlide.mediaType === 'VIDEO' && !!getMedia(activeSlide, language).videoUrl;
+  const isActiveDirectVideo = isActiveVideo && !getIframeSrc(getMedia(activeSlide, language).videoUrl || '');
 
   const next = useCallback(() => {
     setActive(prev => (prev + 1) % Math.max(sliders.length, 1));
@@ -215,15 +252,18 @@ export default function HeroSection({ texts }: { texts: HeroTexts }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active]);
 
-  // التشغيل التلقائي للصور فقط (الفيديو ينتقل عند onEnded)
+  // التشغيل التلقائي للصور فقط (الفيديو المباشر ينتقل عند onEnded، والـ iframe بعد مهلة)
   useEffect(() => {
     if (paused || loading || sliders.length === 0) return;
     if (imageTimerRef.current) clearTimeout(imageTimerRef.current);
     if (!isActiveVideo) {
       imageTimerRef.current = setTimeout(() => next(), IMAGE_DURATION);
+    } else if (isActiveVideo && !isActiveDirectVideo) {
+      // فيديو iframe (يوتيوب/فيميو) — ننتقل بعد 15 ثانية لأننا لا نستطيع سماع onEnded
+      imageTimerRef.current = setTimeout(() => next(), 15000);
     }
     return () => { if (imageTimerRef.current) clearTimeout(imageTimerRef.current); };
-  }, [active, paused, loading, sliders.length, isActiveVideo, next]);
+  }, [active, paused, loading, sliders.length, isActiveVideo, isActiveDirectVideo, next]);
 
   // دعم لوحة المفاتيح
   useEffect(() => {
@@ -449,7 +489,7 @@ export default function HeroSection({ texts }: { texts: HeroTexts }) {
 
       {/* ===== شريط التقدّم العلوي ===== */}
       <div className="absolute top-0 left-0 right-0 z-30 h-1 bg-white/10">
-        {isActiveVideo ? (
+        {isActiveDirectVideo ? (
           <div className="h-full bg-gradient-to-r from-cyan-400 to-indigo-500 transition-[width] duration-200" style={{ width: `${progress}%` }} />
         ) : (
           !paused && !loading && sliders.length > 0 && (
@@ -472,9 +512,9 @@ export default function HeroSection({ texts }: { texts: HeroTexts }) {
         </button>
       </div>
 
-      {/* ===== تحكّم الفيديو (يظهر فقط للسلايدات الفيديو) ===== */}
+      {/* ===== تحكّم الفيديو (يظهر فقط للسلايدات الفيديو المباشر) ===== */}
       <AnimatePresence>
-        {isActiveVideo && !videoError && (
+        {isActiveDirectVideo && !videoError && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}

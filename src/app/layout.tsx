@@ -46,7 +46,7 @@ export default function RootLayout({ // تمت إزالة async لأنه لم ي
               <Toaster position="top-center" />
               <div className="flex flex-col min-h-screen">
                 <NavbarWrapper />
-                <main className="flex-1 relative pt-20">
+                <main className="flex-1 relative">
                   {children}
                 </main>
                 <FooterWrapper />

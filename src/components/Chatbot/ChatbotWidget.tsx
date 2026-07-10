@@ -469,11 +469,7 @@ export default function ChatbotWidget() {
           {!isOpen && (
             <motion.button
               onClick={toggleChatbot}
-              className={`backdrop-blur-xl p-4 rounded-full shadow-xl border ${
-                isDark
-                  ? 'bg-gray-800/80 border-gray-700/50 hover:bg-gray-700/80'
-                  : 'bg-white/80 border-gray-200/50 hover:bg-gray-50/80'
-              }`}
+              className="p-4 rounded-full shadow-xl border border-white/20 bg-gradient-to-br from-cyan-500/30 via-blue-500/30 to-indigo-500/30 backdrop-blur-xl hover:from-cyan-500/50 hover:via-blue-500/50 hover:to-indigo-500/50 transition-all duration-300"
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
             >

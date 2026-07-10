@@ -234,24 +234,6 @@ export default function ProfilePage() {
 
   return (
     <div className={`min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300 ${isRTL ? 'rtl' : 'ltr'}`}>
-
-      {/* Background */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className={`absolute inset-0 transition-colors duration-500 ${
-          isBanned
-            ? 'bg-gradient-to-b from-red-50 via-gray-50 to-gray-100 dark:from-red-950/20 dark:via-gray-900 dark:to-gray-950'
-            : 'bg-gradient-to-b from-blue-50 via-gray-50 to-gray-100 dark:from-blue-950/20 dark:via-gray-900 dark:to-gray-950'
-        }`} />
-        <div className={`absolute top-0 w-full h-96 transition-colors duration-500 ${
-          isBanned
-            ? 'bg-gradient-to-b from-red-200/30 to-transparent dark:from-red-900/20'
-            : 'bg-gradient-to-b from-blue-200/30 to-transparent dark:from-indigo-900/20'
-        }`} />
-        <div className={`absolute top-1/4 left-1/4 w-80 h-80 rounded-full blur-[100px] transition-colors duration-500 ${
-          isBanned ? 'bg-red-300/20 dark:bg-red-600/20' : 'bg-blue-300/20 dark:bg-blue-600/20'
-        }`} />
-      </div>
-
       <div className="max-w-4xl mx-auto px-4 pt-8 pb-12 relative z-10">
 
         {/* Hero Card */}

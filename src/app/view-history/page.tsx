@@ -3,8 +3,8 @@
 import { useState, useEffect, useCallback } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
-import { motion } from "framer-motion"
-import { History, Play, FileText, Eye, Trash2, Search, ArrowLeft, Clock, X, AlertCircle } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
+import { History, Play, FileText, Eye, Trash2, Search, ArrowLeft, Clock, X, AlertCircle, LayoutGrid, List } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { useLanguage } from "@/components/Language/LanguageProvider"
@@ -37,6 +37,11 @@ const translations = {
     hoursAgo_plural: "منذ {h} ساعات",
     daysAgo: "منذ يوم",
     daysAgo_plural: "منذ {d} أيام",
+    listView: "عرض قائمة",
+    gridView: "عرض شبكة",
+    untitled: "بدون عنوان",
+    retry: "إعادة المحاولة",
+    backToProfile: "العودة إلى الملف الشخصي",
   },
   en: {
     title: "View History",
@@ -65,6 +70,11 @@ const translations = {
     hoursAgo_plural: "{h} hours ago",
     daysAgo: "1 day ago",
     daysAgo_plural: "{d} days ago",
+    listView: "List View",
+    gridView: "Grid View",
+    untitled: "Untitled",
+    retry: "Retry",
+    backToProfile: "Back to Profile",
   },
 }
 
@@ -102,6 +112,7 @@ export default function ViewHistoryPage() {
   const [search, setSearch] = useState("")
   const [showConfirm, setShowConfirm] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [viewMode, setViewMode] = useState<"list" | "grid">("list")
 
   const fetchHistory = useCallback(async () => {
     setLoading(true)
@@ -158,54 +169,71 @@ export default function ViewHistoryPage() {
   if (status === "loading") return null
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-950 to-gray-900" dir={isRTL ? "rtl" : "ltr"}>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors" dir={isRTL ? "rtl" : "ltr"}>
       <div className="max-w-5xl mx-auto px-4 py-8">
         {/* Header */}
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-          <Link href="/profile" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-4 text-sm">
-            <ArrowLeft className="w-4 h-4" /> {language === "ar" ? "العودة إلى الملف الشخصي" : "Back to Profile"}
+          <Link href="/profile" className="inline-flex items-center gap-2 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors mb-4 text-sm">
+            <ArrowLeft className="w-4 h-4" /> {t.backToProfile}
           </Link>
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-                <History className="w-7 h-7 text-purple-400" />
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+                <div className="p-2 bg-purple-50 dark:bg-purple-950/30 rounded-xl">
+                  <History className="w-6 h-6 text-purple-500" />
+                </div>
                 {t.title}
               </h1>
-              <p className="text-gray-400 mt-1 text-sm">{t.subtitle}</p>
+              <p className="text-gray-500 dark:text-gray-400 mt-1 text-sm">{t.subtitle}</p>
             </div>
             {history.length > 0 && (
-              <button onClick={() => setShowConfirm(true)} className="flex items-center gap-2 px-4 py-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 rounded-xl text-sm font-semibold transition-all border border-red-600/30">
+              <button onClick={() => setShowConfirm(true)} className="flex items-center gap-2 px-4 py-2 bg-red-50 dark:bg-red-950/30 hover:bg-red-100 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 rounded-xl text-sm font-semibold transition-all border border-red-200 dark:border-red-800/30">
                 <Trash2 className="w-4 h-4" /> {t.clearAll}
               </button>
             )}
           </div>
         </motion.div>
 
-        {/* Filters */}
+        {/* Filters & Controls */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="mb-6">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex gap-2">
               {(["ALL", "EPISODE", "ARTICLE"] as const).map(f => (
-                <button key={f} onClick={() => setFilter(f)} className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${filter === f ? "bg-purple-600 text-white shadow-lg shadow-purple-600/30" : "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white border border-white/10"}`}>
+                <button key={f} onClick={() => setFilter(f)} className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+                  filter === f
+                    ? "bg-blue-500 text-white shadow-lg shadow-blue-500/20"
+                    : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700"
+                }`}>
                   {f === "ALL" ? t.all : f === "EPISODE" ? t.episodes : t.articles}
                 </button>
               ))}
             </div>
-            <div className="relative flex-1 max-w-xs">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-              <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder={t.search} className="w-full pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 text-sm" />
-              {search && (
-                <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white">
-                  <X className="w-4 h-4" />
+            <div className="flex items-center gap-2 flex-1">
+              <div className="relative flex-1 max-w-xs">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder={t.search}
+                  className="w-full pl-10 pr-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-sm" />
+                {search && (
+                  <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+              <div className="flex bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+                <button onClick={() => setViewMode("list")} className={`p-2 transition-colors ${viewMode === "list" ? "bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400" : "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"}`}>
+                  <List className="w-4 h-4" />
                 </button>
-              )}
+                <button onClick={() => setViewMode("grid")} className={`p-2 transition-colors ${viewMode === "grid" ? "bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400" : "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"}`}>
+                  <LayoutGrid className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           </div>
         </motion.div>
 
-        {/* Stats bar */}
+        {/* Stats */}
         {!loading && !error && history.length > 0 && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }} className="mb-4 text-sm text-gray-500">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }} className="mb-4 text-sm text-gray-500 dark:text-gray-400">
             {filtered.length} / {history.length} {t.items}
           </motion.div>
         )}
@@ -213,26 +241,26 @@ export default function ViewHistoryPage() {
         {/* Content */}
         {loading ? (
           <div className="flex justify-center py-24">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500" />
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500" />
           </div>
         ) : error ? (
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-24">
             <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
-            <p className="text-red-400 font-semibold text-lg mb-2">{error}</p>
-            <button onClick={fetchHistory} className="px-6 py-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-colors text-sm">{language === "ar" ? "إعادة المحاولة" : "Retry"}</button>
+            <p className="text-red-500 dark:text-red-400 font-semibold text-lg mb-2">{error}</p>
+            <button onClick={fetchHistory} className="px-6 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors text-sm">{t.retry}</button>
           </motion.div>
         ) : filtered.length === 0 ? (
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-24">
-            <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-6">
-              <History className="w-10 h-10 text-gray-500" />
+            <div className="w-20 h-20 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mx-auto mb-6">
+              <History className="w-10 h-10 text-gray-300 dark:text-gray-600" />
             </div>
-            <p className="text-white text-xl font-semibold mb-2">{t.noHistory}</p>
-            <p className="text-gray-500 mb-6">{t.noHistoryDesc}</p>
-            <Link href="/episodes" className="inline-flex items-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-colors font-semibold">
+            <p className="text-gray-900 dark:text-white text-xl font-semibold mb-2">{t.noHistory}</p>
+            <p className="text-gray-500 dark:text-gray-400 mb-6">{t.noHistoryDesc}</p>
+            <Link href="/episodes" className="inline-flex items-center gap-2 px-6 py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors font-semibold">
               <Play className="w-4 h-4" /> {t.startExploring}
             </Link>
           </motion.div>
-        ) : (
+        ) : viewMode === "list" ? (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
             {filtered.map((item, i) => (
               <motion.div
@@ -240,49 +268,40 @@ export default function ViewHistoryPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.03 }}
-                className="group relative bg-white/5 hover:bg-white/10 border border-white/10 hover:border-purple-500/30 rounded-2xl p-4 transition-all"
+                className="group relative bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-750 border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-700 rounded-2xl p-4 transition-all hover:shadow-md"
               >
                 <div className="flex items-center gap-4">
-                  {/* Thumbnail */}
-                  <div className={`shrink-0 w-16 h-16 rounded-xl overflow-hidden ${item.contentType === "EPISODE" ? "bg-blue-600/20" : "bg-green-600/20"}`}>
+                  <div className={`shrink-0 w-16 h-16 rounded-xl overflow-hidden ${item.contentType === "EPISODE" ? "bg-blue-50 dark:bg-blue-950/30" : "bg-green-50 dark:bg-green-950/30"}`}>
                     {item.thumbnailUrl ? (
-                      <Image src={item.thumbnailUrl} alt="" width={64} height={64} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                      <Image src={item.thumbnailUrl} alt="" width={64} height={64} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
                         {item.contentType === "EPISODE" ? <Play className="w-6 h-6 text-blue-400" /> : <FileText className="w-6 h-6 text-green-400" />}
                       </div>
                     )}
                   </div>
-
-                  {/* Info */}
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-white truncate">{item.title || (language === "ar" ? "بدون عنوان" : "Untitled")}</p>
+                    <p className="font-semibold text-gray-900 dark:text-white truncate">{item.title || t.untitled}</p>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${item.contentType === "EPISODE" ? "bg-blue-600/20 text-blue-400" : "bg-green-600/20 text-green-400"}`}>
+                      <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
+                        item.contentType === "EPISODE"
+                          ? "bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400"
+                          : "bg-green-50 dark:bg-green-950/30 text-green-600 dark:text-green-400"
+                      }`}>
                         {item.contentType === "EPISODE" ? t.episode : t.article}
                       </span>
-                      <span className="text-xs text-gray-500 flex items-center gap-1">
+                      <span className="text-xs text-gray-400 dark:text-gray-500 flex items-center gap-1">
                         <Clock className="w-3 h-3" /> {timeAgo(item.createdAt, t)}
                       </span>
                     </div>
                   </div>
-
-                  {/* Actions */}
                   <div className="flex items-center gap-2 shrink-0">
-                    <a
-                      href={`/${item.contentType === "EPISODE" ? "episodes" : "articles"}/${item.slug}`}
-                      target="_blank"
-                      className="p-2.5 bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-400 rounded-xl transition-all hover:scale-105"
-                      title={t.view}
-                    >
+                    <a href={`/${item.contentType === "EPISODE" ? "episodes" : "articles"}/${item.slug}`} target="_blank"
+                      className="p-2.5 bg-blue-50 dark:bg-blue-950/30 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-500 rounded-xl transition-all hover:scale-105" title={t.view}>
                       <Eye className="w-4 h-4" />
                     </a>
-                    <button
-                      onClick={(e) => handleDelete(e, item.id)}
-                      disabled={deletingId === item.id}
-                      className="p-2.5 bg-red-600/20 hover:bg-red-600/40 text-red-400 rounded-xl transition-all hover:scale-105 disabled:opacity-50"
-                      title={t.delete}
-                    >
+                    <button onClick={(e) => handleDelete(e, item.id)} disabled={deletingId === item.id}
+                      className="p-2.5 bg-red-50 dark:bg-red-950/30 hover:bg-red-100 dark:hover:bg-red-900/40 text-red-500 rounded-xl transition-all hover:scale-105 disabled:opacity-50" title={t.delete}>
                       {deletingId === item.id ? (
                         <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-red-400" />
                       ) : (
@@ -294,22 +313,77 @@ export default function ViewHistoryPage() {
               </motion.div>
             ))}
           </motion.div>
+        ) : (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            {filtered.map((item, i) => (
+              <motion.div
+                key={item.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.03 }}
+                className="group relative bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-700 rounded-2xl overflow-hidden transition-all hover:shadow-md"
+              >
+                <div className={`aspect-video relative ${item.contentType === "EPISODE" ? "bg-blue-50 dark:bg-blue-950/30" : "bg-green-50 dark:bg-green-950/30"}`}>
+                  {item.thumbnailUrl ? (
+                    <Image src={item.thumbnailUrl} alt="" fill className="object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      {item.contentType === "EPISODE" ? <Play className="w-8 h-8 text-blue-300 dark:text-blue-600" /> : <FileText className="w-8 h-8 text-green-300 dark:text-green-600" />}
+                    </div>
+                  )}
+                  <div className="absolute top-2 right-2 flex gap-1">
+                    <a href={`/${item.contentType === "EPISODE" ? "episodes" : "articles"}/${item.slug}`} target="_blank"
+                      onClick={(e) => e.stopPropagation()}
+                      className="p-1.5 bg-white/90 dark:bg-gray-900/90 rounded-lg hover:bg-white dark:hover:bg-gray-800 transition-colors shadow-sm">
+                      <Eye className="w-3.5 h-3.5 text-blue-500" />
+                    </a>
+                    <button onClick={(e) => handleDelete(e, item.id)} disabled={deletingId === item.id}
+                      className="p-1.5 bg-white/90 dark:bg-gray-900/90 rounded-lg hover:bg-white dark:hover:bg-gray-800 transition-colors shadow-sm disabled:opacity-50">
+                      {deletingId === item.id ? (
+                        <div className="animate-spin rounded-full h-3.5 w-3.5 border-t-2 border-b-2 border-red-400" />
+                      ) : (
+                        <Trash2 className="w-3.5 h-3.5 text-red-500" />
+                      )}
+                    </button>
+                  </div>
+                  <div className="absolute bottom-2 left-2">
+                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                      item.contentType === "EPISODE"
+                        ? "bg-blue-500 text-white"
+                        : "bg-green-500 text-white"
+                    }`}>
+                      {item.contentType === "EPISODE" ? t.episode : t.article}
+                    </span>
+                  </div>
+                </div>
+                <div className="p-3">
+                  <p className="font-semibold text-gray-900 dark:text-white text-sm truncate">{item.title || t.untitled}</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 flex items-center gap-1">
+                    <Clock className="w-3 h-3" /> {timeAgo(item.createdAt, t)}
+                  </p>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
         )}
 
-        {/* Clear All Confirmation Modal */}
-        {showConfirm && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowConfirm(false)}>
-            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-gray-800 rounded-2xl p-6 max-w-sm mx-4 border border-gray-700 shadow-2xl" onClick={e => e.stopPropagation()}>
-              <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
-              <p className="text-white text-lg font-semibold text-center mb-2">{t.confirmClear}</p>
-              <p className="text-gray-400 text-sm text-center mb-6">{history.length} {t.items}</p>
-              <div className="flex gap-3">
-                <button onClick={() => setShowConfirm(false)} className="flex-1 px-4 py-2.5 bg-gray-700 text-gray-300 rounded-xl hover:bg-gray-600 transition-colors font-semibold text-sm">{t.cancel}</button>
-                <button onClick={handleClearAll} className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors font-semibold text-sm">{t.confirm}</button>
-              </div>
+        {/* Clear All Modal */}
+        <AnimatePresence>
+          {showConfirm && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setShowConfirm(false)}>
+              <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}
+                className="bg-white dark:bg-gray-800 rounded-2xl p-6 max-w-sm mx-4 border border-gray-200 dark:border-gray-700 shadow-2xl" onClick={e => e.stopPropagation()}>
+                <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
+                <p className="text-gray-900 dark:text-white text-lg font-semibold text-center mb-2">{t.confirmClear}</p>
+                <p className="text-gray-500 dark:text-gray-400 text-sm text-center mb-6">{history.length} {t.items}</p>
+                <div className="flex gap-3">
+                  <button onClick={() => setShowConfirm(false)} className="flex-1 px-4 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors font-semibold text-sm">{t.cancel}</button>
+                  <button onClick={handleClearAll} className="flex-1 px-4 py-2.5 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-colors font-semibold text-sm">{t.confirm}</button>
+                </div>
+              </motion.div>
             </motion.div>
-          </div>
-        )}
+          )}
+        </AnimatePresence>
       </div>
     </div>
   )

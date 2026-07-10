@@ -143,7 +143,7 @@ export async function GET(request: NextRequest) {
   const allIps = new Set(rows.map((r) => r.ip).filter(Boolean) as string[])
   if (ip) allIps.add(ip)
   const uniqueIps = [...allIps]
-  const geoMap = new Map<string, { country: string; city: string; flag: string; lat: number; lng: number } | null>()
+  const geoMap = new Map<string, { country: string; city: string; region: string; flag: string; lat: number; lng: number } | null>()
   await Promise.all(
     uniqueIps.map(async (geoIp) => {
       const geo = await getGeoFromIp(geoIp)
@@ -163,7 +163,7 @@ export async function GET(request: NextRequest) {
       browserVersion: r.browserVersion,
       os: r.os,
       osVersion: r.osVersion,
-      location: (r.ip ? geoMap.get(r.ip) ?? null : null) as { country: string; city: string; flag: string; lat: number; lng: number } | null,
+      location: (r.ip ? geoMap.get(r.ip) ?? null : null) as { country: string; city: string; region: string; flag: string; lat: number; lng: number } | null,
       createdAt: r.createdAt.toISOString(),
       lastActive: r.lastActive.toISOString(),
       expiresAt: r.expiresAt.toISOString(),

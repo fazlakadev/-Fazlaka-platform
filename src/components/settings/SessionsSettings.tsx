@@ -127,7 +127,7 @@ interface SessionRow {
   browserVersion: string | null
   os: string | null
   osVersion: string | null
-  location: { country: string; city: string; flag: string; lat: number; lng: number } | null
+  location: { country: string; city: string; region: string; flag: string; lat: number; lng: number } | null
   createdAt: string
   lastActive: string
   expiresAt: string
@@ -610,7 +610,7 @@ function SessionCard({
                     <div className={`flex items-center gap-1.5 ${isRTL ? "flex-row-reverse" : ""}`}>
                       <span className="text-sm">{session.location.flag}</span>
                       <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                        {session.location.city}{session.location.city && session.location.country ? ", " : ""}{session.location.country}
+                        {session.location.region || session.location.city}{(session.location.region || session.location.city) && session.location.country ? ", " : ""}{session.location.country}
                       </span>
                     </div>
                   ) : session.ip ? (
@@ -625,6 +625,7 @@ function SessionCard({
                       lat={session.location.lat}
                       lng={session.location.lng}
                       city={session.location.city}
+                      region={session.location.region}
                       country={session.location.country}
                       flag={session.location.flag}
                       isDark={isDark}
