@@ -127,7 +127,7 @@ interface SessionRow {
   browserVersion: string | null
   os: string | null
   osVersion: string | null
-  location: { country: string; city: string; region: string; flag: string; lat: number; lng: number } | null
+  location: { country: string; city: string; region: string; flag: string; lat: number; lng: number; postal: string; isp: string; org: string; timezone: string; continent: string } | null
   createdAt: string
   lastActive: string
   expiresAt: string
@@ -604,14 +604,24 @@ function SessionCard({
                     <div className="p-1.5 rounded-lg bg-blue-100 dark:bg-blue-500/15">
                       <MapPin className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                     </div>
-                    <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{t.locationMap}</span>
+                    <div>
+                      <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{t.locationMap}</span>
+                      {session.location?.isp && (
+                        <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5">{session.location.isp}</p>
+                      )}
+                    </div>
                   </div>
                   {session.location ? (
-                    <div className={`flex items-center gap-1.5 ${isRTL ? "flex-row-reverse" : ""}`}>
-                      <span className="text-sm">{session.location.flag}</span>
-                      <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                        {session.location.region || session.location.city}{(session.location.region || session.location.city) && session.location.country ? ", " : ""}{session.location.country}
-                      </span>
+                    <div className={`flex flex-col items-end gap-0.5 ${isRTL ? "items-start" : ""}`}>
+                      <div className={`flex items-center gap-1.5 ${isRTL ? "flex-row-reverse" : ""}`}>
+                        <span className="text-sm">{session.location.flag}</span>
+                        <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                          {session.location.region || session.location.city}{(session.location.region || session.location.city) && session.location.country ? ", " : ""}{session.location.country}
+                        </span>
+                      </div>
+                      {session.location.timezone && (
+                        <span className="text-[10px] text-gray-400 dark:text-gray-500">{session.location.timezone}</span>
+                      )}
                     </div>
                   ) : session.ip ? (
                     <span className="text-xs text-gray-400 dark:text-gray-500 font-mono">{session.ip}</span>
@@ -628,6 +638,11 @@ function SessionCard({
                       region={session.location.region}
                       country={session.location.country}
                       flag={session.location.flag}
+                      postal={session.location.postal}
+                      isp={session.location.isp}
+                      org={session.location.org}
+                      timezone={session.location.timezone}
+                      continent={session.location.continent}
                       isDark={isDark}
                     />
                   </div>
@@ -640,6 +655,9 @@ function SessionCard({
                     <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
                       {session.ip ? session.ip : t.unknown}
                     </p>
+                    {session.location?.isp && (
+                      <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5">{session.location.isp}</p>
+                    )}
                   </div>
                 )}
               </div>

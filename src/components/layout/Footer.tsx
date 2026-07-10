@@ -228,10 +228,6 @@ export default function Footer() {
   const sectionCardBg = isDark
     ? "bg-gray-800/30 border-gray-700/30"
     : "bg-white/60 border-gray-200/50";
-  const headerBg = isDark
-    ? "bg-gray-800/40 border-gray-700/30"
-    : "bg-white/60 border-gray-200/50";
-
   return (
     <>
       <div className="w-full h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500">

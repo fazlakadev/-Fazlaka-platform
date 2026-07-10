@@ -248,8 +248,6 @@ function FaqContent() {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const [mounted, setMounted] = useState(false);
-
   const reduceMotion = useReducedMotion();
   const searchParams = useSearchParams();
   const faqIdFromSearch = searchParams.get("faq");
@@ -260,7 +258,6 @@ function FaqContent() {
   const t = translations[language];
 
   useEffect(() => {
-    setMounted(true);
     const savedDarkMode = localStorage.getItem('darkMode');
     if (savedDarkMode !== null) {
       setIsDarkMode(savedDarkMode === 'true');
@@ -292,7 +289,7 @@ function FaqContent() {
       clearTimeout(timeout);
       window.removeEventListener("resize", measure);
     };
-  }, [faqs]);
+  }, []);
 
   useEffect(() => {
     if (faqIdFromSearch && faqs.length > 0) {
@@ -307,7 +304,7 @@ function FaqContent() {
         }, 300);
       }
     }
-  }, [faqIdFromSearch, faqs]);
+  }, [faqIdFromSearch]);
 
   const filteredFaqs = faqs.filter((faq) => {
     const matchesSearch = searchTerm.trim()

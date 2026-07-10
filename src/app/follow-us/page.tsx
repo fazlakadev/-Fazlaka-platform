@@ -563,7 +563,7 @@ function FollowUsContent() {
   const [isRTL, setIsRTL] = useState(true);
   const [language, setLanguage] = useState('ar');
   const [mounted, setMounted] = useState(false);
-  const [_lastUpdate, setLastUpdate] = useState<number>(Date.now());
+  const [_lastUpdate, _setLastUpdate] = useState<number>(Date.now());
 
   useEffect(() => {
     setMounted(true);

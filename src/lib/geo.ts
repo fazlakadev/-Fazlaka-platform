@@ -6,6 +6,11 @@ export interface GeoInfo {
   flag: string
   lat: number
   lng: number
+  postal: string
+  isp: string
+  org: string
+  timezone: string
+  continent: string
 }
 
 const cache = new Map<string, GeoInfo>()
@@ -39,6 +44,10 @@ export async function getGeoFromIp(ip: string | null): Promise<GeoInfo | null> {
       region?: string
       latitude?: number
       longitude?: number
+      postal?: string
+      continent?: string
+      timezone?: { id?: string }
+      connection?: { isp?: string; org?: string }
     }
     if (!data.success || !data.country) return null
     if (data.latitude == null || data.longitude == null) return null
@@ -51,6 +60,11 @@ export async function getGeoFromIp(ip: string | null): Promise<GeoInfo | null> {
       flag: countryCodeToFlag(data.country_code ?? ""),
       lat: data.latitude,
       lng: data.longitude,
+      postal: data.postal ?? "",
+      isp: data.connection?.isp ?? "",
+      org: data.connection?.org ?? "",
+      timezone: data.timezone?.id ?? "",
+      continent: data.continent ?? "",
     }
     cache.set(ip, geo)
     return geo

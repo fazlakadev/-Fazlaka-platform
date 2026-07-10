@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useSession } from 'next-auth/react';
 import {
   FileText, Play, Users, Calendar, ArrowUp, ArrowDown, RefreshCw, ChevronDown,
-  HelpCircle, Shield, Layers, FileCheck, ListVideo, Eye, Heart, MessageCircle,
+  HelpCircle, Layers, ListVideo, Eye, Heart, MessageCircle,
   TrendingUp, Activity, BarChart3, UserPlus, BookOpen, Video,
   Globe, Mail, Image as ImageIcon, Layout, type LucideIcon,
   Clock, Star, UserCheck, CheckCircle, Zap, MessageSquare, Bot,

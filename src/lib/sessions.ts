@@ -35,7 +35,7 @@ export interface PublicSession {
   browserVersion: string | null
   os: string | null
   osVersion: string | null
-  location: { country: string; city: string; region: string; flag: string; lat: number; lng: number } | null
+  location: { country: string; city: string; region: string; flag: string; lat: number; lng: number; postal: string; isp: string; org: string; timezone: string; continent: string } | null
   createdAt: string
   lastActive: string
   expiresAt: string
