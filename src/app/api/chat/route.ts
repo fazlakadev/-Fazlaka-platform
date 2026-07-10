@@ -38,21 +38,8 @@ interface ModelsResponse {
   models: ModelInfo[];
 }
 
-// تعريف واجهة للمحتوى القانوني
-interface LegalContent {
-  id: string;
-  title: string;
-  titleEn?: string;
-  content: string;
-  contentEn?: string;
-  [key: string]: unknown;
-}
-
 // استخدام ChatbotKnowledge من chatbotData بدلاً من تعريف KnowledgeBase جديد
-type KnowledgeBase = Omit<ChatbotKnowledge, 'platformInfo'> & {
-  privacyContent?: LegalContent[];
-  termsContent?: LegalContent[];
-};
+type KnowledgeBase = Omit<ChatbotKnowledge, 'platformInfo'>;
 
 export async function POST(req: NextRequest) {
   try {
@@ -155,9 +142,7 @@ Very important: You must always speak in English in your responses.`
       articles: [],
       episodes: [],
       seasons: [],
-      playlists: [],
-      team: [],
-      faqs: []
+      playlists: []
     };
 
     try {
@@ -168,64 +153,13 @@ Very important: You must always speak in English in your responses.`
         articles: knowledgeBase.articles,
         episodes: knowledgeBase.episodes,
         seasons: knowledgeBase.seasons,
-        playlists: knowledgeBase.playlists,
-        team: knowledgeBase.team,
-        faqs: knowledgeBase.faqs
+        playlists: knowledgeBase.playlists
       };
       
       console.log("✅ Knowledge base loaded:", knowledgeBase);
       
     } catch (searchErr) {
       console.warn('Failed to fetch data from database:', searchErr);
-    }
-
-    // --- جلب بيانات الشروط والأحكام وسياسة الخصوصية ---
-    try {
-      // استخدام Prisma بدلاً من mongoose
-      const [privacyContent, termsContent] = await Promise.all([
-        prisma.privacy.findMany({ take: 10 }),
-        prisma.terms.findMany({ take: 10 })
-      ]);
-
-      // تحويل البيانات إلى التنسيق المناسب
-      const formattedPrivacyContent: LegalContent[] = privacyContent.map(item => {
-        const title = userLanguage === 'ar' ? item.title : (item.titleEn || item.title);
-        // استخدام النص مباشرة أو تحويل JSON إذا لزم الأمر
-        const content = userLanguage === 'ar' 
-            ? (typeof item.description === 'string' ? item.description : JSON.stringify(item.description)) 
-            : (typeof item.descriptionEn === 'string' ? item.descriptionEn : JSON.stringify(item.descriptionEn));
-        
-        return {
-          id: item.id,
-          title: title || '',
-          titleEn: item.titleEn || undefined,
-          content: content,
-          contentEn: item.descriptionEn || undefined,
-        };
-      });
-
-      const formattedTermsContent: LegalContent[] = termsContent.map(item => {
-        const title = userLanguage === 'ar' ? item.title : (item.titleEn || item.title);
-        const content = userLanguage === 'ar' 
-            ? (typeof item.description === 'string' ? item.description : JSON.stringify(item.description)) 
-            : (typeof item.descriptionEn === 'string' ? item.descriptionEn : JSON.stringify(item.descriptionEn));
-        
-        return {
-          id: item.id,
-          title: title || '',
-          titleEn: item.titleEn || undefined,
-          content: content,
-          contentEn: item.descriptionEn || undefined,
-        };
-      });
-
-      // إضافة هذه المعلومات إلى allKnowledge
-      allKnowledge.privacyContent = formattedPrivacyContent;
-      allKnowledge.termsContent = formattedTermsContent;
-      
-      console.log("✅ Privacy and Terms content loaded");
-    } catch (legalErr) {
-      console.warn('Failed to fetch privacy and terms content:', legalErr);
     }
 
     // --- بناء الموجه الكامل بناءً على لغة المستخدم ---
@@ -272,27 +206,7 @@ Very important: You must always speak in English in your responses.`
         fullPrompt += `أحدث موسم: ${allKnowledge.seasons[0]?.title || 'غير متوفر'}\n`;
       }
       
-      if (allKnowledge.team && allKnowledge.team.length > 0) {
-        fullPrompt += `عدد أعضاء الفريق: ${allKnowledge.team.length}\n`;
-        fullPrompt += `الفريق يتضمن: ${allKnowledge.team.slice(0, 3).map(t => t.name).join(', ')}${allKnowledge.team.length > 3 ? ' وغيرهم الكثيرين' : ''}\n`;
-      }
-      
       fullPrompt += `--- نهاية معلومات المنصة ---\n\n`;
-      
-      // إضافة معلومات الشروط والأحكام وسياسة الخصوصية
-      fullPrompt += `--- سياسة الخصوصية والشروط والأحكام ---\n`;
-      
-      if (allKnowledge.privacyContent && allKnowledge.privacyContent.length > 0) {
-        fullPrompt += `عدد أقسام سياسة الخصوصية: ${allKnowledge.privacyContent.length}\n`;
-        fullPrompt += `أقسام سياسة الخصوصية: ${allKnowledge.privacyContent.map((item: LegalContent) => item.title).join(', ')}\n`;
-      }
-      
-      if (allKnowledge.termsContent && allKnowledge.termsContent.length > 0) {
-        fullPrompt += `عدد أقسام الشروط والأحكام: ${allKnowledge.termsContent.length}\n`;
-        fullPrompt += `أقسام الشروط والأحكام: ${allKnowledge.termsContent.map((item: LegalContent) => item.title).join(', ')}\n`;
-      }
-      
-      fullPrompt += `--- نهاية معلومات سياسة الخصوصية والشروط والأحكام ---\n\n`;
       
       // إضافة معلومات المستخدم
       if (userData) {
@@ -330,27 +244,7 @@ Very important: You must always speak in English in your responses.`
         fullPrompt += `Latest Season: ${allKnowledge.seasons[0]?.title || 'Not available'}\n`;
       }
       
-      if (allKnowledge.team && allKnowledge.team.length > 0) {
-        fullPrompt += `Number of Team Members: ${allKnowledge.team.length}\n`;
-        fullPrompt += `The team includes: ${allKnowledge.team.slice(0, 3).map(t => t.name).join(', ')}${allKnowledge.team.length > 3 ? ' and many others' : ''}\n`;
-      }
-      
       fullPrompt += `--- End of Platform Information ---\n\n`;
-      
-      // Add privacy and terms information
-      fullPrompt += `--- Privacy Policy and Terms & Conditions ---\n`;
-      
-      if (allKnowledge.privacyContent && allKnowledge.privacyContent.length > 0) {
-        fullPrompt += `Number of Privacy Policy sections: ${allKnowledge.privacyContent.length}\n`;
-        fullPrompt += `Privacy Policy sections: ${allKnowledge.privacyContent.map((item: LegalContent) => item.titleEn || item.title).join(', ')}\n`;
-      }
-      
-      if (allKnowledge.termsContent && allKnowledge.termsContent.length > 0) {
-        fullPrompt += `Number of Terms & Conditions sections: ${allKnowledge.termsContent.length}\n`;
-        fullPrompt += `Terms & Conditions sections: ${allKnowledge.termsContent.map((item: LegalContent) => item.titleEn || item.title).join(', ')}\n`;
-      }
-      
-      fullPrompt += `--- End of Privacy Policy and Terms & Conditions ---\n\n`;
       
       // Add user information
       if (userData) {

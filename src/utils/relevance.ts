@@ -20,18 +20,10 @@ type RelevantResultData =
 
 // تعريف واجهة موسعة لـ ChatbotKnowledge لدعم الخصائص المحتملة
 interface ExtendedChatbotKnowledge {
-  team?: BaseContentItem[];
   episodes?: Episode[];
   articles?: Article[];
   seasons?: BaseContentItem[];
   playlists?: BaseContentItem[];
-  faqs?: BaseContentItem[];
-  privacyContent?: BaseContentItem[];
-  privacy?: BaseContentItem[];
-  privacyPolicy?: BaseContentItem[];
-  termsContent?: BaseContentItem[];
-  terms?: BaseContentItem[];
-  termsAndConditions?: BaseContentItem[];
 }
 
 const normalizeText = (text: string): string => {
@@ -47,19 +39,6 @@ export async function findRelevantInfo(userMessage: string, language: string = '
     console.log("🔑 Normalized User Message:", normalizedUserMessage);
 
     const relevantResults: { type: string; data: RelevantResultData; query: string; relevance: string }[] = [];
-
-    // --- البحث عن أعضاء الفريق ---
-    if (normalizedUserMessage.includes('فريق') || normalizedUserMessage.includes('مطور') || normalizedUserMessage.includes('اعضاء')) {
-      console.log("🎯 Detected a team-related question.");
-      if (knowledgeBase.team && knowledgeBase.team.length > 0) {
-        relevantResults.push({ 
-          type: 'team_list', 
-          data: knowledgeBase.team, 
-          query: 'من هم أعضاء الفريق؟',
-          relevance: 'صلة مباشرة'
-        });
-      }
-    }
 
     // --- البحث عن الحلقات (الأحدث أو الكل) ---
     if (normalizedUserMessage.includes('حلقه') || normalizedUserMessage.includes('حلقات')) {
@@ -182,49 +161,6 @@ export async function findRelevantInfo(userMessage: string, language: string = '
       }
     }
 
-    // --- البحث عن الأسئلة الشائعة ---
-    if (normalizedUserMessage.includes('سؤال') || normalizedUserMessage.includes('استفسار') || normalizedUserMessage.includes('سؤال سائع')) {
-      console.log("🎯 Detected a FAQ-related question.");
-      if (knowledgeBase.faqs && knowledgeBase.faqs.length > 0) {
-        relevantResults.push({ 
-          type: 'faq_list', 
-          data: knowledgeBase.faqs, 
-          query: 'ما هي الأسئلة الشائعة؟',
-          relevance: 'صلة مباشرة'
-        });
-      }
-    }
-
-    // --- البحث عن سياسة الخصوصية ---
-    if (normalizedUserMessage.includes('خصوصية') || normalizedUserMessage.includes('بيانات') || normalizedUserMessage.includes('privacy')) {
-      console.log("🎯 Detected a privacy-related question.");
-      // Check for different possible property names
-      const privacyData = knowledgeBase.privacyContent || knowledgeBase.privacy || knowledgeBase.privacyPolicy;
-      if (privacyData && Array.isArray(privacyData) && privacyData.length > 0) {
-        relevantResults.push({ 
-          type: 'privacy_list', 
-          data: privacyData, 
-          query: 'ما هي سياسة الخصوصية؟',
-          relevance: 'صلة مباشرة'
-        });
-      }
-    }
-
-    // --- البحث عن الشروط والأحكام ---
-    if (normalizedUserMessage.includes('شروط') || normalizedUserMessage.includes('أحكام') || normalizedUserMessage.includes('terms')) {
-      console.log("🎯 Detected a terms-related question.");
-      // Check for different possible property names
-      const termsData = knowledgeBase.termsContent || knowledgeBase.terms || knowledgeBase.termsAndConditions;
-      if (termsData && Array.isArray(termsData) && termsData.length > 0) {
-        relevantResults.push({ 
-          type: 'terms_list', 
-          data: termsData, 
-          query: 'ما هي الشروط والأحكام؟',
-          relevance: 'صلة مباشرة'
-        });
-      }
-    }
-    
     // --- بحث عام في المقالات والحلقات إذا لم يتم العثور على نية محددة ---
     if (relevantResults.length === 0) {
       console.log("🔎 Performing a general search in articles and episodes...");

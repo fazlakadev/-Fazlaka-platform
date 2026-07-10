@@ -12,21 +12,9 @@ import {
   FaDiscord, FaArrowRight, FaCheckCircle, FaTimesCircle,
   FaFilePdf, FaFileWord, FaFileImage, FaFileArchive,
   FaDownload, FaEye, FaTrash, FaTimes,
-  FaShare, FaPaperPlane, FaHeart,
-  FaQuestionCircle, FaSearch
+  FaShare, FaPaperPlane, FaHeart
 } from "react-icons/fa";
 import { FaXTwitter } from "react-icons/fa6";
-
-// تحديث الواجهة لتتطابق مع Prisma Schema (الحقول الإنجليزية اختيارية)
-interface FAQ {
-  id: string;
-  question: string;
-  questionEn?: string;
-  answer: string;
-  answerEn?: string;
-  category?: string;
-  categoryEn?: string;
-}
 
 export default function ContactPage() {
   const { data: session, status: sessionStatus } = useSession();
@@ -42,9 +30,6 @@ export default function ContactPage() {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isRTL, setIsRTL] = useState(true);
   const [pdfError, setPdfError] = useState(false);
-  const [faqs, setFaqs] = useState<FAQ[]>([]);
-  const [faqsLoading, setFaqsLoading] = useState(true);
-  const [faqsError, setFaqsError] = useState(false);
   const _fileInputRef = useRef<HTMLInputElement>(null);
   
   useEffect(() => {
@@ -96,32 +81,6 @@ export default function ContactPage() {
       setName(session.user.name || "");
     }
   }, [session]);
-
-  // Fetch FAQs from database
-  useEffect(() => {
-    const fetchFaqs = async () => {
-      try {
-        setFaqsLoading(true);
-        // تأكد من وجود API للأسئلة الشائعة أو قم بتعديل المسار حسب مشروعك
-        const response = await fetch(`/api/faqs?limit=3&language=${isRTL ? 'ar' : 'en'}`);
-        const result = await response.json();
-        
-        if (result.success && Array.isArray(result.data)) {
-          setFaqs(result.data);
-        } else {
-          // التعامل مع حالة عدم وجود بيانات كخطأ غير حرج
-          setFaqs([]); 
-        }
-      } catch (error) {
-        console.error('Error fetching FAQs:', error);
-        setFaqsError(true);
-      } finally {
-        setFaqsLoading(false);
-      }
-    };
-
-    fetchFaqs();
-  }, [isRTL]);
   
   const texts = {
     ar: {
@@ -647,148 +606,6 @@ export default function ContactPage() {
     );
   };
 
-  const FAQSection = () => {
-    const [activeIndex, setActiveIndex] = useState<number | null>(null);
-    
-    const getCardColors = (index: number) => {
-      const colors = [
-        { border: "border-blue-500", bg: "bg-blue-50", darkBg: "dark:bg-blue-900/20", text: "text-blue-800", darkText: "dark:text-blue-200", icon: "text-blue-500", shadow: "shadow-blue-500/20", hoverShadow: "hover:shadow-blue-500/30", ring: "ring-blue-500" },
-        { border: "border-purple-500", bg: "bg-purple-50", darkBg: "dark:bg-purple-900/20", text: "text-purple-800", darkText: "dark:text-purple-200", icon: "text-purple-500", shadow: "shadow-purple-500/20", hoverShadow: "hover:shadow-purple-500/30", ring: "ring-purple-500" },
-        { border: "border-green-500", bg: "bg-green-50", darkBg: "dark:bg-green-900/20", text: "text-green-800", darkText: "dark:text-green-200", icon: "text-green-500", shadow: "shadow-green-500/20", hoverShadow: "hover:shadow-green-500/30", ring: "ring-green-500" },
-      ];
-      return colors[index % colors.length];
-    };
-
-    const toggleFAQ = useCallback((index: number) => {
-      setActiveIndex(activeIndex === index ? null : index);
-    }, [activeIndex]);
-
-    return (
-      <section className="mb-16 relative">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-100 dark:from-blue-900/20 dark:via-indigo-900/20 dark:to-purple-900/20 rounded-3xl overflow-hidden"></div>
-        
-        <div className="relative z-10 p-8 md:p-12">
-          <header className="text-center mb-12">
-            <div className="inline-block mb-6">
-              <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-2 rounded-full text-sm font-medium shadow-lg flex items-center">
-                <FaQuestionCircle className="mr-2" />
-                {t.faqTitle}
-              </div>
-            </div>
-            
-            <h2 className={`text-3xl md:text-4xl lg:text-5xl font-bold mb-6 text-gray-900 dark:text-white ${isRTL ? '' : 'font-sans'}`}>
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600">
-                {t.faqTitle}
-              </span>
-            </h2>
-            
-            <p className={`text-lg md:text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto mb-4 ${isRTL ? '' : 'font-sans'}`}>
-              {t.faqSubtitle}
-            </p>
-          </header>
-
-          <div className="max-w-4xl mx-auto">
-            {faqsLoading ? (
-              <div className="flex justify-center items-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-                <span className="mr-3 text-gray-600 dark:text-gray-400">{t.loadingFaqs}</span>
-              </div>
-            ) : faqsError ? (
-              <div className="text-center py-12">
-                <p className="text-red-600 dark:text-red-400 mb-4">{t.errorLoadingFaqs}</p>
-              </div>
-            ) : faqs.length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-gray-600 dark:text-gray-400">{t.noFaqsAvailable}</p>
-              </div>
-            ) : (
-              <div className="space-y-6 mb-8">
-                {faqs.map((faq, index) => {
-                  const colors = getCardColors(index);
-                  const isActive = activeIndex === index;
-                  
-                  return (
-                    <motion.article
-                      key={faq.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      className={`group relative overflow-hidden rounded-2xl bg-white dark:bg-gray-800 shadow-lg hover:shadow-xl transition-all duration-300 border-2 ${colors.border} ${colors.shadow} ${colors.hoverShadow}`}
-                    >
-                      <button
-                        onClick={() => toggleFAQ(index)}
-                        className={`w-full p-6 ${colors.bg} ${colors.darkBg} border-b border-gray-200 dark:border-gray-700 text-left focus:outline-none focus:ring-2 ${colors.ring} focus:ring-opacity-50 rounded-t-2xl transition-all duration-200`}
-                      >
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-start">
-                            <div className={`flex-shrink-0 w-12 h-12 bg-gradient-to-r ${colors.icon.replace('text-', 'from-')} to-${colors.icon.replace('text-', '')} rounded-xl flex items-center justify-center mr-4 shadow-md`}>
-                              <FaQuestionCircle className="text-white text-xl" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <h3 className={`text-lg font-bold ${colors.text} ${colors.darkText} mb-2 ${isRTL ? '' : 'font-sans'}`}>
-                                {/* دعم الترجمة مع قيمة افتراضية */}
-                                {isRTL ? faq.question : (faq.questionEn || faq.question)}
-                              </h3>
-                              {faq.category && (
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${colors.bg} ${colors.text} ${colors.darkBg} ${colors.darkText}`}>
-                                    <FaSearch className="mr-1" />
-                                    {t.category}: {isRTL ? faq.category : (faq.categoryEn || faq.category)}
-                                  </span>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                          <div className={`flex-shrink-0 ml-4 transition-transform duration-300 ${isActive ? 'rotate-180' : ''}`}>
-                            <svg className={`w-6 h-6 ${colors.icon}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                            </svg>
-                          </div>
-                        </div>
-                      </button>
-
-                      <AnimatePresence>
-                        {isActive && (
-                          <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: 'auto', opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-                            className="overflow-hidden"
-                          >
-                            <div className={`p-6 ${colors.text} ${colors.darkText}`}>
-                              <div 
-                                className={`prose prose-sm max-w-none ${isRTL ? '' : 'font-sans'} dark:prose-invert`}
-                                dangerouslySetInnerHTML={{ 
-                                  // دعم الترجمة مع قيمة افتراضية
-                                  __html: isRTL ? faq.answer : (faq.answerEn || faq.answer) 
-                                }}
-                              />
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </motion.article>
-                  );
-                })}
-              </div>
-            )}
-            
-            <div className="text-center">
-              <Link 
-                href="/faq"
-                className="inline-flex items-center bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-4 rounded-full font-bold text-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 group"
-              >
-                <span>{t.viewMoreFaqs}</span>
-                <FaArrowRight className="mr-2 group-hover:translate-x-1 transition-transform" />
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-    );
-  };
-
   return (
     <div className="min-h-screen pt-24 pb-12 px-4 relative overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="absolute inset-0 overflow-hidden">
@@ -924,8 +741,6 @@ export default function ContactPage() {
             </form>
           )}
         </main>
-        
-        <FAQSection />
       </div>
       
       <AnimatePresence>

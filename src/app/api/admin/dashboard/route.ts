@@ -48,13 +48,8 @@ export async function POST(request: NextRequest) {
       prisma.episode.count(),
       prisma.season.count(),
       prisma.playlist.count(),
-      prisma.fAQ.count(),
-      prisma.team.count(),
       prisma.heroSlider.count(),
-      prisma.socialLink.count(),
       prisma.ticket.count(),
-      prisma.terms.count(),
-      prisma.privacy.count(),
       prisma.user.count(),
       prisma.comment.count(),
       prisma.favorite.count(),
@@ -144,8 +139,7 @@ export async function POST(request: NextRequest) {
 
     const [
       _totalArticles, _totalEpisodes, _totalSeasons, _totalPlaylists,
-      _totalFaqs, _totalTeam, _totalHeroSliders, _totalSocialLinks,
-      _totalTickets, _totalTerms, _totalPrivacy, _totalUsers,
+      _totalHeroSliders, _totalTickets, _totalUsers,
       _totalComments, _totalFavorites, _totalNewsletterSubs
     ] = totalCounts;
 
@@ -203,16 +197,12 @@ export async function POST(request: NextRequest) {
 
     const [
       recentArticles, recentEpisodes, recentSeasons, recentPlaylists,
-      recentTeam, recentFaqs, recentTerms, recentPrivacy, recentUsers
+      recentUsers
     ] = await Promise.all([
       prisma.article.findMany({ orderBy: { createdAt: 'desc' }, take: 2 }),
       prisma.episode.findMany({ orderBy: { createdAt: 'desc' }, take: 2 }),
       prisma.season.findMany({ orderBy: { createdAt: 'desc' }, take: 1 }),
       prisma.playlist.findMany({ orderBy: { createdAt: 'desc' }, take: 1 }),
-      prisma.team.findMany({ orderBy: { createdAt: 'desc' }, take: 1 }),
-      prisma.fAQ.findMany({ orderBy: { createdAt: 'desc' }, take: 1 }),
-      prisma.terms.findMany({ orderBy: { updatedAt: 'desc' }, take: 1 }),
-      prisma.privacy.findMany({ orderBy: { updatedAt: 'desc' }, take: 1 }),
       prisma.user.findMany({ orderBy: { createdAt: 'desc' }, take: 1 }),
     ]);
 
@@ -231,10 +221,6 @@ export async function POST(request: NextRequest) {
       ...formatActivity(recentEpisodes, 'episode', 'title', 'titleEn'),
       ...formatActivity(recentSeasons, 'season', 'title', 'titleEn'),
       ...formatActivity(recentPlaylists, 'playlist', 'title', 'titleEn'),
-      ...formatActivity(recentTeam, 'team', 'name', 'nameEn'),
-      ...formatActivity(recentFaqs, 'faq', 'question', 'questionEn'),
-      ...formatActivity(recentTerms, 'terms', 'title', 'titleEn', 'updatedAt'),
-      ...formatActivity(recentPrivacy, 'privacy', 'title', 'titleEn', 'updatedAt'),
       ...formatActivity(recentUsers, 'user', 'name', 'name'),
     ]
     .sort((a, b) => new Date(b.timestamp as string).getTime() - new Date(a.timestamp as string).getTime())
@@ -266,13 +252,8 @@ export async function POST(request: NextRequest) {
         episodes: _totalEpisodes,
         seasons: _totalSeasons,
         playlists: _totalPlaylists,
-        faqs: _totalFaqs,
-        team: _totalTeam,
         heroSliders: _totalHeroSliders,
-        socialLinks: _totalSocialLinks,
         tickets: _totalTickets,
-        terms: _totalTerms,
-        privacy: _totalPrivacy,
         users: _totalUsers,
         comments: _totalComments,
         favorites: _totalFavorites,

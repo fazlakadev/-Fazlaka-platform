@@ -12,17 +12,13 @@ import { SemanticSearchResult } from '@/services/semanticSearch';
 import Image from 'next/image';
 
 type Language = 'ar' | 'en';
-type ContentType = 'article' | 'episode' | 'season' | 'playlist' | 'team' | 'faq' | 'privacy' | 'terms';
+type ContentType = 'article' | 'episode' | 'season' | 'playlist';
 
 const typeConfig: Record<ContentType, { color: string; gradient: string; border: string }> = {
   article: { color: 'from-blue-500 to-cyan-500', gradient: 'from-blue-50 to-cyan-50 dark:from-blue-950/30 dark:to-cyan-950/30', border: 'border-blue-200 dark:border-blue-800' },
   episode: { color: 'from-emerald-500 to-teal-500', gradient: 'from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30', border: 'border-emerald-200 dark:border-emerald-800' },
   season: { color: 'from-orange-500 to-rose-500', gradient: 'from-orange-50 to-rose-50 dark:from-orange-950/30 dark:to-rose-950/30', border: 'border-orange-200 dark:border-orange-800' },
-  playlist: { color: 'from-pink-500 to-purple-500', gradient: 'from-pink-50 to-purple-50 dark:from-pink-950/30 dark:to-purple-950/30', border: 'border-pink-200 dark:border-pink-800' },
-  team: { color: 'from-violet-500 to-indigo-500', gradient: 'from-violet-50 to-indigo-50 dark:from-violet-950/30 dark:to-indigo-950/30', border: 'border-violet-200 dark:border-violet-800' },
-  faq: { color: 'from-cyan-500 to-blue-500', gradient: 'from-cyan-50 to-blue-50 dark:from-cyan-950/30 dark:to-blue-950/30', border: 'border-cyan-200 dark:border-cyan-800' },
-  privacy: { color: 'from-green-500 to-emerald-500', gradient: 'from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30', border: 'border-green-200 dark:border-green-800' },
-  terms: { color: 'from-purple-500 to-violet-500', gradient: 'from-purple-50 to-violet-50 dark:from-purple-950/30 dark:to-violet-950/30', border: 'border-purple-200 dark:border-purple-800' }
+  playlist: { color: 'from-pink-500 to-purple-500', gradient: 'from-pink-50 to-purple-50 dark:from-pink-950/30 dark:to-purple-950/30', border: 'border-pink-200 dark:border-pink-800' }
 };
 
 function SearchResultImage({ src, alt, defaultSrc, children }: { src: string; alt: string; defaultSrc: string; children: React.ReactNode }) {
@@ -71,21 +67,13 @@ export default function SearchResults({
         article: 'مقال',
         episode: 'حلقة',
         season: 'موسم',
-        playlist: 'قائمة تشغيل',
-        team: 'عضو فريق',
-        faq: 'سؤال شائع',
-        privacy: 'سياسة الخصوصية',
-        terms: 'شروط وأحكام'
+        playlist: 'قائمة تشغيل'
       },
       en: {
         article: 'Article',
         episode: 'Episode',
         season: 'Season',
-        playlist: 'Playlist',
-        team: 'Team Member',
-        faq: 'FAQ',
-        privacy: 'Privacy Policy',
-        terms: 'Terms & Conditions'
+        playlist: 'Playlist'
       }
     };
     return labels[language][type] || type;
@@ -112,26 +100,6 @@ export default function SearchResults({
         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
         </svg>
-      ),
-      team: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-        </svg>
-      ),
-      faq: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      ),
-      privacy: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-        </svg>
-      ),
-      terms: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-        </svg>
       )
     };
     return icons[type] || icons.article;
@@ -145,10 +113,6 @@ export default function SearchResults({
       case 'episode': return `/episodes/${data.slug}`;
       case 'season': return `/seasons/${data.slug}`;
       case 'playlist': return `/playlists/${data._id || data.id}`;
-      case 'team': return `/team/${data.slug}`;
-      case 'faq': return `/faqs#${data._id || data.id}`;
-      case 'privacy': return `/privacy#${data._id || data.id}`;
-      case 'terms': return `/terms#${data._id || data.id}`;
       default: return '/';
     }
   };
@@ -160,8 +124,6 @@ export default function SearchResults({
       case 'episode': return String(data.thumbnailUrl || data.thumbnailUrlEn || '/images/default-episode.jpg');
       case 'season': return String(data.thumbnailUrl || data.thumbnailUrlEn || '/images/default-season.jpg');
       case 'playlist': return String(data.imageUrl || data.imageUrlEn || '/images/default-playlist.jpg');
-      case 'team': return String(data.imageUrl || data.imageUrlEn || '/images/default-avatar.jpg');
-      case 'faq': case 'privacy': case 'terms': return '/images/default-content.jpg';
       default: return '/images/default-content.jpg';
     }
   };
@@ -170,10 +132,6 @@ export default function SearchResults({
     const { type, data } = result;
     switch (type) {
       case 'article': case 'episode': case 'season': case 'playlist':
-        return String(result.highlightedTitle || data.localizedTitle || data.title || '');
-      case 'team': return String(result.highlightedTitle || data.localizedName || data.name || '');
-      case 'faq': return String(result.highlightedTitle || data.localizedQuestion || data.question || '');
-      case 'privacy': case 'terms':
         return String(result.highlightedTitle || data.localizedTitle || data.title || '');
       default: return String(result.highlightedTitle || data.title || data.name || '');
     }
@@ -184,10 +142,6 @@ export default function SearchResults({
     switch (type) {
       case 'article': return String(result.highlightedDescription || data.localizedExcerpt || data.excerpt || '');
       case 'episode': case 'season': case 'playlist':
-        return String(result.highlightedDescription || data.localizedDescription || data.description || '');
-      case 'team': return String(result.highlightedDescription || data.localizedBio || data.bio || '');
-      case 'faq': return String(result.highlightedDescription || data.localizedAnswer || data.answer || '');
-      case 'privacy': case 'terms':
         return String(result.highlightedDescription || data.localizedDescription || data.description || '');
       default: return String(result.highlightedDescription || data.description || '');
     }
@@ -204,8 +158,8 @@ export default function SearchResults({
     return getRelativeTime(date, language);
   };
 
-  const shouldShowIcon = (result: SemanticSearchResult) => {
-    return ['faq', 'privacy', 'terms'].includes(result.type);
+  const shouldShowIcon = (_result: SemanticSearchResult) => {
+    return false;
   };
 
   return (

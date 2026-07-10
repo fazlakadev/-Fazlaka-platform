@@ -19,28 +19,9 @@ interface ContentData {
   [key: string]: unknown;
 }
 
-// واجهات محددة لنتائج البحث في الخصوصية والشروط لتجنب استخدام any
-interface PrivacyItem {
-  id: string;
-  title?: string | null;
-  titleEn?: string | null;
-  description?: string | null;
-  descriptionEn?: string | null;
-}
-
-interface TermsItem {
-  id: string;
-  title?: string | null;
-  titleEn?: string | null;
-  term?: string | null;
-  termEn?: string | null;
-  definition?: string | null;
-  definitionEn?: string | null;
-}
-
 // واجهة لتمثيل نتيجة البحث الدلالي
 export interface SemanticSearchResult {
-  type: 'article' | 'episode' | 'season' | 'playlist' | 'team' | 'faq' | 'privacy' | 'terms';
+  type: 'article' | 'episode' | 'season' | 'playlist';
   data: ContentData;
   score: number;
   relevance: string;
@@ -155,11 +136,7 @@ function calculateRelevanceScore(
       (intentType.includes('حلقة') && contentType === 'episode') ||
       (intentType.includes('مقال') && contentType === 'article') ||
       (intentType.includes('موسم') && contentType === 'season') ||
-      (intentType.includes('قائمة تشغيل') && contentType === 'playlist') ||
-      (intentType.includes('فريق') && contentType === 'team') ||
-      (intentType.includes('سؤال') && contentType === 'faq') ||
-      (intentType.includes('خصوصية') && contentType === 'privacy') ||
-      (intentType.includes('شروط') && contentType === 'terms')
+      (intentType.includes('قائمة تشغيل') && contentType === 'playlist')
     ) {
       score += 0.2;
       relevance = "صلة قوية";
@@ -183,96 +160,6 @@ function calculateRelevanceScore(
   else relevance = "صلة ضعيفة";
   
   return { score, relevance };
-}
-
-// دالة للبحث في الشروط والأحكام وسياسة الخصوصية
-async function searchPrivacyTerms(
-  query: string, 
-  _language: string = 'ar', // تم تعديل الاسم لتجنب التحذير
-  options: { limit?: number; offset?: number } = {}
-): Promise<SemanticSearchResult[]> {
-  try {
-    const { limit = 10, offset = 0 } = options;
-    
-    const intent = await analyzeUserIntent(query);
-    const isPrivacyQuery = intent.entities.some(entity => entity.includes('خصوصية') || entity.includes('privacy'));
-    const isTermsQuery = intent.entities.some(entity => entity.includes('شروط') || entity.includes('أحكام') || entity.includes('terms'));
-
-    // استخدام الواجهات المحددة بدلاً من unknown أو any
-    let privacyResults: PrivacyItem[] = [];
-    let termsResults: TermsItem[] = [];
-
-    // Prisma query for Privacy
-    if (!isTermsQuery || isPrivacyQuery) {
-      const rawPrivacy = await prisma.privacy.findMany({
-        where: {
-          OR: [
-            { title: { contains: query, mode: 'insensitive' } },
-            { titleEn: { contains: query, mode: 'insensitive' } },
-            { description: { contains: query, mode: 'insensitive' } },
-            { descriptionEn: { contains: query, mode: 'insensitive' } }
-          ]
-        },
-        take: Math.floor(limit / 2),
-        skip: offset,
-      });
-      privacyResults = rawPrivacy as PrivacyItem[];
-    }
-
-    // Prisma query for Terms
-    if (!isPrivacyQuery || isTermsQuery) {
-      const rawTerms = await prisma.terms.findMany({
-        where: {
-          OR: [
-            { title: { contains: query, mode: 'insensitive' } },
-            { titleEn: { contains: query, mode: 'insensitive' } },
-            { term: { contains: query, mode: 'insensitive' } },
-            { termEn: { contains: query, mode: 'insensitive' } },
-            { definition: { contains: query, mode: 'insensitive' } },
-            { definitionEn: { contains: query, mode: 'insensitive' } }
-          ]
-        },
-        take: Math.floor(limit / 2),
-        skip: offset,
-      });
-      termsResults = rawTerms as TermsItem[];
-    }
-
-    const privacySemanticResults = privacyResults.map(item => {
-      const title = _language === 'ar' ? item.title : item.titleEn;
-      const content = _language === 'ar' ? item.description : item.descriptionEn;
-      let score = 0.7;
-      if (title && title.toLowerCase() === query.toLowerCase()) score += 0.3;
-      if (content && content.toLowerCase().includes(query.toLowerCase())) score += 0.2;
-      return {
-        type: 'privacy' as const,
-        data: { ...item, localizedTitle: title, localizedContent: content },
-        score,
-        relevance: score >= 0.9 ? 'صلة قوية جداً' : score >= 0.7 ? 'صلة قوية' : 'صلة متوسطة'
-      };
-    });
-
-    const termsSemanticResults = termsResults.map(item => {
-      const title = _language === 'ar' ? item.title : item.titleEn;
-      const content = _language === 'ar' ? item.definition : item.definitionEn;
-      let score = 0.7;
-      if (title && title.toLowerCase() === query.toLowerCase()) score += 0.3;
-      if (content && content.toLowerCase().includes(query.toLowerCase())) score += 0.2;
-      return {
-        type: 'terms' as const,
-        data: { ...item, localizedTitle: title, localizedContent: content },
-        score,
-        relevance: score >= 0.9 ? 'صلة قوية جداً' : score >= 0.7 ? 'صلة قوية' : 'صلة متوسطة'
-      };
-    });
-
-    return [...privacySemanticResults, ...termsSemanticResults]
-      .sort((a, b) => b.score - a.score)
-      .slice(0, limit);
-  } catch (error) {
-    console.error('Error searching privacy and terms:', error);
-    return [];
-  }
 }
 
 // الدالة الرئيسية للبحث الدلالي المحسّن
@@ -306,7 +193,7 @@ export async function performSemanticSearch(
     }
 
     // جلب البيانات باستخدام Prisma
-    const [articles, episodes, seasons, playlists, teamMembers, faqs] = await Promise.all([
+    const [articles, episodes, seasons, playlists] = await Promise.all([
       filters.type && filters.type !== 'article' ? [] : prisma.article.findMany({
         where: { OR: [{ publishedAt: dateFilter }, { createdAt: dateFilter }] },
         take: limit, skip: offset
@@ -322,33 +209,17 @@ export async function performSemanticSearch(
       filters.type && filters.type !== 'playlist' ? [] : prisma.playlist.findMany({
         where: { createdAt: dateFilter },
         take: limit, skip: offset
-      }),
-      filters.type && filters.type !== 'team' ? [] : prisma.team.findMany({
-        take: limit, skip: offset
-      }),
-      filters.type && filters.type !== 'faq' ? [] : prisma.fAQ.findMany({
-        take: limit, skip: offset
       })
     ]);
 
-    let privacyTermsResults: SemanticSearchResult[] = [];
-    if (!filters.type || filters.type === 'all' || filters.type === 'privacy' || filters.type === 'terms') {
-      privacyTermsResults = await searchPrivacyTerms(userQuery, _language, { limit, offset });
-      if (filters.type && filters.type !== 'all') {
-        privacyTermsResults = privacyTermsResults.filter(result => result.type === filters.type);
-      }
-    }
-
     const results: SemanticSearchResult[] = [];
-    
+
     // تحديد نوع المصفوفة بشكل صريح لتجنب استخدام any
     const allItems: Array<{ itemType: string } & ContentData> = [
       ...articles.map(item => ({ ...item, itemType: 'article' as const })),
       ...episodes.map(item => ({ ...item, itemType: 'episode' as const })),
       ...seasons.map(item => ({ ...item, itemType: 'season' as const })),
       ...playlists.map(item => ({ ...item, itemType: 'playlist' as const })),
-      ...teamMembers.map(item => ({ ...item, itemType: 'team' as const })),
-      ...faqs.map(item => ({ ...item, itemType: 'faq' as const })),
     ];
 
     const keywords = intent.entities || [];
@@ -388,8 +259,6 @@ export async function performSemanticSearch(
       }));
     }
 
-    results.push(...privacyTermsResults);
-
     const sortedResults = results.sort((a, b) => b.score - a.score).slice(0, limit);
     
     console.log(`✅ Search completed in ${Date.now() - startTime}ms`);
@@ -418,31 +287,12 @@ async function performTextualSearch(
       ]
     };
 
-    const [articles, episodes, seasons, playlists, teamMembers, faqs] = await Promise.all([
+    const [articles, episodes, seasons, playlists] = await Promise.all([
       filters.type && filters.type !== 'article' ? [] : prisma.article.findMany({ where: searchCondition, take: limit }),
       filters.type && filters.type !== 'episode' ? [] : prisma.episode.findMany({ where: searchCondition, take: limit }),
       filters.type && filters.type !== 'season' ? [] : prisma.season.findMany({ where: searchCondition, take: limit }),
-      filters.type && filters.type !== 'playlist' ? [] : prisma.playlist.findMany({ where: searchCondition, take: limit }),
-      filters.type && filters.type !== 'team' ? [] : prisma.team.findMany({ 
-        where: { OR: [
-            { name: { contains: userQuery, mode: 'insensitive' } },
-            { bio: { contains: userQuery, mode: 'insensitive' } }
-          ]}, 
-        take: limit 
-      }),
-      filters.type && filters.type !== 'faq' ? [] : prisma.fAQ.findMany({ 
-        where: { OR: [
-            { question: { contains: userQuery, mode: 'insensitive' } },
-            { answer: { contains: userQuery, mode: 'insensitive' } }
-          ]}, 
-        take: limit 
-      })
+      filters.type && filters.type !== 'playlist' ? [] : prisma.playlist.findMany({ where: searchCondition, take: limit })
     ]);
-
-    let privacyTermsResults: SemanticSearchResult[] = [];
-    if (!filters.type || filters.type === 'all' || filters.type === 'privacy' || filters.type === 'terms') {
-      privacyTermsResults = await searchPrivacyTerms(userQuery, 'ar', { limit });
-    }
 
     const results: SemanticSearchResult[] = [];
     const allItems: Array<{ itemType: string } & ContentData> = [
@@ -450,8 +300,6 @@ async function performTextualSearch(
       ...episodes.map(item => ({ ...item, itemType: 'episode' as const })),
       ...seasons.map(item => ({ ...item, itemType: 'season' as const })),
       ...playlists.map(item => ({ ...item, itemType: 'playlist' as const })),
-      ...teamMembers.map(item => ({ ...item, itemType: 'team' as const })),
-      ...faqs.map(item => ({ ...item, itemType: 'faq' as const })),
     ];
 
     for (const item of allItems) {
@@ -463,7 +311,6 @@ async function performTextualSearch(
       });
     }
     
-    results.push(...privacyTermsResults);
     return results.slice(0, limit);
   } catch (error) {
     console.error("❌ Error during textual search:", error);
@@ -507,15 +354,11 @@ export async function getSearchSuggestions(
   try {
     const condition = { contains: query, mode: 'insensitive' as const };
     
-    const [articles, episodes, seasons, playlists, teamMembers, faqs, privacyResults, termsResults] = await Promise.all([
+    const [articles, episodes, seasons, playlists] = await Promise.all([
       prisma.article.findMany({ where: { title: condition }, select: { title: true, slug: true }, take: 5 }),
       prisma.episode.findMany({ where: { title: condition }, select: { title: true, slug: true }, take: 5 }),
       prisma.season.findMany({ where: { title: condition }, select: { title: true, slug: true }, take: 5 }),
       prisma.playlist.findMany({ where: { title: condition }, select: { title: true, slug: true }, take: 5 }),
-      prisma.team.findMany({ where: { name: condition }, select: { name: true, slug: true }, take: 5 }),
-      prisma.fAQ.findMany({ where: { question: condition }, select: { question: true }, take: 5 }),
-      prisma.privacy.findMany({ where: { OR: [{ title: condition }, { titleEn: condition }] }, select: { title: true, titleEn: true }, take: 5 }),
-      prisma.terms.findMany({ where: { OR: [{ title: condition }, { titleEn: condition }] }, select: { title: true, titleEn: true }, take: 5 }),
     ]);
 
     const suggestions: SearchSuggestion[] = [];
@@ -524,10 +367,6 @@ export async function getSearchSuggestions(
     episodes.forEach(item => { if(item.title) suggestions.push({ text: item.title, type: 'episode', popularity: Math.random() }); });
     seasons.forEach(item => { if(item.title) suggestions.push({ text: item.title, type: 'season', popularity: Math.random() }); });
     playlists.forEach(item => { if(item.title) suggestions.push({ text: item.title, type: 'playlist', popularity: Math.random() }); });
-    teamMembers.forEach(item => { if(item.name) suggestions.push({ text: item.name, type: 'team', popularity: Math.random() }); });
-    faqs.forEach(item => { if(item.question) suggestions.push({ text: item.question, type: 'faq', popularity: Math.random() }); });
-    privacyResults.forEach(item => { suggestions.push({ text: _language === 'ar' ? (item.title || '') : (item.titleEn || ''), type: 'privacy', popularity: Math.random() }); });
-    termsResults.forEach(item => { suggestions.push({ text: _language === 'ar' ? (item.title || '') : (item.titleEn || ''), type: 'terms', popularity: Math.random() }); });
 
     return suggestions.sort((a, b) => b.popularity - a.popularity).slice(0, limit);
   } catch (error) {

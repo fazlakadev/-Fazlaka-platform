@@ -91,21 +91,15 @@ export interface SocialLink {
   id: string;
   platform: string;
   url: string;
-  createdAt?: Date;
-  updatedAt?: Date;
 }
 
-async function fetchSocialLinksFromMongoDB() {
-  try {
-    const response = await fetch('/api/social-links');
-    const data = await response.json();
-    if (data.success && data.data) return data.data;
-    return [];
-  } catch (error) {
-    console.error('Error fetching social links from MongoDB:', error);
-    return [];
-  }
-}
+const STATIC_SOCIAL_LINKS: SocialLink[] = [
+  { id: 'youtube', platform: 'youtube', url: 'https://youtube.com/@Falthaka' },
+  { id: 'instagram', platform: 'instagram', url: 'https://instagram.com/falthaka' },
+  { id: 'facebook', platform: 'facebook', url: 'https://facebook.com/falthaka' },
+  { id: 'tiktok', platform: 'tiktok', url: 'https://tiktok.com/@falthaka' },
+  { id: 'twitter', platform: 'twitter', url: 'https://x.com/falthaka' },
+];
 
 function getSocialIcon(platform: string) {
   switch (platform) {
@@ -180,17 +174,8 @@ export default function Footer() {
     });
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
 
-    const fetchLinks = async () => {
-      try {
-        const links = await fetchSocialLinksFromMongoDB();
-        setSocialLinks(links);
-      } catch (error) {
-        console.error('Error fetching social links:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchLinks();
+    setSocialLinks(STATIC_SOCIAL_LINKS);
+    setLoading(false);
 
     return () => {
       window.removeEventListener('resize', checkMobile);
@@ -198,14 +183,6 @@ export default function Footer() {
       observer.disconnect();
     };
   }, []);
-
-  useEffect(() => {
-    if (!mounted) return;
-    const interval = setInterval(() => {
-      fetchSocialLinksFromMongoDB().then(linksData => setSocialLinks(linksData)).catch(() => {});
-    }, 60000);
-    return () => clearInterval(interval);
-  }, [mounted]);
 
   const t = translations[isRTL ? 'ar' : 'en'];
   const logoSrc = isRTL ? "/logo.png" : "/logoE.png";

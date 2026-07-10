@@ -135,65 +135,6 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    if (type === 'all' || type === 'faq') {
-      queries.faq = () => searchModel(
-        prisma.fAQ,
-        ['question', 'questionEn', 'answer', 'answerEn'],
-        q, limit, offset,
-        { id: true, question: true, questionEn: true, category: true, categoryEn: true },
-        (i: any) => ({
-          id: i.id, type: 'faq', title: i.question, titleEn: i.questionEn || '',
-          slug: i.id, description: i.category || '', descriptionEn: i.categoryEn || '',
-          adminUrl: `/admin/faqs/${i.id}/edit`,
-          metadata: { category: i.category, categoryEn: i.categoryEn },
-        })
-      );
-    }
-
-    if (type === 'all' || type === 'team') {
-      queries.team = () => searchModel(
-        prisma.team,
-        ['name', 'nameEn', 'role', 'roleEn'],
-        q, limit, offset,
-        { id: true, name: true, nameEn: true, slug: true, role: true, roleEn: true, imageUrl: true, imageUrlEn: true },
-        (i: any) => ({
-          id: i.id, type: 'team', title: i.name, titleEn: i.nameEn,
-          slug: i.slug, description: i.role || '', descriptionEn: i.roleEn || '',
-          imageUrl: i.imageUrl || i.imageUrlEn || undefined,
-          adminUrl: `/admin/team/${i.id}/edit`,
-          previewUrl: `/team/${i.slug}`,
-        })
-      );
-    }
-
-    if (type === 'all' || type === 'privacy') {
-      queries.privacy = () => searchModel(
-        prisma.privacy,
-        ['title', 'titleEn', 'description', 'descriptionEn'],
-        q, limit, offset,
-        { id: true, title: true, titleEn: true, sectionType: true, description: true, descriptionEn: true },
-        (i: any) => ({
-          id: i.id, type: 'privacy', title: i.title || i.sectionType, titleEn: i.titleEn || i.sectionType,
-          description: i.description || '', descriptionEn: i.descriptionEn || '',
-          adminUrl: `/admin/privacy/${i.id}/edit`,
-        })
-      );
-    }
-
-    if (type === 'all' || type === 'terms') {
-      queries.terms = () => searchModel(
-        prisma.terms,
-        ['title', 'titleEn', 'description', 'descriptionEn'],
-        q, limit, offset,
-        { id: true, title: true, titleEn: true, sectionType: true, description: true, descriptionEn: true },
-        (i: any) => ({
-          id: i.id, type: 'terms', title: i.title || i.sectionType, titleEn: i.titleEn || i.sectionType,
-          description: i.description || '', descriptionEn: i.descriptionEn || '',
-          adminUrl: `/admin/terms/${i.id}/edit`,
-        })
-      );
-    }
-
     if (type === 'all' || type === 'heroSlider') {
       queries.heroSlider = () => searchModel(
         prisma.heroSlider,
@@ -205,20 +146,6 @@ export async function GET(req: NextRequest) {
           description: i.description || '', descriptionEn: i.descriptionEn || '',
           imageUrl: i.image || i.imageEn || undefined,
           adminUrl: `/admin/hero-sliders/${i.id}/edit`,
-        })
-      );
-    }
-
-    if (type === 'all' || type === 'socialLink') {
-      queries.socialLink = () => searchModel(
-        prisma.socialLink,
-        ['platform', 'url'],
-        q, limit, offset,
-        { id: true, platform: true, url: true },
-        (i: any) => ({
-          id: i.id, type: 'socialLink', title: i.platform, titleEn: i.platform,
-          description: i.url, descriptionEn: i.url,
-          adminUrl: `/admin/social-links/${i.id}/edit`,
         })
       );
     }

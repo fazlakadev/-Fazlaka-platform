@@ -48,8 +48,8 @@ interface ActivityItem {
 
 interface TotalCounts {
   articles: number; episodes: number; seasons: number; playlists: number;
-  faqs: number; team: number; heroSliders: number; socialLinks: number;
-  tickets: number; terms: number; privacy: number;
+  heroSliders: number;
+  tickets: number;
   users: number; comments: number; favorites: number; newsletterSubscribers: number;
 }
 
@@ -98,14 +98,9 @@ const quickLinks: QuickLink[] = [
   { title: 'الحلقات', titleEn: 'Episodes', icon: Play, color: 'from-green-500 to-green-700', link: '/admin/episodes' },
   { title: 'المواسم', titleEn: 'Seasons', icon: Layers, color: 'from-orange-500 to-orange-700', link: '/admin/seasons' },
   { title: 'قوائم التشغيل', titleEn: 'Playlists', icon: ListVideo, color: 'from-pink-500 to-pink-700', link: '/admin/playlists' },
-  { title: 'الأسئلة الشائعة', titleEn: 'FAQs', icon: HelpCircle, color: 'from-cyan-500 to-cyan-700', link: '/admin/faqs' },
-  { title: 'الفريق', titleEn: 'Team', icon: Users, color: 'from-indigo-500 to-indigo-700', link: '/admin/team' },
-  { title: 'الشروط', titleEn: 'Terms', icon: FileCheck, color: 'from-red-500 to-red-700', link: '/admin/terms' },
-  { title: 'الخصوصية', titleEn: 'Privacy', icon: Shield, color: 'from-amber-500 to-amber-700', link: '/admin/privacy' },
   { title: 'التعليقات', titleEn: 'Comments', icon: MessageCircle, color: 'from-violet-500 to-violet-700', link: '/admin/comments' },
   { title: 'المستخدمون', titleEn: 'Users', icon: UserPlus, color: 'from-purple-500 to-purple-700', link: '/admin/users' },
   { title: 'النشرة البريدية', titleEn: 'Newsletter', icon: Mail, color: 'from-teal-500 to-teal-700', link: '/admin/newsletter' },
-  { title: 'روابط التواصل', titleEn: 'Social Links', icon: Globe, color: 'from-sky-500 to-sky-700', link: '/admin/social-links' },
   { title: 'شرائح البطل', titleEn: 'Hero Sliders', icon: ImageIcon, color: 'from-rose-500 to-rose-700', link: '/admin/hero-sliders' },
   { title: 'الدعم', titleEn: 'Support', icon: HelpCircle, color: 'from-emerald-500 to-emerald-700', link: '/admin/support' },
   { title: 'تحليلات الحلقات', titleEn: 'Episode Analytics', icon: BarChart3, color: 'from-fuchsia-500 to-fuchsia-700', link: '/admin/episodes' },
@@ -150,7 +145,7 @@ function AnimatedNumber({ value, duration = 1500 }: { value: number; duration?: 
 
 const TypeIcon: Record<string, LucideIcon> = {
   article: FileText, episode: Play, season: Layers, playlist: ListVideo,
-  team: Users, faq: HelpCircle, terms: FileCheck, privacy: Shield, user: UserPlus,
+  user: UserPlus,
 };
 
 const TypeColor: Record<string, string> = {
@@ -158,10 +153,6 @@ const TypeColor: Record<string, string> = {
   episode: 'text-green-500 bg-green-100 dark:bg-green-900/30',
   season: 'text-orange-500 bg-orange-100 dark:bg-orange-900/30',
   playlist: 'text-pink-500 bg-pink-100 dark:bg-pink-900/30',
-  team: 'text-indigo-500 bg-indigo-100 dark:bg-indigo-900/30',
-  faq: 'text-cyan-500 bg-cyan-100 dark:bg-cyan-900/30',
-  terms: 'text-red-500 bg-red-100 dark:bg-red-900/30',
-  privacy: 'text-amber-500 bg-amber-100 dark:bg-amber-900/30',
   user: 'text-purple-500 bg-purple-100 dark:bg-purple-900/30',
 };
 
@@ -279,13 +270,8 @@ export default function AdminDashboard() {
     { label: t('الحلقات', 'Episodes'), value: totalCounts.episodes, icon: Play, color: 'text-green-500', bg: 'bg-green-50 dark:bg-green-900/20' },
     { label: t('المواسم', 'Seasons'), value: totalCounts.seasons, icon: Layers, color: 'text-orange-500', bg: 'bg-orange-50 dark:bg-orange-900/20' },
     { label: t('قوائم التشغيل', 'Playlists'), value: totalCounts.playlists, icon: ListVideo, color: 'text-pink-500', bg: 'bg-pink-50 dark:bg-pink-900/20' },
-    { label: t('الأسئلة الشائعة', 'FAQs'), value: totalCounts.faqs, icon: HelpCircle, color: 'text-cyan-500', bg: 'bg-cyan-50 dark:bg-cyan-900/20' },
-    { label: t('فريق العمل', 'Team'), value: totalCounts.team, icon: Users, color: 'text-indigo-500', bg: 'bg-indigo-50 dark:bg-indigo-900/20' },
     { label: t('شرائح البطل', 'Hero Sliders'), value: totalCounts.heroSliders, icon: ImageIcon, color: 'text-rose-500', bg: 'bg-rose-50 dark:bg-rose-900/20' },
-    { label: t('روابط التواصل', 'Social Links'), value: totalCounts.socialLinks, icon: Globe, color: 'text-sky-500', bg: 'bg-sky-50 dark:bg-sky-900/20' },
     { label: t('تذاكر الدعم', 'Support Tickets'), value: totalCounts.tickets, icon: HelpCircle, color: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-900/20' },
-    { label: t('الشروط', 'Terms'), value: totalCounts.terms, icon: FileCheck, color: 'text-red-500', bg: 'bg-red-50 dark:bg-red-900/20' },
-    { label: t('الخصوصية', 'Privacy'), value: totalCounts.privacy, icon: Shield, color: 'text-amber-500', bg: 'bg-amber-50 dark:bg-amber-900/20' },
     { label: t('التعليقات', 'Comments'), value: totalCounts.comments, icon: MessageCircle, color: 'text-violet-500', bg: 'bg-violet-50 dark:bg-violet-900/20' },
     { label: t('الإعجابات', 'Favorites'), value: totalCounts.favorites, icon: Heart, color: 'text-red-500', bg: 'bg-red-50 dark:bg-red-900/20' },
     { label: t('المستخدمون', 'Users'), value: totalCounts.users, icon: UserPlus, color: 'text-purple-500', bg: 'bg-purple-50 dark:bg-purple-900/20' },
@@ -974,7 +960,7 @@ export default function AdminDashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-100 dark:border-green-800">
                     <p className="text-2xl font-bold text-green-600">
-                      {(totalCounts ? totalCounts.articles + totalCounts.episodes + totalCounts.seasons + totalCounts.playlists + totalCounts.faqs + totalCounts.team + totalCounts.heroSliders : 0).toLocaleString()}
+                      {(totalCounts ? totalCounts.articles + totalCounts.episodes + totalCounts.seasons + totalCounts.playlists + totalCounts.heroSliders : 0).toLocaleString()}
                     </p>
                     <p className="text-sm text-green-700 dark:text-green-300">{t('إجمالي المحتوى', 'Total Content')}</p>
                   </div>

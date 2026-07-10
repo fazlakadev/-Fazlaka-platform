@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { Article } from '@/types/article';
-import { FAQ } from '@/types/faq';
+
 import { Episode, Season, Playlist } from '@prisma/client';
 
 const CACHE_TTL = 30_000;
@@ -25,30 +25,12 @@ export interface PortableTextBlock {
 
 // تعريف الواجهات المحلية للكيانات التي تحتاج تعديلات أو تنسيق خاص
 // تم تعديلها لتتوافق مع قيم null التي يرجعها Prisma
-export interface TeamMember {
-  id: string;
-  name: string;
-  nameEn: string | null;
-  role: string;
-  roleEn: string | null;
-  bio: string;
-  bioEn: string | null;
-  imageUrl: string;
-  imageUrlEn: string | null;
-  slug: string;
-  socialMedia?: { platform: string; url: string }[] | null; // Prisma JsonValue
-  order: number;
-  createdAt?: Date;
-  updatedAt?: Date;
-}
 
 export interface ChatbotKnowledge {
   articles: Article[];
   episodes: Episode[];
   seasons: Season[];
   playlists: Playlist[];
-  team: TeamMember[];
-  faqs: FAQ[];
   platformInfo: {
     name: string;
     description: string;
@@ -65,13 +47,11 @@ export async function fetchChatbotKnowledge(_language: string = 'ar'): Promise<C
     return knowledgeCache.data;
   }
   try {
-    const [articlesData, episodesData, seasonsData, playlistsData, teamMembersData, faqsData] = await Promise.all([
+    const [articlesData, episodesData, seasonsData, playlistsData] = await Promise.all([
       prisma.article.findMany({ take: 20 }),
       prisma.episode.findMany({ take: 20 }),
       prisma.season.findMany({ take: 20 }),
-      prisma.playlist.findMany({ take: 20 }),
-      prisma.team.findMany({ take: 20 }),
-      prisma.fAQ.findMany({ take: 20 })
+      prisma.playlist.findMany({ take: 20 })
     ]);
     
     // لا نحتاج لإعادة تعريف الحقول، Prisma يقوم بذلك تلقائياً
@@ -80,8 +60,6 @@ export async function fetchChatbotKnowledge(_language: string = 'ar'): Promise<C
     const episodes = episodesData as Episode[];
     const seasons = seasonsData as Season[];
     const playlists = playlistsData as Playlist[];
-    const team = teamMembersData as TeamMember[];
-    const faqs = faqsData as FAQ[];
     
     const totalContent = articles.length + episodes.length + seasons.length + playlists.length;
     
@@ -90,8 +68,6 @@ export async function fetchChatbotKnowledge(_language: string = 'ar'): Promise<C
       episodes,
       seasons,
       playlists,
-      team,
-      faqs,
       platformInfo: {
         name: "فذلكه",
         description: "منصة عربية متخصصة في نشر المعرفة والثقافة من خلال محتوى متنوع ومميز",
@@ -110,8 +86,6 @@ export async function fetchChatbotKnowledge(_language: string = 'ar'): Promise<C
       episodes: [],
       seasons: [],
       playlists: [],
-      team: [],
-      faqs: [],
       platformInfo: {
         name: "فذلكه",
         description: "منصة عربية متخصصة",
@@ -124,7 +98,7 @@ export async function fetchChatbotKnowledge(_language: string = 'ar'): Promise<C
 }
 
 // تعريف نوع موحد لنتائج البحث
-type SearchResultItem = Article | Episode | Season | Playlist | TeamMember | FAQ;
+type SearchResultItem = Article | Episode | Season | Playlist;
 
 export async function searchContent(query: string, type?: string, language: string = 'ar'): Promise<SearchResultItem[]> {
   try {
@@ -163,24 +137,6 @@ export async function searchContent(query: string, type?: string, language: stri
         knowledgeBase.playlists.filter(playlist => 
           playlist.title.toLowerCase().includes(query.toLowerCase()) ||
           (playlist.description && playlist.description.toLowerCase().includes(query.toLowerCase()))
-        )
-      );
-    }
-    
-    if (!type || type === 'team') {
-      results = results.concat(
-        knowledgeBase.team.filter(member => 
-          member.name.toLowerCase().includes(query.toLowerCase()) ||
-          member.role.toLowerCase().includes(query.toLowerCase())
-        )
-      );
-    }
-    
-    if (!type || type === 'faq') {
-      results = results.concat(
-        knowledgeBase.faqs.filter(faq => 
-          faq.question.toLowerCase().includes(query.toLowerCase()) ||
-          faq.answer.toLowerCase().includes(query.toLowerCase())
         )
       );
     }

@@ -65,25 +65,16 @@ export interface SocialLink {
   id: string
   platform: string
   url: string
-  createdAt?: Date
-  updatedAt?: Date
 }
 
-// دالة لجلب الروابط الاجتماعية
-async function fetchSocialLinksFromMongoDB() {
-  try {
-    const response = await fetch('/api/social-links');
-    const data = await response.json();
-    
-    if (data.success && data.data) {
-      return data.data;
-    }
-    return [];
-  } catch (error) {
-    console.error('Error fetching social links from MongoDB:', error);
-    return [];
-  }
-}
+// روابط تواصل اجتماعي ثابتة
+const STATIC_SOCIAL_LINKS: SocialLink[] = [
+  { id: 'youtube', platform: 'youtube', url: 'https://youtube.com/@Falthaka' },
+  { id: 'instagram', platform: 'instagram', url: 'https://instagram.com/falthaka' },
+  { id: 'facebook', platform: 'facebook', url: 'https://facebook.com/falthaka' },
+  { id: 'tiktok', platform: 'tiktok', url: 'https://tiktok.com/@falthaka' },
+  { id: 'twitter', platform: 'twitter', url: 'https://x.com/falthaka' },
+];
 
 // دالة للحصول على الأيقونة المناسبة لكل منصة
 function getSocialIcon(platform: string) {
@@ -162,20 +153,10 @@ export default function BannedFooter() {
       const browserLang = navigator.language || (navigator as { userLanguage?: string }).userLanguage || 'en';
       setIsRTL(browserLang.includes('ar'));
     }
-    
-    const fetchLinks = async () => {
-      try {
-        const links = await fetchSocialLinksFromMongoDB();
-        setSocialLinks(links);
-      } catch (error) {
-        console.error('Error fetching social links:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchLinks();
-    
+
+    setSocialLinks(STATIC_SOCIAL_LINKS);
+    setLoading(false);
+
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
   

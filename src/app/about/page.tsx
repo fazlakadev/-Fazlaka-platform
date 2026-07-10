@@ -45,16 +45,49 @@ const socialLinks = [
 
 // --- APIs ---
 async function getMembers(language: string = 'ar'): Promise<TeamMember[]> {
-  try {
-    const response = await fetch(`/api/team?language=${language}`);
-    if (!response.ok) throw new Error('Failed to fetch');
-    const data = await response.json();
-    const members = Array.isArray(data) ? data : (data.members || []);
-    return members.map((member: TeamMember) => ({ ...member, language: language as 'ar' | 'en' })) || [];
-  } catch (error) {
-    console.error(error);
-    return [];
-  }
+  const members: TeamMember[] = [
+    {
+      _id: '1',
+      nameAr: 'أحمد المصري',
+      nameEn: 'Ahmed Elmasry',
+      roleAr: 'المؤسس',
+      roleEn: 'Founder',
+      bioAr: 'صاحب الفكرة وقائد الرؤية، يعمل على تحويل الشغف بالمعرفة إلى محتوى يلمس القلوب.',
+      bioEn: 'The visionary behind the idea, turning a passion for knowledge into content that touches hearts.',
+      image: '',
+    },
+    {
+      _id: '2',
+      nameAr: 'سارة عبد الله',
+      nameEn: 'Sara Abdullah',
+      roleAr: 'مدير المحتوى',
+      roleEn: 'Content Manager',
+      bioAr: 'تشرف على خطة المحتوى وتنسيق العمل بين الفريق لضمان جودة كل ما يُنشر.',
+      bioEn: 'Oversees the content plan and coordinates the team to ensure the quality of every publication.',
+      image: '',
+    },
+    {
+      _id: '3',
+      nameAr: 'محمود حسن',
+      nameEn: 'Mahmoud Hassan',
+      roleAr: 'رئيس التحرير',
+      roleEn: 'Editor-in-Chief',
+      bioAr: 'يراجع النصوص ويصقل الأفكار ليصل المعنى بوضوح ومصداقية إلى القارئ.',
+      bioEn: 'Reviews texts and refines ideas so meaning reaches the reader with clarity and credibility.',
+      image: '',
+    },
+    {
+      _id: '4',
+      nameAr: 'ليلى إبراهيم',
+      nameEn: 'Laila Ibrahim',
+      roleAr: 'مصمم الجرافيك',
+      roleEn: 'Graphic Designer',
+      bioAr: 'تحوّل الأفكار إلى تصاميم بصرية جذابة تعبّر عن هوية المنصة بأسلوب مميز.',
+      bioEn: 'Transforms ideas into striking visuals that express the platform identity with a distinctive style.',
+      image: '',
+    },
+  ];
+  return members.map((member) => ({ ...member, language: language as 'ar' | 'en' }));
 }
 
 async function getSubscribers(): Promise<number | null> {

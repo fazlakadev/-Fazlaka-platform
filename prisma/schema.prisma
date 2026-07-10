@@ -24,30 +24,9 @@ enum OtpPurpose {
   CHANGE_PASSWORD
 }
 
-enum SectionType {
-  MAIN_TERMS
-  LEGAL_TERM
-  RIGHTS_RESPONSIBILITY
-  ADDITIONAL_POLICY
-  SITE_SETTINGS
-}
-
-enum RightsType {
-  USER_RIGHTS
-  USER_RESPONSIBILITIES
-  COMPANY_RIGHTS
-}
-
 enum HeroSliderMediaType {
   IMAGE
   VIDEO
-}
-
-enum PrivacySectionType {
-  MAIN_POLICY
-  USER_RIGHT
-  DATA_TYPE
-  SECURITY_MEASURE
 }
 
 enum TicketCategory {
@@ -90,10 +69,6 @@ enum RelatedType {
   EPISODE
   SEASON
   PLAYLIST
-  TEAM
-  FAQ
-  PRIVACY
-  TERMS
   GENERAL
 }
 
@@ -492,95 +467,6 @@ model TicketMessageAttachment {
   @@map("ticket_message_attachments")
 }
 
-// --- Terms & Conditions Models ---
-
-model Terms {
-  id                      String        @id @default(cuid())
-  sectionType             SectionType
-  title                   String?
-  titleEn                 String?       @map("title_en")
-  content                 Json?
-  contentEn               Json?         @map("content_en")
-  term                    String?
-  termEn                  String?       @map("term_en")
-  definition              String?       @db.Text
-  definitionEn            String?       @map("definition_en") @db.Text
-  icon                    String?
-  rightsType              RightsType?
-  color                   String?
-  borderColor             String?       @map("border_color")
-  description             String?       @db.Text
-  descriptionEn           String?       @map("description_en") @db.Text
-  linkText                String?       @map("link_text")
-  linkTextEn              String?       @map("link_text_en")
-  linkUrl                 String?       @map("link_url")
-  siteTitle               String?       @map("site_title")
-  siteTitleEn             String?       @map("site_title_en")
-  siteDescription         String?       @map("site_description") @db.Text
-  siteDescriptionEn       String?       @map("site_description_en") @db.Text
-  logo                    Json?
-  logoEn                  Json?         @map("logo_en")
-  footerText              String?       @map("footer_text") @db.Text
-  footerTextEn            String?       @map("footer_text_en") @db.Text
-  lastUpdated             DateTime?     @map("last_updated")
-  createdAt               DateTime      @default(now()) @map("created_at")
-  updatedAt               DateTime      @updatedAt @map("updated_at")
-
-  items                   TermsItem[]
-
-  @@map("terms")
-}
-
-model TermsItem {
-  id      String @id @default(cuid())
-  item    String @db.Text
-  itemEn  String? @map("item_en") @db.Text
-
-  termsId String
-  terms   Terms  @relation(fields: [termsId], references: [id], onDelete: Cascade)
-
-  @@map("terms_items")
-}
-
-// --- Team Model ---
-
-model Team {
-  id          String        @id @default(cuid())
-  name        String
-  nameEn      String        @map("name_en")
-  role        String?
-  roleEn      String?       @map("role_en")
-  bio         String?       @db.Text
-  bioEn       String?       @map("bio_en") @db.Text
-  imageUrl    String?       @map("image_url")
-  imageUrlEn  String?       @map("image_url_en")
-  slug        String        @unique
-  socialMedia Json?         @map("social_media")
-  socialLinks SocialLink[]
-  order       Int           @default(0)
-  createdAt   DateTime      @default(now()) @map("created_at")
-  updatedAt   DateTime      @updatedAt @map("updated_at")
-
-  @@map("teams")
-}
-
-// --- Social Link Model ---
-
-model SocialLink {
-  id        String   @id @default(cuid())
-  platform  String
-  url       String
-  isActive  Boolean  @default(true)
-  order     Int      @default(0)
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  teamId    String?
-  team      Team?    @relation(fields: [teamId], references: [id], onDelete: Cascade)
-
-  @@map("social_links")
-}
-
 // --- Hero Slider Model ---
 
 model HeroSlider {
@@ -604,43 +490,6 @@ model HeroSlider {
   updatedAt     DateTime            @updatedAt @map("updated_at")
 
   @@map("hero_sliders")
-}
-
-// --- FAQ Model ---
-
-model FAQ {
-  id          String   @id @default(cuid())
-  question    String
-  questionEn  String?  @map("question_en")
-  answer      String   @db.Text
-  answerEn    String?  @map("answer_en") @db.Text
-  category    String
-  categoryEn  String?  @map("category_en")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-
-  @@map("faqs")
-}
-
-// --- Privacy Policy Model ---
-
-model Privacy {
-  id            String           @id @default(cuid())
-  sectionType   PrivacySectionType
-  title         String?
-  titleEn       String?          @map("title_en")
-  content       Json?
-  contentEn     Json?            @map("content_en")
-  description   String?          @db.Text
-  descriptionEn String?          @map("description_en") @db.Text
-  icon          String?
-  color         String?
-  textColor     String?          @map("text_color")
-  lastUpdated   DateTime?        @map("last_updated")
-  createdAt     DateTime         @default(now()) @map("created_at")
-  updatedAt     DateTime         @updatedAt @map("updated_at")
-
-  @@map("privacy")
 }
 
 // --- Content Models ---

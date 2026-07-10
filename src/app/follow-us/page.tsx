@@ -16,12 +16,19 @@ import {
 
 // تحديث الواجهة
 export interface SocialLink {
-  id: string; // تغيير من _id إلى id
+  id: string;
   platform: string;
   url: string;
-  createdAt?: Date;
-  updatedAt?: Date;
 }
+
+// روابط تواصل اجتماعي ثابتة
+const STATIC_SOCIAL_LINKS: SocialLink[] = [
+  { id: 'youtube', platform: 'youtube', url: 'https://youtube.com/@Falthaka' },
+  { id: 'instagram', platform: 'instagram', url: 'https://instagram.com/falthaka' },
+  { id: 'facebook', platform: 'facebook', url: 'https://facebook.com/falthaka' },
+  { id: 'tiktok', platform: 'tiktok', url: 'https://tiktok.com/@falthaka' },
+  { id: 'twitter', platform: 'twitter', url: 'https://x.com/falthaka' },
+];
 
 // أيقونات مخصصة
 const XIcon = ({ className }: { className?: string }) => (
@@ -43,21 +50,8 @@ const DiscordIcon = ({ className }: { className?: string }) => (
 );
 
 // تحديث اسم الدالة لتكون عامة
-async function fetchSocialLinks() {
-  try {
-    // ملاحظة: هذا الطلب سيجلب جميع الروابط. 
-    // إذا أردت تصفية حسب فريق معين، يمكنك إضافة ?teamId=xxx
-    const response = await fetch('/api/social-links');
-    const data = await response.json();
-    
-    if (data.success && data.data) {
-      return data.data;
-    }
-    return [];
-  } catch (error) {
-    console.error('Error fetching social links:', error);
-    return [];
-  }
+async function fetchSocialLinks(): Promise<SocialLink[]> {
+  return STATIC_SOCIAL_LINKS;
 }
 
 type PlatformType = 'youtube' | 'instagram' | 'facebook' | 'tiktok' | 'x' | 'twitter' | 
@@ -594,28 +588,6 @@ function FollowUsContent() {
     };
     fetchData();
   }, [language, mounted]);
-
-  useEffect(() => {
-    if (!mounted) return;
-    const eventSource = new EventSource('/api/stream');
-    eventSource.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        if (data.type === 'change' && data.collection === 'socialLinks' || data.type === 'socialLinkCreated' || data.type === 'socialLinkUpdated' || data.type === 'socialLinkDeleted') {
-          setLastUpdate(Date.now());
-          fetchSocialLinks().then(linksData => { setSocialLinks(linksData); }).catch(error => { console.error('Error fetching updated social links:', error); });
-        }
-      } catch (error) { console.error('Error parsing SSE message:', error); }
-    };
-    eventSource.onerror = (error) => { console.error('SSE error:', error); eventSource.close(); setTimeout(() => { const newEventSource = new EventSource('/api/stream'); newEventSource.onmessage = eventSource.onmessage; newEventSource.onerror = eventSource.onerror; }, 5000); };
-    return () => { eventSource.close(); };
-  }, [mounted]);
-
-  useEffect(() => {
-    if (!mounted) return;
-    const interval = setInterval(() => { fetchSocialLinks().then(linksData => { setSocialLinks(linksData); }).catch(error => { console.error('Error during periodic refresh:', error); }); }, 60000);
-    return () => clearInterval(interval);
-  }, [mounted]);
 
   if (loading) {
     return (

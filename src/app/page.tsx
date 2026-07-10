@@ -16,7 +16,6 @@ import TopicsMap, { type TopicItem } from '@/components/home/TopicsMap';
 // --- Interfaces ---
 interface Episode { id: string; slug: string; localizedTitle?: string; localizedThumbnailUrl?: string; publishedAt?: string | Date | null; }
 interface Article { id: string; slug: string; localizedTitle?: string; localizedExcerpt?: string; localizedFeaturedImageUrl?: string; publishedAt?: string | Date | null; }
-interface FAQ { id: string; localizedQuestion?: string; localizedAnswer?: string; }
 
 // --- Translations ---
 const translations = {
@@ -28,7 +27,6 @@ const translations = {
     learnMore: "اعرف المزيد",
     latestEpisodes: "أحدث الحلقات",
     latestArticles: "أحدث المقالات",
-    faqs: "الأسئلة الشائعة",
     viewAll: "عرض الكل",
     whyUs: "لماذا فذلكة؟",
     why_simplified: "تبسيط عميق",
@@ -91,7 +89,6 @@ const translations = {
     learnMore: "Learn More",
     latestEpisodes: "Latest Episodes",
     latestArticles: "Latest Articles",
-    faqs: "FAQs",
     viewAll: "View All",
     whyUs: "Why Fazlaka?",
     why_simplified: "Deep Simplification",
@@ -626,50 +623,6 @@ const NewsletterSection = () => {
   );
 };
 
-const FAQSection = () => {
-  const { language } = useLanguage();
-  const t = getT(language);
-  const [faqs, setFaqs] = useState<FAQ[]>([]);
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
-
-  useEffect(() => {
-    fetch(`/api/faqs?language=${language}`)
-      .then(res => res.json())
-      .then(data => setFaqs(data.data || []));
-  }, [language]);
-
-  return (
-    <AnimatedSection className="py-24 bg-[#030712]">
-      <div className="container mx-auto px-4 lg:px-8 max-w-4xl">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-white mb-4">{t.faqs}</h2>
-          <div className="w-20 h-1.5 bg-gradient-to-r from-cyan-500 to-indigo-500 mx-auto rounded-full" />
-        </div>
-        <div className="space-y-4">
-          {faqs.map((faq, index) => (
-            <div key={faq.id} className={`bg-white/[0.03] border border-white/5 rounded-2xl overflow-hidden transition-all duration-300 ${openIndex === index ? 'bg-white/[0.05] border-cyan-500/20' : ''}`}>
-              <button
-                onClick={() => setOpenIndex(prev => prev === index ? null : index)}
-                className="w-full p-6 flex justify-between items-center text-white font-medium text-lg hover:text-cyan-400 transition-colors text-right"
-              >
-                <span>{faq.localizedQuestion}</span>
-                <div className={`flex-shrink-0 w-8 h-8 rounded-full border border-white/10 flex items-center justify-center transition-transform duration-300 ${openIndex === index ? 'rotate-180 bg-cyan-500/10 border-cyan-500/30' : ''}`}>
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-                </div>
-              </button>
-              <div className={`overflow-hidden transition-all duration-500 ease-in-out ${openIndex === index ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
-                <div className="px-6 pb-6 text-slate-400 leading-relaxed" dir={language === 'ar' ? 'rtl' : 'ltr'}>
-                  {faq.localizedAnswer}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </AnimatedSection>
-  );
-};
-
 const Footer = () => {
   const { language } = useLanguage();
   const t = getT(language);
@@ -747,9 +700,6 @@ export default function Home() {
 
       {/* ===== النشرة البريدية ===== */}
       <NewsletterSection />
-
-      {/* ===== الأسئلة الشائعة ===== */}
-      <FAQSection />
 
       <Footer />
 
