@@ -5,33 +5,6 @@ import bcrypt from 'bcryptjs'
 
 const prisma = new PrismaClient()
 
-// تعريف واجهة للمستخدم
-interface User {
-  id: string;
-  name: string | null;
-  email: string;
-  password?: string | null;
-  role: Role;
-  bio?: string | null;
-  image?: string | null;
-  banner?: string | null;
-  isActive: boolean;
-  banned: boolean;
-  emailVerified: Date | null;
-  secondaryEmails?: Array<{
-    id: string;
-    email: string;
-    isVerified: boolean;
-  }>;
-  verificationToken?: string | null;
-  resetToken?: string | null;
-  magicToken?: string | null;
-  otpCode?: string | null;
-  emailChangeCode?: string | null;
-  createdAt: Date;
-  updatedAt?: Date;
-}
-
 // GET - لجلب تفاصيل مستخدم معين
 export async function GET(
   request: NextRequest,
@@ -56,7 +29,7 @@ export async function GET(
     }
     
     // إزالة الحقول الحساسة
-    const { password, verificationToken, resetToken, magicToken, otpCode, emailChangeCode, ...userWithoutSensitiveFields } = user;
+    const { password: _password, verificationToken: _verificationToken, resetToken: _resetToken, magicToken: _magicToken, otpCode: _otpCode, emailChangeCode: _emailChangeCode, ...userWithoutSensitiveFields } = user;
     
     return NextResponse.json(userWithoutSensitiveFields);
   } catch (error) {
@@ -109,7 +82,7 @@ export async function PUT(
     });
     
     // إزالة الحقول الحساسة
-    const { password: removedPassword, verificationToken, resetToken, magicToken, otpCode, emailChangeCode, ...userWithoutSensitiveFields } = updatedUser;
+    const { password: _removedPassword, verificationToken: _verificationToken, resetToken: _resetToken, magicToken: _magicToken, otpCode: _otpCode, emailChangeCode: _emailChangeCode, ...userWithoutSensitiveFields } = updatedUser;
     
     // تحديث البريد الإلكتروني الثانوي إذا تم توفيره
     if (secondaryEmails !== undefined) {

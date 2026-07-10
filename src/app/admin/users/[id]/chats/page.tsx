@@ -1,12 +1,11 @@
 "use client"
 
-import { useState, useEffect, useCallback, use } from "react"
+import { useState, useEffect, use } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { 
   ArrowLeft, 
   MessageCircle, 
   User, 
-  Clock, 
   Loader2,
   Search,
   Eye,

@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import Select, { StylesConfig } from 'react-select';
 import { format } from 'date-fns';
-import type { SingleValue } from 'react-select';
+
 
 // Updated Interface for Prisma
 interface Season {
@@ -128,7 +128,7 @@ export default function SeasonsPage() {
       URL.revokeObjectURL(url);
       setSuccess('Seasons exported successfully');
       setTimeout(() => setSuccess(null), 3000);
-    } catch (error) {
+    } catch (_error) {
       setError('Failed to export');
     } finally {
       setIsExporting(false);
@@ -151,7 +151,7 @@ export default function SeasonsPage() {
       const result = await response.json();
       setSuccess(`Successfully imported ${result.imported} seasons`);
       fetchSeasons();
-    } catch (error) {
+    } catch (_error) {
       setError('Failed to import');
     } finally {
       setIsImporting(false);

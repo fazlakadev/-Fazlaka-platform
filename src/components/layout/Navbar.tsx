@@ -604,7 +604,7 @@ const MobileSettingsDropdown = ({
 
 // مكون أيقونة الإشعارات للموبايل مع العداد
 const MobileNotificationIcon = ({ isRTL }: { isRTL: boolean }) => {
-  const { data: session } = useSession();
+  const { data: _session } = useSession();
   const router = useRouter();
   const pathname = usePathname();
   const { unreadCount } = useNotifications();
@@ -644,7 +644,7 @@ const MobileNotificationIcon = ({ isRTL }: { isRTL: boolean }) => {
 
 // مكون الإشعارات للكمبيوتر
 const NotificationIcon = () => {
-  const { data: session } = useSession();
+  const { data: _session } = useSession();
   const [isOpen, setIsOpen] = useState(false);
   const notificationRef = useRef<HTMLDivElement>(null);
   const [isRTL, setIsRTL] = useState(true);

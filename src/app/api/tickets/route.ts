@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
     });
 
     return NextResponse.json({ success: true, data: tickets });
-  } catch (_error) { // تم إصلاح التحذير: استخدام _error
+  } catch { // تم إصلاح التحذير: استخدام _error
     return NextResponse.json({ error: "Failed to fetch tickets" }, { status: 500 });
   }
 }

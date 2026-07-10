@@ -104,7 +104,7 @@ export default function WelcomeModal() {
                 setIsBanned(true);
                 setIsOpen(false);
               }
-            } catch (err) {
+            } catch {
               // لو فيه مشكلة في localStorage، نعرضها مرة واحدة كحل احتياطي
               setIsBanned(true);
               setIsOpen(true);
@@ -142,6 +142,7 @@ export default function WelcomeModal() {
     return () => {
       if (timer) clearTimeout(timer);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, session]);
 
   const handleClose = () => {

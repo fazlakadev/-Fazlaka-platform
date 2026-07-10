@@ -171,6 +171,7 @@ model User {
   secondaryEmails         SecondaryEmail[]
   accounts                Account[]
   sessions                Session[]
+  userSessions            UserSession[]
   notifications           Notification[]
   contacts                Contact[]
   tickets                 Ticket[]
@@ -283,6 +284,36 @@ model LoginHistory {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("login_history")
+}
+
+// --- Active Sessions Tracking ---
+// Tracks active login sessions per device/browser for the Sessions UI.
+// Works alongside JWT auth: each login stores the NextAuth JWT `jti` here so
+// that revoking a session can immediately invalidate that JWT (see lib/sessions.ts).
+model UserSession {
+  id           String   @id @default(cuid())
+  userId       String
+  jti          String   @unique @map("jti")
+  ip           String?
+  userAgent    String?  @map("user_agent")
+  device       String?
+  deviceType   String?  @map("device_type")
+  browser      String?
+  browserVersion String? @map("browser_version")
+  os           String?
+  osVersion    String?  @map("os_version")
+  isRevoked    Boolean  @default(false) @map("is_revoked")
+  revokedAt    DateTime? @map("revoked_at")
+  createdAt    DateTime @default(now()) @map("created_at")
+  lastActive   DateTime @default(now()) @map("last_active")
+  expiresAt    DateTime @map("expires_at")
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([jti])
+  @@index([lastActive(sort: Desc)])
+  @@map("user_sessions")
 }
 
 model VerificationAttempt {

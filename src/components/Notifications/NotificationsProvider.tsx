@@ -151,7 +151,7 @@ export function NotificationsProvider({ children }: NotificationsProviderProps) 
       }
       
       toast.success(language === 'ar' ? 'تم تحديث جميع الإشعارات' : 'All notifications updated');
-    } catch (error) {
+    } catch {
       setNotifications(originalNotifications);
       setUnreadCount(unreadNotifications.length);
       toast.error(language === 'ar' ? 'فشل' : 'Failed');
@@ -178,7 +178,7 @@ export function NotificationsProvider({ children }: NotificationsProviderProps) 
       if (!response.ok) throw new Error('Failed');
       
       toast.success(language === 'ar' ? 'تم حذف الإشعار' : 'Deleted');
-    } catch (error) {
+    } catch {
       setNotifications(originalNotifications);
       if (!deletedNotification.isRead) {
         setUnreadCount(prev => prev + 1);

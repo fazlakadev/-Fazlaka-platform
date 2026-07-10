@@ -52,7 +52,7 @@ export default function AddSeasonPage() {
     formData.append('file', file);
     try {
       const res = await fetch('/api/upload', { method: 'POST', body: formData });
-      if (res.ok) { const data = await res.json(); isEnglish ? setThumbnailUrlEn(data.url) : setThumbnailUrl(data.url); }
+      if (res.ok) { const data = await res.json(); if (isEnglish) setThumbnailUrlEn(data.url); else setThumbnailUrl(data.url); }
     } catch (err) { console.error(err); }
     finally { if (isEnglish) setIsUploadingEn(false); else setIsUploading(false); }
   };
@@ -73,7 +73,7 @@ export default function AddSeasonPage() {
       const result = await response.json();
       if (response.ok) { setMessage({ type: 'success', text: 'Season created!' }); setTimeout(() => router.push('/admin/seasons'), 2000); }
       else setMessage({ type: 'error', text: result.error || 'Failed' });
-    } catch (err) { setMessage({ type: 'error', text: 'Error' }); }
+    } catch (_err) { setMessage({ type: 'error', text: 'Error' }); }
     finally { setIsSubmitting(false); }
   };
 

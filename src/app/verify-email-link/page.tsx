@@ -87,6 +87,7 @@ export default function VerifyEmailLinkPage() {
 
     // Verify the link
     verifyEmailLink(token, emailParam, typeParam)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams])
 
   useEffect(() => {

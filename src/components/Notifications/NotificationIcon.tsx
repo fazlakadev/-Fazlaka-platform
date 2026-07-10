@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
-import { useSession } from 'next-auth/react';
 import { useLanguage } from '@/components/Language/LanguageProvider';
 import { Bell, BellRing, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -62,7 +61,7 @@ export default function NotificationIcon() {
     }
   };
 
-  const handleNotificationClick = (notificationId: string, actionUrl?: string) => {
+  const handleNotificationClick = (notificationId: string, _actionUrl?: string) => {
     if (!notifications.find(n => n.id === notificationId)?.isRead) {
       handleMarkAsRead(notificationId);
     }

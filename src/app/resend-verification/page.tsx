@@ -140,8 +140,7 @@ export default function ResendVerificationPage() {
       } else {
         setError(data.error || t.error)
       }
-    } catch (error) {
-      setError(t.error)
+    } catch {
     } finally {
       setIsLoading(false)
     }

@@ -4,7 +4,7 @@ import { findSimilarContent } from '@/services/semanticSearch';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { contentId, contentType, language = 'ar', limit = 5 } = body;
+    const { contentId, contentType, language: _language = 'ar', limit = 5 } = body;
     
     if (!contentId || !contentType) {
       return NextResponse.json({ error: 'contentId and contentType are required' }, { status: 400 });

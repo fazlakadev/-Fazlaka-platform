@@ -6,14 +6,13 @@ import { useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDropzone } from "react-dropzone";
 import { 
-  FaEnvelope, FaStar, FaHandshake, FaComments, FaHeadset,
+  FaEnvelope, FaHandshake,
   FaYoutube, FaInstagram, FaFacebookF, FaTiktok,
-  FaPhone, FaMapMarkerAlt, FaClock,
+  FaPhone,
   FaDiscord, FaArrowRight, FaCheckCircle, FaTimesCircle,
   FaFilePdf, FaFileWord, FaFileImage, FaFileArchive,
   FaDownload, FaEye, FaTrash, FaTimes,
-  FaShieldAlt, FaRocket, FaAward, FaBolt,
-  FaShare, FaHeart, FaLightbulb, FaPaperPlane,
+  FaShare, FaPaperPlane, FaHeart,
   FaQuestionCircle, FaSearch
 } from "react-icons/fa";
 import { FaXTwitter } from "react-icons/fa6";
@@ -46,7 +45,7 @@ export default function ContactPage() {
   const [faqs, setFaqs] = useState<FAQ[]>([]);
   const [faqsLoading, setFaqsLoading] = useState(true);
   const [faqsError, setFaqsError] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const _fileInputRef = useRef<HTMLInputElement>(null);
   
   useEffect(() => {
     setIsDarkMode(window.matchMedia('(prefers-color-scheme: dark)').matches);
@@ -264,6 +263,7 @@ export default function ContactPage() {
     if (previewFile && previewFile.name === fileName) {
       closePreview();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [files, previewFile]);
   
   const handlePreview = useCallback((file: File) => {
@@ -352,7 +352,7 @@ export default function ContactPage() {
     else return (bytes / 1048576).toFixed(1) + ' MB';
   }, []);
 
-  const socialLinks = [
+  const _socialLinks = [
     { href: "https://www.youtube.com/channel/UCWftbKWXqj0wt-UHMLAcsJA", icon: <FaYoutube />, label: isRTL ? "يوتيوب" : "YouTube", color: "from-red-500 to-red-600", hover: "hover:from-red-600 hover:to-red-700" },
     { href: "https://www.instagram.com/fazlaka_platform/", icon: <FaInstagram />, label: isRTL ? "انستجرام" : "Instagram", color: "from-pink-500 to-purple-500", hover: "hover:from-pink-600 hover:to-purple-600" },
     { href: "https://www.facebook.com/profile.php?id=61579582675453", icon: <FaFacebookF />, label: isRTL ? "فيس بوك" : "Facebook", color: "from-blue-500 to-blue-600", hover: "hover:from-blue-600 hover:to-blue-700" },

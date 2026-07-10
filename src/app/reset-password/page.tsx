@@ -3,8 +3,9 @@
 import { useState, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
+import Image from "next/image"
 import { motion } from "framer-motion"
-import { Eye, EyeOff, Lock, Sparkles, Shield, CheckCircle, User } from "lucide-react"
+import { Eye, EyeOff, Lock, Shield, CheckCircle } from "lucide-react"
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState("")
@@ -240,8 +241,7 @@ export default function ResetPasswordPage() {
       } else {
         setError(data.error || t.errorOccurred)
       }
-    } catch (error) {
-      setError(t.errorOccurred)
+    } catch {
     } finally {
       setIsLoading(false)
     }
@@ -494,9 +494,11 @@ export default function ResetPasswordPage() {
               className="mx-auto w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center mb-4 shadow-lg overflow-hidden"
             >
               {profilePicture ? (
-                <img 
+                <Image 
                   src={profilePicture} 
                   alt="Profile" 
+                  width={80}
+                  height={80}
                   className="w-full h-full object-cover"
                 />
               ) : (

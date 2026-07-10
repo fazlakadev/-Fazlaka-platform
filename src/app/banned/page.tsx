@@ -4,6 +4,7 @@
 
 import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { useLanguage } from "../../components/Language/LanguageProvider";
 import { 
   ArrowRightOnRectangleIcon, 
@@ -69,9 +70,11 @@ export default function BannedPage() {
         <div className="mb-6 flex flex-col items-center">
           <div className="relative mb-4">
             <div className="absolute -inset-1 rounded-full bg-gradient-to-tr from-red-500 to-orange-500 blur opacity-40"></div>
-            <img 
+            <Image 
               src={userImage} 
               alt="User" 
+              width={112}
+              height={112}
               className="relative h-28 w-28 rounded-full border-4 border-white object-cover shadow-lg dark:border-gray-800"
             />
             <div className="absolute bottom-0 right-0 flex h-10 w-10 items-center justify-center rounded-full bg-red-100 ring-4 ring-white dark:bg-red-900 dark:ring-gray-800">

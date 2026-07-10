@@ -5,20 +5,6 @@ import nodemailer from "nodemailer"
 
 const prisma = new PrismaClient()
 
-// Define types for better type safety
-interface SecondaryEmail {
-  email: string;
-  isVerified: boolean;
-  verificationToken?: string;
-  verificationTokenExpiry?: Date;
-}
-
-interface User {
-  id: string;
-  name: string;
-  secondaryEmails?: SecondaryEmail[];
-}
-
 export async function POST(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }

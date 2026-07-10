@@ -189,7 +189,7 @@ export default function ChatbotWidget() {
     setIsLoading(true);
     setIsTyping(false);
     
-    const currentInput = input;
+    const _currentInput = input;
     
     try {
       const response = await fetch('/api/chat', {

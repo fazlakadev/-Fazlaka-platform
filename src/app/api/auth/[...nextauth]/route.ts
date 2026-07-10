@@ -33,6 +33,7 @@ declare module "next-auth" {
 declare module "next-auth/jwt" {
   interface JWT {
     id: string
+    jti?: string
     name?: string | null
     email?: string | null
     image?: string | null
@@ -125,12 +126,52 @@ const authOptions: NextAuthOptions = {
   },
   callbacks: {
     async jwt({ token, user, account, trigger, session }) {
+      // First-time issuance: mint an immutable jti and create tracked session.
       if (account && user) {
         token.id = user.id
         token.name = user.name
         token.image = user.image
         token.role = user.role
         token.banned = user.banned
+        if (!token.jti) {
+          token.jti = crypto.randomUUID()
+          // Create a tracked session row (device info enriched lazily on first API call).
+          try {
+            const now = new Date()
+            const expiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
+            const existing = await prisma.userSession.findUnique({
+              where: { jti: token.jti },
+              select: { id: true, isRevoked: true },
+            })
+            if (!existing) {
+              await prisma.userSession.create({
+                data: {
+                  userId: user.id,
+                  jti: token.jti,
+                  ip: null,
+                  userAgent: null,
+                  device: null,
+                  deviceType: null,
+                  browser: null,
+                  browserVersion: null,
+                  os: null,
+                  osVersion: null,
+                  lastActive: now,
+                  expiresAt,
+                },
+              })
+            } else if (existing.isRevoked) {
+              const { unrevokedJti } = await import("@/lib/redis")
+              await prisma.userSession.update({
+                where: { id: existing.id },
+                data: { isRevoked: false, revokedAt: null, lastActive: now, expiresAt },
+              })
+              await unrevokedJti(token.jti)
+            }
+          } catch (error) {
+            console.error("Session tracking error:", error)
+          }
+        }
         return token
       }
 
@@ -179,6 +220,14 @@ const authOptions: NextAuthOptions = {
         session.user.banned = token.banned as boolean
       }
       return session
+    },
+  },
+  events: {
+    async signOut({ token }) {
+      if (token?.jti) {
+        const { revokeSessionByJti } = await import("@/lib/sessions")
+        await revokeSessionByJti(token.jti)
+      }
     },
   },
   pages: {

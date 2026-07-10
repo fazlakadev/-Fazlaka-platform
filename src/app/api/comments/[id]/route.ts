@@ -40,7 +40,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     if (contentId) await pusherServer.trigger(`comments-${contentId}`, 'new-comment', {});
 
     return NextResponse.json({ success: true });
-  } catch (_error) { 
+  } catch { 
     return NextResponse.json({ error: 'Error deleting' }, { status: 500 }); 
   }
 }

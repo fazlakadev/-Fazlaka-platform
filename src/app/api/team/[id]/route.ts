@@ -38,7 +38,7 @@ export async function PUT(
     const teamMemberData = await request.json();
     
     // إزالة الحقول التي لا يجب تحديثها يدوياً
-    const { id: _, createdAt, ...updateData } = teamMemberData;
+    const { id: _, createdAt: _createdAt, ...updateData } = teamMemberData;
     
     const updatedMember = await prisma.team.update({
       where: { id },

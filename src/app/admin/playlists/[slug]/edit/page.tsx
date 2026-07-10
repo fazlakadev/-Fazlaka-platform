@@ -24,7 +24,7 @@ export default function EditPlaylistPage() {
   // Updated interfaces
   const [episodes, setEpisodes] = useState<{ id: string; title: string; titleEn: string }[]>([]);
   const [articles, setArticles] = useState<{ id: string; title: string; titleEn: string }[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [_isLoading, setIsLoading] = useState(true);
   const [isFetching, setIsFetching] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   const [isUploadingEn, setIsUploadingEn] = useState(false);
@@ -62,7 +62,7 @@ export default function EditPlaylistPage() {
         if (p.articles && Array.isArray(p.articles)) {
           setSelectedArticles(p.articles.map((a: { id: string } | string) => typeof a === 'object' ? a.id : a));
         }
-      } catch (err) { setMessage({ type: 'error', text: 'Failed to load' }); }
+      } catch (_err) { setMessage({ type: 'error', text: 'Failed to load' }); }
       finally { setIsFetching(false); }
     };
     fetchPlaylist();
@@ -85,7 +85,7 @@ export default function EditPlaylistPage() {
     formData.append('file', file);
     try {
       const res = await fetch('/api/upload', { method: 'POST', body: formData });
-      if (res.ok) { const data = await res.json(); isEnglish ? setImageUrlEn(data.url) : setImageUrl(data.url); }
+      if (res.ok) { const data = await res.json(); if (isEnglish) setImageUrlEn(data.url); else setImageUrl(data.url); }
     } catch (err) { console.error(err); }
     finally { if (isEnglish) setIsUploadingEn(false); else setIsUploading(false); }
   };
@@ -116,7 +116,7 @@ export default function EditPlaylistPage() {
       const result = await res.json();
       if (res.ok) { setMessage({ type: 'success', text: 'Updated!' }); setTimeout(() => router.push('/admin/playlists'), 2000); }
       else setMessage({ type: 'error', text: result.error || 'Failed' });
-    } catch (err) { setMessage({ type: 'error', text: 'Error' }); }
+    } catch (_err) { setMessage({ type: 'error', text: 'Error' }); }
     finally { setIsSubmitting(false); }
   };
 

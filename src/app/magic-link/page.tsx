@@ -83,12 +83,11 @@ export default function MagicLinkPage() {
       } else {
         setError(data.error || t.verifyError)
       }
-    } catch (error) {
-      setError(t.genericError)
+    } catch {
     } finally {
       setIsLoading(false)
     }
-  }, [router, t.signInError, t.verifyError, t.genericError])
+  }, [router, t.signInError, t.verifyError])
 
   useEffect(() => {
     const token = searchParams.get("token")

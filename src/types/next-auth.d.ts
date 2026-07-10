@@ -8,7 +8,8 @@ declare module "next-auth" {
       name?: string | null;
       email?: string | null;
       image?: string | null;
-      // لاحظ أننا أزلنا role و banned من هنا
+      role?: string;
+      banned?: boolean;
     };
   }
 
@@ -17,15 +18,19 @@ declare module "next-auth" {
     name?: string | null;
     email?: string | null;
     image?: string | null;
+    role?: string;
+    banned?: boolean;
   }
 }
 
 declare module "next-auth/jwt" {
   interface JWT {
     id: string;
+    jti?: string;
     name?: string | null;
     email?: string | null;
     image?: string | null;
-    // لاحظ أننا أزلنا role و banned من هنا أيضاً
+    role?: string;
+    banned?: boolean;
   }
 }

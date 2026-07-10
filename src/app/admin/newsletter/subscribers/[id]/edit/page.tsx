@@ -2,7 +2,7 @@
 
 import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, Save, AlertCircle } from 'lucide-react';
+import { ArrowRight, Save } from 'lucide-react';
 
 export default function EditSubscriberPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);

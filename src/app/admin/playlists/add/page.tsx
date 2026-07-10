@@ -59,7 +59,7 @@ export default function AddPlaylistPage() {
     formData.append('file', file);
     try {
       const res = await fetch('/api/upload', { method: 'POST', body: formData });
-      if (res.ok) { const data = await res.json(); isEnglish ? setImageUrlEn(data.url) : setImageUrl(data.url); }
+      if (res.ok) { const data = await res.json(); if (isEnglish) setImageUrlEn(data.url); else setImageUrl(data.url); }
     } catch (err) { console.error(err); }
     finally { if (isEnglish) setIsUploadingEn(false); else setIsUploading(false); }
   }, []);
@@ -92,7 +92,7 @@ export default function AddPlaylistPage() {
         setMessage({ type: 'success', text: 'Playlist created!' });
         setTimeout(() => router.push('/admin/playlists'), 2000);
       } else setMessage({ type: 'error', text: result.error || 'Failed' });
-    } catch (err) { setMessage({ type: 'error', text: 'Error' }); }
+    } catch (_err) { setMessage({ type: 'error', text: 'Error' }); }
     finally { setIsSubmitting(false); }
   };
 

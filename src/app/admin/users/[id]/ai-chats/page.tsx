@@ -1,18 +1,17 @@
 "use client"
 
-import { useState, useEffect, useCallback, use } from "react"
+import { useState, useEffect, use } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { 
   ArrowLeft, 
   Bot, 
   User, 
-  Clock, 
   Loader2,
   MessageSquareText,
   Sparkles
 } from "lucide-react"
 import Link from "next/link"
-import Image from "next/image"
+
 import { useLanguage } from "@/components/Language/LanguageProvider"
 
 // --- Interfaces ---
@@ -126,6 +125,7 @@ export default function UserAIChatsPage({ params }: { params: Promise<Params> })
     if (selectedChat && (!selectedChat.messages || selectedChat.messages.length === 0)) {
        fetchMessages()
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedChat?.id, targetUserId])
 
   const handleSelectChat = async (chat: AIChat) => {

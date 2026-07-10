@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   ArrowLeft, BarChart3, Send, Eye, MousePointerClick,
-  Calendar, Clock, Users, Tag, Globe, CheckCircle, XCircle, FileText,
-  RefreshCw, Mail, Smartphone
+  Calendar, Clock, Users, Tag, Globe, XCircle, FileText,
+  RefreshCw, Smartphone
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
@@ -189,7 +189,7 @@ const translations = {
 
 export default function CampaignDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const router = useRouter();
+  const _router = useRouter();
   const { isRTL, language } = useLanguage();
   const t = translations[language];
   const dateLocale = language === 'ar' ? ar : enUS;

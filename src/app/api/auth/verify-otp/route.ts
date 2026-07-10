@@ -3,8 +3,6 @@ import { NextRequest, NextResponse } from "next/server"
 import { v4 as uuidv4 } from "uuid"
 import { prisma } from "@/lib/prisma"
 
-type PurposeType = "login" | "register" | "reset" | "verify" | "change-password"
-
 // خريطة التحويل لربط القيم النصية مع قيم الـ Enum في Prisma
 const purposeToEnumMap: Record<string, "LOGIN" | "REGISTER" | "RESET" | "VERIFY" | "CHANGE_PASSWORD"> = {
   "login": "LOGIN",

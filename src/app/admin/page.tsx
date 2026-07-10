@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useSession } from 'next-auth/react';
 import {
   FileText, Play, Users, Calendar, ArrowUp, ArrowDown, RefreshCw, ChevronDown,
@@ -141,6 +142,7 @@ function AnimatedNumber({ value, duration = 1500 }: { value: number; duration?: 
     };
     animRef.current = requestAnimationFrame(animate);
     return () => { if (animRef.current) cancelAnimationFrame(animRef.current); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value, duration]);
 
   return <>{display.toLocaleString()}</>;
@@ -327,7 +329,7 @@ export default function AdminDashboard() {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="flex items-center gap-4">
               {session?.user?.image ? (
-                <img src={session.user.image} alt="" className="w-14 h-14 rounded-2xl border-2 border-white/20 object-cover shadow-xl" />
+                <Image src={session.user.image} alt="" width={56} height={56} className="w-14 h-14 rounded-2xl border-2 border-white/20 object-cover shadow-xl" />
               ) : (
                 <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-xl font-bold shadow-xl">
                   {session?.user?.name?.[0] || 'A'}
@@ -521,7 +523,7 @@ export default function AdminDashboard() {
                 className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors group">
                 <span className="text-xs font-bold text-gray-400 w-5 shrink-0">#{i + 1}</span>
                 <div className="w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-700 flex-shrink-0 overflow-hidden">
-                  {ep.thumbnailUrl ? <img src={ep.thumbnailUrl} alt="" className="w-full h-full object-cover" /> : <Play size={16} className="text-gray-400 m-auto mt-3" />}
+                  {ep.thumbnailUrl ? <Image src={ep.thumbnailUrl} alt="" width={40} height={40} className="w-full h-full object-cover" /> : <Play size={16} className="text-gray-400 m-auto mt-3" />}
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium text-gray-900 dark:text-white truncate group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors">
@@ -549,7 +551,7 @@ export default function AdminDashboard() {
                 className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors group">
                 <span className="text-xs font-bold text-gray-400 w-5 shrink-0">#{i + 1}</span>
                 <div className="w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-700 flex-shrink-0 overflow-hidden">
-                  {art.thumbnailUrl ? <img src={art.thumbnailUrl} alt="" className="w-full h-full object-cover" /> : <FileText size={16} className="text-gray-400 m-auto mt-3" />}
+                  {art.thumbnailUrl ? <Image src={art.thumbnailUrl} alt="" width={40} height={40} className="w-full h-full object-cover" /> : <FileText size={16} className="text-gray-400 m-auto mt-3" />}
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium text-gray-900 dark:text-white truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">

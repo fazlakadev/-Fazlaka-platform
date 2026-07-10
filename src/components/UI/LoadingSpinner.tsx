@@ -3,12 +3,10 @@
 
 interface LoadingSpinnerProps {
   size?: 'small' | 'medium' | 'large';
-  color?: string;
 }
 
 export default function LoadingSpinner({ 
-  size = 'medium', 
-  color = 'text-amber-500' 
+  size = 'medium' 
 }: LoadingSpinnerProps) {
   const sizeClasses = {
     small: 'h-4 w-4',

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useSession, signIn } from "next-auth/react";
+import { useSession } from "next-auth/react";
 
 export default function AuthFieldChecker() {
   const { data: session, status } = useSession();

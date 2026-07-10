@@ -2,7 +2,7 @@
 
 import { useState, useRef, FormEvent, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { Upload, Link as LinkIcon, Image as ImageIcon, Bold, Italic, List, ListOrdered, Quote, Heading1, Heading2, Heading3, Palette, Highlighter } from 'lucide-react';
+import { Upload, Link as LinkIcon, Image as ImageIcon, Bold, Italic } from 'lucide-react';
 import Image from 'next/image';
 
 // Simple Text Editor Component
@@ -11,8 +11,8 @@ function SimpleTextEditor({ content, onChange, placeholder = '', language = 'ar'
   const [linkUrl, setLinkUrl] = useState('');
   const [showImageDialog, setShowImageDialog] = useState(false);
   const [showLinkDialog, setShowLinkDialog] = useState(false);
-  const [textColor, setTextColor] = useState('#000000');
-  const [highlightColor, setHighlightColor] = useState('#ffff00');
+  const [_textColor, _setTextColor] = useState('#000000');
+  const [_highlightColor, _setHighlightColor] = useState('#ffff00');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {

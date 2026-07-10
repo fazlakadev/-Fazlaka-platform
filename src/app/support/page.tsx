@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useSession } from "next-auth/react";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   FaPaperPlane, FaSpinner, FaPlus, FaImage, FaTimes, 
@@ -196,7 +197,7 @@ export default function SupportPage() {
                   {msg.sender !== 'USER' && (
                     <div className="flex-shrink-0">
                       {msg.senderImage ? (
-                        <img src={msg.senderImage} className="w-8 h-8 rounded-full object-cover" alt="Support" />
+                        <Image src={msg.senderImage} width={32} height={32} className="w-8 h-8 rounded-full object-cover" alt="Support" />
                       ) : (
                         <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-white text-xs">
                           <FaHeadset />
@@ -218,7 +219,7 @@ export default function SupportPage() {
                     }`}>
                       {msg.attachments?.map(att => att.isImage && (
                         <a key={att.url} href={att.url} target="_blank" rel="noopener noreferrer" className="block mb-2">
-                          <img src={att.url} className="rounded-lg max-h-48 w-auto object-cover" alt="attachment" />
+                          <Image src={att.url} width={384} height={192} className="rounded-lg max-h-48 w-auto object-cover" alt="attachment" />
                         </a>
                       ))}
                       <p className="text-sm leading-relaxed">{msg.content}</p>
@@ -230,7 +231,7 @@ export default function SupportPage() {
 
                   {/* User Avatar */}
                   {msg.sender === 'USER' && session?.user?.image && (
-                    <img src={session.user.image} className="w-8 h-8 rounded-full object-cover flex-shrink-0" alt="You" />
+                    <Image src={session.user.image} width={32} height={32} className="w-8 h-8 rounded-full object-cover flex-shrink-0" alt="You" />
                   )}
                 </div>
               ))}
@@ -242,7 +243,7 @@ export default function SupportPage() {
               <div className="p-4 bg-white dark:bg-slate-800 border-t dark:border-slate-700">
                 {chatPreview && (
                   <div className="relative inline-block mb-2">
-                    <img src={chatPreview} className="h-16 rounded-lg border-2 border-indigo-200" alt="Preview" />
+                    <Image src={chatPreview} width={64} height={64} className="h-16 rounded-lg border-2 border-indigo-200" alt="Preview" />
                     <button onClick={() => { setChatFile(null); setChatPreview(null); }} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 text-xs"><FaTimes /></button>
                   </div>
                 )}
@@ -282,7 +283,7 @@ export default function SupportPage() {
                 <div className="border-2 border-dashed dark:border-slate-600 rounded-lg p-4 text-center cursor-pointer hover:border-indigo-500 transition-colors" onClick={() => document.getElementById('fileNew')?.click()}>
                   <input type="file" id="fileNew" accept="image/*" onChange={(e) => handleFileChange(e, 'new')} className="hidden" />
                   {newPreview ? (
-                    <img src={newPreview} className="h-24 mx-auto object-contain" alt="Preview" />
+                    <Image src={newPreview} width={96} height={96} className="h-24 mx-auto object-contain" alt="Preview" />
                   ) : (
                     <div className="text-slate-400">
                       <FaImage className="mx-auto text-2xl mb-1" />

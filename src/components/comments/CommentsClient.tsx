@@ -6,6 +6,7 @@ import Link from "next/link";
 import { FaPaperPlane, FaSpinner, FaComments, FaLock, FaUserCircle } from "react-icons/fa";
 import CommentItem from "./CommentItem";
 import { pusherClient } from "@/lib/pusher";
+import Image from "next/image";
 
 interface User { id: string; name: string | null; image: string | null; role?: string; }
 interface Comment {
@@ -207,7 +208,7 @@ export default function CommentsClient({ contentId, type }: CommentsClientProps)
             <div className="flex items-start gap-3">
                 <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center overflow-hidden flex-shrink-0 ring-2 ring-white shadow-sm">
                     {session?.user?.image ? (
-                        <img src={session.user.image} alt="me" className="w-full h-full object-cover" />
+                        <Image src={session.user.image} alt="me" fill className="object-cover" />
                     ) : ( <FaUserCircle className="text-indigo-400 text-2xl" /> )}
                 </div>
                 <div className="flex-1 relative">

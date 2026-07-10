@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
     });
 
     return NextResponse.json({ friends });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Internal Error" }, { status: 500 });
   }
 }
@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json(request);
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Internal Error" }, { status: 500 });
   }
 }
@@ -96,7 +96,7 @@ export async function DELETE(req: NextRequest) {
     });
 
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Internal Error" }, { status: 500 });
   }
 }

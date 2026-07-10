@@ -158,6 +158,7 @@ export default function NewsletterDashboardPage() {
     } catch (e) { console.error(e); }
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { fetchStats(); fetchDailyStats(); }, [period]);
 
   const last7Days = dailyStats?.dailyViews?.slice(-7)?.map(d => ({

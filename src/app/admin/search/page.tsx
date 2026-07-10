@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Link from 'next/link';
+import NextImage from 'next/image';
 import { Search, FileText, Play, Layers, ListVideo, HelpCircle, Users, Shield, FileCheck, Image as ImageIcon, Globe, User as UserIcon, MessageCircle, ExternalLink, Eye, ChevronRight, SlidersHorizontal, X, Clock, TrendingUp, Sparkles } from 'lucide-react';
 import { useLanguage } from '@/components/Language/LanguageProvider';
 interface AdminSearchHit {
@@ -497,9 +498,11 @@ export default function AdminSearchPage() {
                               {/* Image/Icon */}
                               <div className="w-11 h-11 rounded-xl overflow-hidden flex-shrink-0 relative shadow-sm">
                                 {hasImage ? (
-                                  <img
+                                  <NextImage
                                     src={item.imageUrl!}
                                     alt=""
+                                    width={44}
+                                    height={44}
                                     className="w-full h-full object-cover"
                                     onError={() => setImgErrors(prev => ({ ...prev, [`${item.type}-${item.id}`]: true }))}
                                   />

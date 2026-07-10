@@ -15,7 +15,7 @@ import {
   ChevronDown,
   X
 } from 'lucide-react';
-import Select, { StylesConfig, SingleValue } from 'react-select';
+import Select, { StylesConfig } from 'react-select';
 import { format } from 'date-fns';
 
 // تحديث الواجهة لاستخدام id بدلاً من _id

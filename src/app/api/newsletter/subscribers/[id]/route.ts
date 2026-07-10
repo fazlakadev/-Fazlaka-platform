@@ -7,7 +7,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const sub = await prisma.newsletterSubscriber.findUnique({ where: { id } });
     if (!sub) return NextResponse.json({ success: false, error: 'NotFound' }, { status: 404 });
     return NextResponse.json({ success: true, data: { ...sub, tags: typeof sub.tags === 'string' ? JSON.parse(sub.tags) : sub.tags } });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ success: false, error: 'InternalError' }, { status: 500 });
   }
 }
@@ -26,7 +26,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     if (body.source !== undefined) data.source = body.source;
     const updated = await prisma.newsletterSubscriber.update({ where: { id }, data });
     return NextResponse.json({ success: true, data: { ...updated, tags: typeof updated.tags === 'string' ? JSON.parse(updated.tags) : updated.tags } });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ success: false, error: 'InternalError' }, { status: 500 });
   }
 }
@@ -38,7 +38,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     if (!existing) return NextResponse.json({ success: false, error: 'NotFound' }, { status: 404 });
     await prisma.newsletterSubscriber.delete({ where: { id } });
     return NextResponse.json({ success: true, message: 'Deleted' });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ success: false, error: 'InternalError' }, { status: 500 });
   }
 }

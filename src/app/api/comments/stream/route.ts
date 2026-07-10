@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
       const keepAlive = setInterval(() => {
         try {
           controller.enqueue(encoder.encode(': keep-alive\n\n'));
-        } catch (e) {
+        } catch {
           clearInterval(keepAlive);
           removeClient(contentId, controller);
         }

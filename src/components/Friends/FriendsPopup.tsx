@@ -85,7 +85,7 @@ const translations: Record<string, Record<string, string>> = {
 
 export default function FriendsPopup({ sentRequestIds: _sentRequestIds, acceptedFriendIds, onFriendAction, trigger, isOpen: externalOpen, setIsOpen: externalSetOpen }: FriendsPopupProps) {
   const { data: session } = useSession();
-  const { isRTL, language } = useLanguage();
+  const { isRTL: _isRTL, language } = useLanguage();
   const t = translations[language];
 
   const [internalOpen, setInternalOpen] = useState(false);

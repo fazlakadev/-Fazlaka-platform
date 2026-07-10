@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { FaCheckCircle, FaPaperPlane, FaSpinner, FaTimes, FaImage, FaHeadset } from "react-icons/fa";
+import Image from "next/image";
 import { useRealtimeChat } from "@/hooks/useRealtimeChat";
 import { pusherClient } from "@/lib/pusher";
 
@@ -169,8 +170,10 @@ export default function AdminSupportPage() {
                   {msg.sender !== 'ADMIN' && (
                     <div className="flex-shrink-0">
                       {msg.senderImage ? (
-                        <img
+                        <Image
                           src={msg.senderImage}
+                          width={32}
+                          height={32}
                           className="w-8 h-8 rounded-full object-cover"
                           alt={msg.senderName || 'User'}
                         />
@@ -190,7 +193,7 @@ export default function AdminSupportPage() {
                       ? 'bg-indigo-600 text-white rounded-br-none'
                       : 'bg-white dark:bg-slate-700 text-slate-800 dark:text-white rounded-bl-none shadow'
                       }`}>
-                      {msg.attachments?.map(att => att.isImage && <img key={att.url} src={att.url} className="rounded-lg mb-2 max-h-40" alt="Attachment" />)}
+                      {msg.attachments?.map(att => att.isImage && <Image key={att.url} src={att.url} width={160} height={160} className="rounded-lg mb-2 max-h-40" alt="Attachment" />)}
                       <p className="text-sm">{msg.content}</p>
                     </div>
                   </div>
@@ -199,8 +202,10 @@ export default function AdminSupportPage() {
                   {msg.sender === 'ADMIN' && (
                     <div className="flex-shrink-0">
                       {msg.senderImage ? (
-                        <img
+                        <Image
                           src={msg.senderImage}
+                          width={32}
+                          height={32}
                           className="w-8 h-8 rounded-full object-cover"
                           alt="Admin"
                         />
@@ -220,7 +225,7 @@ export default function AdminSupportPage() {
             <div className="p-4 bg-white dark:bg-slate-800 border-t">
               {preview && (
                 <div className="relative inline-block mb-2">
-                  <img src={preview} className="h-16 rounded-lg border-2 border-indigo-300" alt="Preview" />
+                  <Image src={preview} width={64} height={64} className="h-16 rounded-lg border-2 border-indigo-300" alt="Preview" />
                   <button onClick={() => { setFile(null); setPreview(null); }} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 text-xs"><FaTimes /></button>
                 </div>
               )}

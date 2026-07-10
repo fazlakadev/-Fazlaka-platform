@@ -15,7 +15,7 @@ export default function AuthErrorPage({ searchParams }: Props) {
   const resolvedSearchParams = use(searchParams);
   const error = resolvedSearchParams.error as string;
   const { language, isRTL } = useLanguage();
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [_isDarkMode, setIsDarkMode] = useState(false);
   const [stars, setStars] = useState<{x: number, y: number, size: number, opacity: number}[]>([]);
 
   // التحقق من تفضيلات الوضع الليلي عند تحميل المكون

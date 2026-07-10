@@ -7,7 +7,7 @@ import { pusherClient } from "@/lib/pusher";
 import FriendsPopup from "@/components/Friends/FriendsPopup";
 import {
   User, MessageCircle, UserPlus, UserCheck, Check, X, Loader2, Send, ArrowLeft,
-  Edit, Trash2, ImagePlus, Search, ExternalLink, Eye, Clock, Ban, Users
+  Edit, Trash2, ImagePlus, Search, ExternalLink, Users
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -355,7 +355,7 @@ export default function ChatFriendsPage() {
     return friendUser.name?.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
-  const allFriendIds = new Set(friends.flatMap(f => [f.requesterId, f.receiverId]));
+  const _allFriendIds = new Set(friends.flatMap(f => [f.requesterId, f.receiverId]));
 
   // --- Render ---
   return (

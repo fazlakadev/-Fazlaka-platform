@@ -170,6 +170,7 @@ function SearchPageContent() {
     } else {
       loadTrendingSearches();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialQuery]);
 
   useEffect(() => {

@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
-  const encoder = new TextEncoder();
+  const _encoder = new TextEncoder();
   const message = `data: ${JSON.stringify({ type: 'connected' })}\n\n`;
 
   return new Response(message, {

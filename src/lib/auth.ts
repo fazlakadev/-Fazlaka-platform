@@ -61,6 +61,46 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id;
         token.role = user.role;
+        // Mint an immutable jti per login to enable session tracking & revocation.
+        if (!token.jti) {
+          token.jti = crypto.randomUUID();
+          // Create tracked session row (device info enriched lazily on first API call).
+          try {
+            const now = new Date();
+            const expiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+            const existing = await prisma.userSession.findUnique({
+              where: { jti: token.jti },
+              select: { id: true, isRevoked: true },
+            });
+            if (!existing) {
+              await prisma.userSession.create({
+                data: {
+                  userId: user.id,
+                  jti: token.jti,
+                  ip: null,
+                  userAgent: null,
+                  device: null,
+                  deviceType: null,
+                  browser: null,
+                  browserVersion: null,
+                  os: null,
+                  osVersion: null,
+                  lastActive: now,
+                  expiresAt,
+                },
+              });
+            } else if (existing.isRevoked) {
+              const { unrevokedJti } = await import("@/lib/redis");
+              await prisma.userSession.update({
+                where: { id: existing.id },
+                data: { isRevoked: false, revokedAt: null, lastActive: now, expiresAt },
+              });
+              await unrevokedJti(token.jti);
+            }
+          } catch (error) {
+            console.error("Session tracking error:", error);
+          }
+        }
       }
       if (token.id || token.email) {
         const dbUser = await prisma.user.findFirst({
@@ -89,6 +129,14 @@ export const authOptions: NextAuthOptions = {
     },
   },
 
+  events: {
+    async signOut({ token }) {
+      if (token?.jti) {
+        const { revokeSessionByJti } = await import("@/lib/sessions");
+        await revokeSessionByJti(token.jti);
+      }
+    },
+  },
   pages: {
     signIn: "/sign-in",
     error: "/auth/error",

@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useLanguage } from "@/components/Language/LanguageProvider"
-import { motion } from "framer-motion"
-import { Globe, Sun, Moon, Type } from "lucide-react"
+import { Sun, Moon, Type } from "lucide-react"
 
 // Text translations
 const translations = {
@@ -97,7 +96,7 @@ export default function AppearanceSettings() {
     localStorage.setItem('fontSize', fontSize)
   }, [fontSize, mounted])
 
-  const toggleDarkMode = () => {
+  const _toggleDarkMode = () => {
     setIsDark(!isDark)
   }
 

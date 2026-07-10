@@ -305,6 +305,7 @@ export default function EpisodesPage() {
       if (eventSourceRef.current) eventSourceRef.current.close();
       if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [language]);
 
   function toggleSeason(title: string) {

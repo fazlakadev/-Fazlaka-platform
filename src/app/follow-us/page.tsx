@@ -1,20 +1,17 @@
 "use client";
 
 import React, { useState, useEffect, Suspense } from 'react';
-import Link from 'next/link';
 import Image from 'next/image';
 import { 
   FaYoutube, FaInstagram, FaFacebookF, FaTiktok,
-  FaEnvelope, FaPaperPlane, FaShare, FaMobileAlt,
+  FaShare, FaMobileAlt,
   FaDesktop, FaDownload, FaGithub, FaBehance, FaDribbble,
   FaSnapchat, FaPinterest, FaReddit, FaWhatsapp, FaTelegram,
-  FaLinkedin, FaArrowRight, FaQuoteRight,
-  FaApple, FaGooglePlay, FaWindows, FaLinux, FaStar,
-  FaRocket, FaShieldAlt, FaCheckCircle, FaPlay, FaVideo,
-  FaUsers, FaBell, FaInfoCircle,
-  FaHeart, FaLightbulb, FaAward, FaBullseye,
-  FaFlask, FaAtom, FaLandmark, FaBalanceScale, FaBook, FaChartLine,
-  FaDiscord
+  FaLinkedin, FaArrowRight,
+  FaApple, FaGooglePlay, FaWindows, FaLinux,
+  FaRocket, FaCheckCircle, FaPlay, FaVideo,
+  FaBell,
+  FaHeart
 } from 'react-icons/fa';
 
 // تحديث الواجهة
@@ -517,7 +514,7 @@ const AppsSection = ({ socialLinks, isRTL, language }: { socialLinks: SocialLink
                     {appData.mobile.features.map((feature, index) => <span key={index} className="bg-white dark:bg-gray-800 px-3 py-1 rounded-full text-xs font-medium text-gray-700 dark:text-gray-300 flex items-center"><FaCheckCircle className="mr-1 text-green-500" />{feature}</span>)}
                   </div>
                   <div className="space-y-3">
-                    {mobileApps.map((app, index) => (
+                    {mobileApps.map((app) => (
                       <a key={app.id} href={app.url} target="_blank" rel="noopener noreferrer" className="group relative flex items-center justify-between bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-3 px-4 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg">
                         <div className="flex items-center">{app.platform === 'app_store' ? <FaApple className="mr-3 text-xl" /> : <FaGooglePlay className="mr-3 text-xl" />}<span>{t.download}</span></div>
                         <FaArrowRight className={`transition-transform duration-300 group-hover:${isRTL ? '-translate-x-1' : 'translate-x-1'}`} />
@@ -549,7 +546,7 @@ const AppsSection = ({ socialLinks, isRTL, language }: { socialLinks: SocialLink
                     {appData.desktop.features.map((feature, index) => <span key={index} className="bg-white dark:bg-gray-800 px-3 py-1 rounded-full text-xs font-medium text-gray-700 dark:text-gray-300 flex items-center"><FaCheckCircle className="mr-1 text-green-500" />{feature}</span>)}
                   </div>
                   <div className="space-y-3">
-                    {desktopApps.map((app, index) => (
+                    {desktopApps.map((app) => (
                       <a key={app.id} href={app.url} target="_blank" rel="noopener noreferrer" className="group relative flex items-center justify-between bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-3 px-4 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg">
                         <div className="flex items-center"><FaDownload className="mr-3 text-xl" /><span>{t.download}</span></div>
                         <FaArrowRight className={`transition-transform duration-300 group-hover:${isRTL ? '-translate-x-1' : 'translate-x-1'}`} />
@@ -572,7 +569,7 @@ function FollowUsContent() {
   const [isRTL, setIsRTL] = useState(true);
   const [language, setLanguage] = useState('ar');
   const [mounted, setMounted] = useState(false);
-  const [lastUpdate, setLastUpdate] = useState<number>(Date.now());
+  const [_lastUpdate, setLastUpdate] = useState<number>(Date.now());
 
   useEffect(() => {
     setMounted(true);

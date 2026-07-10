@@ -6,7 +6,7 @@ import { useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/components/Language/LanguageProvider";
 import { 
-  FaPlay, FaTrash, FaEdit, FaLock, FaPlus, FaSpinner, FaList, 
+  FaPlay, FaTrash, FaEdit, FaLock, FaPlus, FaSpinner, 
   FaNewspaper, FaVideo, FaTimes, FaSearch, FaSave, FaCloudUploadAlt, FaGraduationCap, FaBookOpen
 } from "react-icons/fa";
 import toast from "react-hot-toast";

@@ -269,6 +269,7 @@ export default function SeasonPageClient({ params }: SeasonProps) {
       if (eventSourceRef.current) eventSourceRef.current.close();
       if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug, language, autoRefresh]);
   
   const filteredEpisodes = useMemo(() => {

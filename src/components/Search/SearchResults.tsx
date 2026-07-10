@@ -9,6 +9,7 @@ import {
   isYesterday
 } from '@/utils/dateUtils';
 import { SemanticSearchResult } from '@/services/semanticSearch';
+import Image from 'next/image';
 
 type Language = 'ar' | 'en';
 type ContentType = 'article' | 'episode' | 'season' | 'playlist' | 'team' | 'faq' | 'privacy' | 'terms';
@@ -37,10 +38,11 @@ function SearchResultImage({ src, alt, defaultSrc, children }: { src: string; al
           </svg>
         </div>
       ) : (
-        <img
+        <Image
           src={imgSrc}
           alt={alt}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+          fill
+          className="object-cover transition-transform duration-500 group-hover:scale-110"
           onError={() => {
             if (imgSrc !== defaultSrc) {
               setImgSrc(defaultSrc);

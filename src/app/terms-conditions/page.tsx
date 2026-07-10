@@ -387,7 +387,7 @@ export default function TermsConditionsPage() {
             <p className="text-gray-700 dark:text-blue-100 max-w-2xl mx-auto">{t.rightsDescription}</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {rightsData.map((section, index) => (
+            {rightsData.map((section) => (
               <div key={section.id} className={`${section.color || 'bg-blue-50'} ${section.borderColor || 'border-blue-100'} dark:bg-gray-700 dark:border-gray-600 rounded-xl p-6 border transition-all duration-500 transform hover:-translate-y-1 hover:shadow-lg`}>
                 <div className="flex items-center mb-4">
                   <div className="text-3xl mr-3">{section.icon || '⚖️'}</div>
@@ -415,7 +415,7 @@ export default function TermsConditionsPage() {
             <p className="text-gray-700 dark:text-blue-100 max-w-2xl mx-auto">{t.policiesDescription}</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {policiesData.map((policy, index) => (
+            {policiesData.map((policy) => (
               <div key={policy.id} className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-800 rounded-xl p-6 border border-blue-100 dark:border-gray-700 transition-all duration-500 transform hover:-translate-y-1 hover:shadow-lg">
                 <div className="flex items-center mb-4">
                   <div className="text-3xl mr-3">{policy.icon || '📋'}</div>

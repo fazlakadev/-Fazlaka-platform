@@ -2,7 +2,7 @@
 
 import { useState, useRef, FormEvent, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Upload, RefreshCw, Link as LinkIcon, Image as ImageIcon, Bold, Italic, List, ListOrdered, Quote, Heading1, Heading2, Heading3, Palette, Highlighter } from 'lucide-react';
+import { RefreshCw, Link as LinkIcon, Image as ImageIcon, Bold, Italic, List, ListOrdered, Quote, Heading1, Heading2, Heading3, Palette, Highlighter } from 'lucide-react';
 import Select, { StylesConfig } from 'react-select';
 import Image from 'next/image';
 
@@ -242,7 +242,7 @@ export default function AddArticlePage() {
       } else {
         setMessage({ type: 'error', text: result.error || 'Failed to create article' });
       }
-    } catch (error) {
+    } catch (_error) {
       setMessage({ type: 'error', text: 'An error occurred' });
     } finally {
       setIsSubmitting(false);

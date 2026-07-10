@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     } else {
       return NextResponse.json({ error: 'User not connected' }, { status: 404 });
     }
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Failed to send' }, { status: 500 });
   }
 }

@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, FileText, Play, Layers, ListVideo, HelpCircle, Users, Shield, FileCheck, Globe, User as UserIcon, MessageCircle, ChevronRight, Command, ArrowUpDown, ExternalLink, Eye, BarChart3, ArrowRight } from 'lucide-react';
+import { Search, FileText, Play, Layers, ListVideo, HelpCircle, Users, Shield, FileCheck, Globe, User as UserIcon, MessageCircle, ChevronRight, ArrowUpDown, ExternalLink, Eye, BarChart3, ArrowRight } from 'lucide-react';
+import Image from 'next/image';
 import { useLanguage } from '@/components/Language/LanguageProvider';
 
 interface AdminSearchHit {
@@ -304,9 +305,11 @@ export default function AdminSearchCommandPalette({ isOpen, onClose }: AdminSear
                             {/* Image/Icon */}
                             <div className="flex-shrink-0 w-10 h-10 rounded-lg overflow-hidden relative">
                               {item.imageUrl && !imgErrors[`${item.type}-${item.id}`] ? (
-                                <img
+                                <Image
                                   src={item.imageUrl}
                                   alt=""
+                                  width={40}
+                                  height={40}
                                   className="w-full h-full object-cover"
                                   onError={() => setImgErrors(prev => ({ ...prev, [`${item.type}-${item.id}`]: true }))}
                                 />

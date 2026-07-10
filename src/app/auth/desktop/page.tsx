@@ -43,7 +43,7 @@ export default function DesktopAuthPage() {
         });
 
         window.location.href = `http://localhost:${port}/callback?${params}`;
-      } catch (e) {
+      } catch {
         setError('فشل الاتصال بالخادم');
       }
     };

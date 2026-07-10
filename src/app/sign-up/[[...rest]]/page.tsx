@@ -6,7 +6,7 @@ import { signIn, signOut, useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
-import { Eye, EyeOff, Mail, Lock, User, Shield, CheckCircle, AlertCircle, Home, ArrowRight, Link2 } from "lucide-react"
+import { Eye, EyeOff, Mail, Lock, User, Shield, CheckCircle, AlertCircle, Home, Link2 } from "lucide-react"
 import { Facebook, Instagram, Youtube, Users, BookOpen } from "lucide-react"
 import { FaTiktok, FaXTwitter } from "react-icons/fa6"
 
@@ -317,7 +317,7 @@ export default function SignUpPage() {
           router.push("/")
         }, 1500)
       }
-    } catch (error) {
+    } catch {
       setError(t.somethingWentWrong)
     } finally {
       setIsLoading(false)
@@ -360,7 +360,7 @@ export default function SignUpPage() {
       } else {
         setError(data.error || t.somethingWentWrong)
       }
-    } catch (error) {
+    } catch {
       setError(t.somethingWentWrong)
     } finally {
       setIsLoading(false)
@@ -407,7 +407,7 @@ export default function SignUpPage() {
       } else {
         setError(data.error || t.somethingWentWrong)
       }
-    } catch (error) {
+    } catch {
       setError(t.somethingWentWrong)
     } finally {
       setIsLoading(false)
@@ -476,7 +476,7 @@ export default function SignUpPage() {
       } else {
         setError(data.error || "Invalid OTP code")
       }
-    } catch (error) {
+    } catch {
       setError(t.somethingWentWrong)
     } finally {
       setIsLoading(false)
@@ -489,7 +489,7 @@ export default function SignUpPage() {
     setOtpCode(numericValue)
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const _handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
     // Check if email is verified
@@ -540,7 +540,7 @@ export default function SignUpPage() {
       } else {
         setError(data.error || t.somethingWentWrong)
       }
-    } catch (error) {
+    } catch {
       setError(t.somethingWentWrong)
     } finally {
       setIsLoading(false)

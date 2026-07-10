@@ -47,7 +47,7 @@ export async function GET(
 
     if (!ticket) return NextResponse.json({ error: "Ticket not found" }, { status: 404 });
     return NextResponse.json({ success: true, data: ticket });
-  } catch (_error) { // تم إصلاح التحذير: استخدام _error
+  } catch { // تم إصلاح التحذير: استخدام _error
     return NextResponse.json({ error: "Server Error" }, { status: 500 });
   }
 }
@@ -133,7 +133,7 @@ export async function PUT(
     });
 
     return NextResponse.json({ success: true });
-  } catch (_error) { // تم إصلاح التحذير: استخدام _error
+  } catch { // تم إصلاح التحذير: استخدام _error
     return NextResponse.json({ error: "Failed" }, { status: 500 });
   }
 }

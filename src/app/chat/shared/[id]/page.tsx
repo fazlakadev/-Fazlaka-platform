@@ -61,7 +61,7 @@ export default function SharedChatPage() {
           if (errorData.error) {
             errorMessage = errorData.error;
           }
-        } catch (parseError) {
+        } catch {
           // Ignore JSON parsing errors
         }
         
@@ -81,6 +81,7 @@ export default function SharedChatPage() {
     if (shareId) {
       fetchSharedChat();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shareId]);
 
   const texts = {

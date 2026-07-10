@@ -353,6 +353,7 @@ function FaqContent() {
         clearTimeout(reconnectTimeoutRef.current);
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [language, mounted]);
   
   useEffect(() => {
@@ -1000,7 +1001,7 @@ function FaqContent() {
 
 export default function FaqPage() {
   // استخدام هوك اللغة للحصول على الحالة الحالية
-  const { language } = useLanguage();
+  const { language: _language } = useLanguage();
   
   return (
     <>

@@ -48,6 +48,7 @@
     "@types/qrcode": "^1.5.5",
     "@types/react-syntax-highlighter": "^15.5.13",
     "@types/uuid": "^10.0.0",
+    "@upstash/redis": "^1.38.0",
     "axios": "^1.13.2",
     "bcryptjs": "^3.0.2",
     "canvas-confetti": "^1.9.4",

@@ -174,7 +174,7 @@ export default function Footer() {
   const [isMobile, setIsMobile] = useState(false);
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
   const [loading, setLoading] = useState(true);
-  const [lastUpdate, setLastUpdate] = useState<number>(Date.now());
+  const [_lastUpdate, _setLastUpdate] = useState<number>(Date.now());
   
   useEffect(() => {
     setMounted(true);

@@ -2,12 +2,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { PortableText, PortableTextReactComponents } from '@portabletext/react'
 import { PortableTextBlock } from '@sanity/types'
-import { 
-  getPrivacyPolicy, 
-  getUserRights, 
-  getDataTypes, 
-  getSecurityMeasures
-} from '@/services/privacyService'
 import { portableTextComponents } from '@/components/Formats/portable-text/PortableTextComponents'
 import { useLanguage } from '@/components/Language/LanguageProvider'
 import { FaSync } from 'react-icons/fa'

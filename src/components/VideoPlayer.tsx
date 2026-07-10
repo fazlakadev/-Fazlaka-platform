@@ -1,7 +1,8 @@
 "use client";
 import React, { useState, useRef } from "react";
-import { FaPlay, FaExpand, FaSpinner } from "react-icons/fa";
+import { FaPlay, FaSpinner } from "react-icons/fa";
 import { useLanguage } from "@/components/Language/LanguageProvider";
+import Image from "next/image";
 
 const toEmbed = (url: string): string => {
   if (!url) return "";
@@ -54,10 +55,11 @@ export default function VideoPlayer({ videoUrl, title, thumbnailUrl }: VideoPlay
     <div className="relative w-full aspect-video rounded-2xl overflow-hidden bg-black shadow-2xl group">
       {!playing ? (
         <>
-          <img
+          <Image
             src={thumbnailUrl || `/placeholder.png`}
             alt={title || "Video"}
-            className="w-full h-full object-cover"
+            fill
+            className="object-cover"
           />
           <div className="absolute inset-0 bg-black/40 transition-opacity group-hover:bg-black/50" />
           <button

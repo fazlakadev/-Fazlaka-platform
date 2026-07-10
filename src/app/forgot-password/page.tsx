@@ -5,26 +5,26 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
-import { Mail, Shield, Key, CheckCircle, AlertCircle, Lock, Eye, EyeOff, ArrowRight } from "lucide-react"
+import { Mail, Shield, Key, CheckCircle, AlertCircle, ArrowRight } from "lucide-react"
 import { Facebook, Instagram, Youtube, Users, BookOpen } from "lucide-react"
 import { FaTiktok, FaXTwitter } from "react-icons/fa6"
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("")
   const [otpCode, setOtpCode] = useState("")
-  const [showNewPassword, setShowNewPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [_showNewPassword, _setShowNewPassword] = useState(false)
+  const [_showConfirmPassword, _setShowConfirmPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
   const [showOtpForm, setShowOtpForm] = useState(false)
-  const [showOtpSent, setShowOtpSent] = useState(false)
+  const [_showOtpSent, setShowOtpSent] = useState(false)
   const [resetMethod, setResetMethod] = useState("link")
   const [isVisible, setIsVisible] = useState(false)
   const [isRTL, setIsRTL] = useState(true)
   const [isEmailFocused, setIsEmailFocused] = useState(false)
   const [isOtpFocused, setIsOtpFocused] = useState(false)
-  const [primaryEmail, setPrimaryEmail] = useState("")
+  const [_primaryEmail, setPrimaryEmail] = useState("")
   
   const router = useRouter()
 
@@ -246,7 +246,7 @@ export default function ForgotPasswordPage() {
       } else {
         setError(data.error || t.somethingWentWrong)
       }
-    } catch (error) {
+    } catch {
       setError(t.somethingWentWrong)
     } finally {
       setIsLoading(false)
@@ -288,7 +288,7 @@ export default function ForgotPasswordPage() {
       } else {
         setError(data.error || t.somethingWentWrong)
       }
-    } catch (error) {
+    } catch {
       setError(t.somethingWentWrong)
     } finally {
       setIsLoading(false)
@@ -349,7 +349,7 @@ export default function ForgotPasswordPage() {
             setError(data.error || t.invalidOtp)
         }
       }
-    } catch (error) {
+    } catch {
       setError(t.somethingWentWrong)
     } finally {
       setIsLoading(false)

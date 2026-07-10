@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react"
 import SettingsLayout from "@/components/settings/SettingsLayout"
 import ProfileSettings from "@/components/settings/ProfileSettings"
 import SecuritySettings from "@/components/settings/SecuritySettings"
+import SessionsSettings from "@/components/settings/SessionsSettings"
 import AppearanceSettings from "@/components/settings/AppearanceSettings"
 import AboutSettings from "@/components/settings/AboutSettings"
 
@@ -40,6 +41,9 @@ export default function SettingsPage() {
 
       {/* Security Tab */}
       {activeTab === "security" && <SecuritySettings />}
+
+      {/* Sessions Tab */}
+      {activeTab === "sessions" && <SessionsSettings />}
 
       {/* Appearance Tab */}
       {activeTab === "appearance" && <AppearanceSettings />}

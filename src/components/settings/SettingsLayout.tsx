@@ -4,7 +4,7 @@
 
 import { signOut } from "next-auth/react"
 import { useRouter } from "next/navigation" // ← أضفنا useRouter
-import { Edit, Shield, Globe, HelpCircle, LogOut, LogIn } from "lucide-react" // ← أضفنا LogIn
+import { Edit, Shield, Monitor, Globe, HelpCircle, LogOut, LogIn } from "lucide-react" // ← أضفنا LogIn
 import { motion } from "framer-motion"
 
 import { useLanguage } from "@/components/Language/LanguageProvider"
@@ -16,20 +16,22 @@ const translations = {
     backToProfile: "العودة إلى الملف الشخصي",
     editProfile: "تعديل الملف الشخصي",
     accountSettings: "إعدادات الحساب",
+    sessionsSettings: "الجلسات",
     appearanceSettings: "إعدادات المظهر",
     aboutSettings: "حول",
     signOut: "تسجيل الخروج",
-    signIn: "تسجيل الدخول", // ← إضافة نص جديد
+    signIn: "تسجيل الدخول",
   },
   en: {
     settings: "Settings",
     backToProfile: "Back to Profile",
     editProfile: "Edit Profile",
     accountSettings: "Account Settings",
+    sessionsSettings: "Sessions",
     appearanceSettings: "Appearance Settings",
     aboutSettings: "About",
     signOut: "Sign Out",
-    signIn: "Sign In", // ← إضافة نص جديد
+    signIn: "Sign In",
   }
 };
 
@@ -106,6 +108,18 @@ export default function SettingsLayout({ children, activeTab, setActiveTab, auth
                     {activeTab === "security" && <motion.span layoutId="settingsActiveTab" className="absolute inset-0 bg-blue-100/90 dark:bg-cyan-500/10 rounded-lg" />}
                     <Shield className="h-5 w-5 mr-3" />
                     <span className="relative">{t.accountSettings}</span>
+                  </button>
+                )}
+
+                {/* Sessions tab — authenticated only */}
+                {authStatus === "authenticated" && (
+                  <button
+                    onClick={() => setActiveTab("sessions")}
+                    className={tabClassName("sessions")}
+                  >
+                    {activeTab === "sessions" && <motion.span layoutId="settingsActiveTab" className="absolute inset-0 bg-blue-100/90 dark:bg-cyan-500/10 rounded-lg" />}
+                    <Monitor className="h-5 w-5 mr-3" />
+                    <span className="relative">{t.sessionsSettings}</span>
                   </button>
                 )}
 

@@ -17,7 +17,7 @@ import {
   BarChart3
 } from 'lucide-react';
 import Select from 'react-select';
-import type { SingleValue } from 'react-select';
+
 import { format } from 'date-fns';
 
 // تعريف أنواع الخيارات لـ react-select

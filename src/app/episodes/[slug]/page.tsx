@@ -127,7 +127,7 @@ function useFavorites(contentId: string | undefined, contentType: "episode" | "a
         body: JSON.stringify({ userId: session.user.id, contentId, contentType })
       });
       if (!res.ok) throw new Error("Failed");
-    } catch (error) {
+    } catch {
       setIsFavorite(originalIsFavorite);
       setCount(originalCount);
     }
@@ -409,7 +409,7 @@ export default function EpisodeDetailPageClient() {
         } else {
             toast.error(t.errorSaving);
         }
-    } catch (err) {
+    } catch {
         toast.error(t.errorSaving);
     } finally {
         setIsSaving(false);

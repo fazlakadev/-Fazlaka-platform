@@ -174,7 +174,7 @@ export default function EmailManagementSection({
           [key]: { ...prev[key], isSending: false, error: data.error || t.error }
         }));
       }
-    } catch (error) {
+    } catch (_error) {
       setSendingStates(prev => ({
         ...prev,
         [key]: { ...prev[key], isSending: false, error: t.error }

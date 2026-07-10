@@ -38,6 +38,7 @@ interface Playlist {
   userId?: string;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 interface Comment {
   id: string;
   name: string;
@@ -510,7 +511,7 @@ export default function ArticleDetailPageClient() {
                 return p;
             }));
         } else { toast.error(t.errorSaving); }
-    } catch (err) { toast.error(t.errorSaving); } 
+    } catch { toast.error(t.errorSaving); } 
     finally { setIsSaving(false); }
   };
 

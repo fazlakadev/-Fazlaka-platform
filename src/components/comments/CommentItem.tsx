@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaReply, FaTrash, FaUserCircle, FaClock, FaHeart, FaEdit, FaFlag, FaEllipsisV, FaTimes, FaChevronDown, FaChevronUp, FaCheckCircle, FaThumbsDown, FaExclamationTriangle } from "react-icons/fa";
+import { FaReply, FaTrash, FaClock, FaHeart, FaEdit, FaFlag, FaEllipsisV, FaTimes, FaChevronDown, FaChevronUp, FaCheckCircle, FaThumbsDown, FaExclamationTriangle } from "react-icons/fa";
 import { Session } from "next-auth";
 import Link from "next/link";
 
@@ -22,9 +22,9 @@ export default function CommentItem({ comment, onReply, onDelete, onUpdate, onLi
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const isOwner = currentUser && comment.userId === currentUser.id;
-  const isAdmin = currentUser?.role === 'ADMIN' || currentUser?.role === 'OWNER';
+  const _isAdmin = currentUser?.role === 'ADMIN' || currentUser?.role === 'OWNER';
   const likeCount = comment._count?.likes || 0;
-  const dislikeCount = comment._count?.dislikes || 0;
+  const _dislikeCount = comment._count?.dislikes || 0;
   const isLiked = comment.likes?.some(l => l.id === currentUser?.id);
   const isDisliked = comment.dislikes?.some(l => l.id === currentUser?.id);
   const replyCount = comment.replies?.length || 0;

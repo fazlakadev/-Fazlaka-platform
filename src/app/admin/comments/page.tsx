@@ -5,6 +5,7 @@ import {
   FaTrash, FaBan, FaExclamationTriangle, FaEnvelope, FaSpinner, 
   FaComments, FaEdit, FaSearch, FaUser, FaNewspaper, FaPlay 
 } from 'react-icons/fa';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { pusherClient } from '@/lib/pusher';
 
@@ -198,7 +199,7 @@ export default function AdminCommentsPage() {
             <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center overflow-hidden">
                     {comment.userRelation?.image ? (
-                        <img src={comment.userRelation.image} className="w-full h-full object-cover" alt="User" />
+                        <Image src={comment.userRelation.image} width={40} height={40} className="w-full h-full object-cover" alt="User" />
                     ) : <FaUser className="text-indigo-500" />}
                 </div>
                 <div>

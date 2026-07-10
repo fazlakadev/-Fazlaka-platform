@@ -4,6 +4,7 @@ import React, { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import Image from 'next/image';
 import { gsap } from 'gsap';
 import { useLanguage } from '@/components/Language/LanguageProvider';
 import './AdminSidebar.css';
@@ -101,7 +102,7 @@ export default function AdminSidebar({ isRTL, onSearchToggle }: AdminSidebarProp
 
     const itemEls = Array.from(panel.querySelectorAll('.sm-item-text'));
     const profileEls = Array.from(panel.querySelectorAll('.user-profile > *')); // عناصر البروفايل
-    const numberEls = Array.from(panel.querySelectorAll('.sm-panel-item'));
+    const _numberEls = Array.from(panel.querySelectorAll('.sm-panel-item'));
 
     const layerStates = layers.map(el => ({ el, start: Number(gsap.getProperty(el, 'xPercent')) }));
     const panelStart = Number(gsap.getProperty(panel, 'xPercent'));
@@ -156,6 +157,7 @@ export default function AdminSidebar({ isRTL, onSearchToggle }: AdminSidebarProp
 
     openTlRef.current = tl;
     return tl;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [position]);
 
   const playOpen = useCallback(() => {
@@ -316,9 +318,11 @@ export default function AdminSidebar({ isRTL, onSearchToggle }: AdminSidebarProp
           {session?.user && (
             <div className="user-profile">
               <div className="user-avatar-wrapper">
-                <img 
+                <Image 
                   src={session.user.image || '/images/default-avatar.png'} 
                   alt={session.user.name || 'User'} 
+                  width={40}
+                  height={40}
                   className="user-avatar"
                 />
               </div>

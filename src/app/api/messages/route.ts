@@ -127,7 +127,7 @@ export async function POST(req: NextRequest) {
     await pusherServer.trigger(`private-conversation-${conversationId}`, "new-message", message);
 
     return NextResponse.json({ ...message, conversationId });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
@@ -156,7 +156,7 @@ export async function PUT(req: NextRequest) {
     );
 
     return NextResponse.json(updatedMessage);
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
@@ -183,7 +183,7 @@ export async function DELETE(req: NextRequest) {
     );
 
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

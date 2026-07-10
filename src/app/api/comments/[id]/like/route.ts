@@ -19,5 +19,5 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     if (contentId) await pusherServer.trigger(`comments-${contentId}`, 'new-comment', {});
 
     return NextResponse.json(result);
-  } catch (error) { return NextResponse.json({ error: 'Error liking comment' }, { status: 500 }); }
+  } catch { return NextResponse.json({ error: 'Error liking comment' }, { status: 500 }); }
 }

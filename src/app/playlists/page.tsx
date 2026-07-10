@@ -6,7 +6,7 @@ import Image from "next/image";
 import { useSession } from "next-auth/react";
 import { useLanguage } from "@/components/Language/LanguageProvider";
 import { 
-  FaPlay, FaList, FaTh, FaSearch, FaTimes, FaHeart, FaFilter, FaUser, FaSignInAlt, FaArrowRight, FaSync, FaPlus, FaLock, FaGlobe, FaTrash, FaCloudUploadAlt, FaMusic
+  FaPlay, FaSearch, FaUser, FaSync, FaPlus, FaLock, FaGlobe, FaTrash, FaCloudUploadAlt, FaMusic
 } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
@@ -140,8 +140,7 @@ const PlaylistsPage = () => {
       } else {
         throw new Error(data.error);
       }
-    } catch (error) {
-      toast.error("Upload Failed");
+    } catch {
     } finally {
       setIsUploading(false);
     }

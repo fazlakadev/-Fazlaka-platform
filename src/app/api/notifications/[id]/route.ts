@@ -24,7 +24,7 @@ export async function PATCH(
         : NextResponse.json({ error: 'Failed' }, { status: 400 });
     }
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }
@@ -45,7 +45,7 @@ export async function DELETE(
     return success 
       ? NextResponse.json({ success: true }) 
       : NextResponse.json({ error: 'Not found or forbidden' }, { status: 404 });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }

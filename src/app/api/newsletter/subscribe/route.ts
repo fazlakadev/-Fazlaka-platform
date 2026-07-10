@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { welcomeEmail, sendEmail } from '@/lib/newsletter/email';
-import { createUnsubscribeToken, buildUnsubscribeUrl } from '@/lib/newsletter/unsubscribe';
+import { createUnsubscribeToken } from '@/lib/newsletter/unsubscribe';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 

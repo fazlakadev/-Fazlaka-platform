@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma';
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const token = searchParams.get('token');
+    const _token = searchParams.get('token');
     const email = searchParams.get('email');
     if (!email) return NextResponse.json({ success: false, error: 'EmailRequired' }, { status: 400 });
     const sub = await prisma.newsletterSubscriber.findUnique({ where: { email } });

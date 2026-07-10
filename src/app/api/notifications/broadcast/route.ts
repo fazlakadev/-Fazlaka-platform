@@ -6,7 +6,7 @@ export async function POST(request: NextRequest) {
     const notificationData = await request.json();
     const sentCount = broadcastNotification(notificationData);
     return NextResponse.json({ message: 'Broadcast sent', sentTo: sentCount });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Failed to broadcast' }, { status: 500 });
   }
 }

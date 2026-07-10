@@ -18,7 +18,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     });
     if (!campaign) return NextResponse.json({ success: false, error: 'NotFound' }, { status: 404 });
     return NextResponse.json({ success: true, data: { ...campaign, campaignSubscribers: campaign.subscribers } });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ success: false, error: 'InternalError' }, { status: 500 });
   }
 }
@@ -50,7 +50,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     const updated = await prisma.newsletterCampaign.update({ where: { id }, data });
     return NextResponse.json({ success: true, data: updated });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ success: false, error: 'InternalError' }, { status: 500 });
   }
 }
@@ -68,7 +68,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     }
     await prisma.newsletterCampaign.delete({ where: { id } });
     return NextResponse.json({ success: true, message: 'Deleted' });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ success: false, error: 'InternalError' }, { status: 500 });
   }
 }

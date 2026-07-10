@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import Select, { StylesConfig } from 'react-select';
 import { format } from 'date-fns';
-import type { SingleValue } from 'react-select';
+
 
 // Updated Interface for Prisma
 interface Playlist {
@@ -126,7 +126,7 @@ export default function PlaylistsPage() {
       URL.revokeObjectURL(url);
       setSuccess('Playlists exported successfully');
       setTimeout(() => setSuccess(null), 3000);
-    } catch (error) {
+    } catch (_error) {
       setError('Failed to export');
     } finally {
       setIsExporting(false);
@@ -149,7 +149,7 @@ export default function PlaylistsPage() {
       const result = await response.json();
       setSuccess(`Successfully imported ${result.imported} playlists`);
       fetchPlaylists();
-    } catch (error) {
+    } catch (_error) {
       setError('Failed to import');
     } finally {
       setIsImporting(false);

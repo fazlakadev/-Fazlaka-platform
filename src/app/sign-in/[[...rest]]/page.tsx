@@ -21,7 +21,7 @@ export default function SignInPage() {
   const [isEmailFocused, setIsEmailFocused] = useState(false);
   const [isPasswordFocused, setIsPasswordFocused] = useState(false);
   const [showOtpForm, setShowOtpForm] = useState(false);
-  const [showOtpSent, setShowOtpSent] = useState(false);
+  const [_showOtpSent, setShowOtpSent] = useState(false);
   const [countdown, setCountdown] = useState(0);
   const [authMethod, setAuthMethod] = useState("password"); // password, magic, otp
   const [isVisible, setIsVisible] = useState(false);
@@ -407,7 +407,7 @@ export default function SignInPage() {
           router.push("/");
         }, 1500);
       }
-    } catch (error) {
+    } catch {
       setError(t.somethingWentWrong);
     } finally {
       setIsLoading(false);
@@ -454,7 +454,7 @@ export default function SignInPage() {
       } else {
         setError(data.error || t.somethingWentWrong);
       }
-    } catch (error) {
+    } catch {
       setError(t.somethingWentWrong);
     } finally {
       setIsLoading(false);
@@ -512,7 +512,7 @@ export default function SignInPage() {
       } else {
         setError(data.error || "Invalid OTP code");
       }
-    } catch (error) {
+    } catch {
       setError(t.somethingWentWrong);
     } finally {
       setIsLoading(false);
@@ -551,7 +551,7 @@ export default function SignInPage() {
       } else {
         setError(data.error || t.somethingWentWrong);
       }
-    } catch (error) {
+    } catch {
       setError(t.somethingWentWrong);
     } finally {
       setIsLoading(false);
@@ -579,7 +579,7 @@ export default function SignInPage() {
       } else {
         setError(data.error || t.somethingWentWrong);
       }
-    } catch (error) {
+    } catch {
       setError(t.somethingWentWrong);
     } finally {
       setIsLoading(false);

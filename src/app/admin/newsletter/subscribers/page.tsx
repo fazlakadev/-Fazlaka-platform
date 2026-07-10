@@ -117,7 +117,7 @@ export default function SubscribersPage() {
   const [statusFilter, setStatusFilter] = useState('');
   const [langFilter, setLangFilter] = useState('');
   const [page, setPage] = useState(1);
-  const [total, setTotal] = useState(0);
+  const [_total, _setTotal] = useState(0);
   const [pages, setPages] = useState(0);
   const [isDark, setIsDark] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
@@ -146,7 +146,7 @@ export default function SubscribersPage() {
       const json = await res.json();
       if (json.success) {
         setSubscribers(json.data);
-        setTotal(json.pagination.total);
+        _setTotal(json.pagination.total);
         setPages(json.pagination.pages);
       } else setError(t.fetchFailed);
     } catch { setError(t.connectionError); }

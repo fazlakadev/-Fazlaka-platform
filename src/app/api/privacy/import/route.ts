@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
 
     for (const item of items) {
       try {
-        const { id, _id, createdAt, updatedAt, ...itemData } = item;
+        const { id, _id, createdAt: _createdAt, updatedAt: _updatedAt, ...itemData } = item;
         const itemId = id || _id;
 
         // التحقق من صحة sectionType

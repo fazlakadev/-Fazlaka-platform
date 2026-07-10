@@ -109,7 +109,7 @@ export async function markNotificationAsRead(notificationId: string, userId: str
       data: { isRead: true },
     });
     return result.count > 0;
-  } catch (error) {
+  } catch {
     return false;
   }
 }
@@ -121,7 +121,7 @@ export async function markAllNotificationsAsRead(userId: string): Promise<boolea
       data: { isRead: true },
     });
     return result.count > 0;
-  } catch (error) {
+  } catch {
     return false;
   }
 }
@@ -132,7 +132,7 @@ export async function deleteNotification(notificationId: string, userId: string)
       where: { id: notificationId, userId },
     });
     return result.count > 0;
-  } catch (error) {
+  } catch {
     return false;
   }
 }

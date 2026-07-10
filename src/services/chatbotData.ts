@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { Article } from '@/types/article';
 import { FAQ } from '@/types/faq';
-import { Episode, Season, Playlist, Team } from '@prisma/client';
+import { Episode, Season, Playlist } from '@prisma/client';
 
 const CACHE_TTL = 30_000;
 let knowledgeCache: { data: ChatbotKnowledge | null; timestamp: number } = { data: null, timestamp: 0 };
@@ -59,7 +59,7 @@ export interface ChatbotKnowledge {
   };
 }
 
-export async function fetchChatbotKnowledge(language: string = 'ar'): Promise<ChatbotKnowledge> {
+export async function fetchChatbotKnowledge(_language: string = 'ar'): Promise<ChatbotKnowledge> {
   const now = Date.now();
   if (knowledgeCache.data && (now - knowledgeCache.timestamp) < CACHE_TTL) {
     return knowledgeCache.data;

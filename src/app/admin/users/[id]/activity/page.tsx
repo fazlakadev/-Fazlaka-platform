@@ -10,7 +10,6 @@ import {
   MessageSquare, 
   Monitor, 
   Clock, 
-  MapPin,
   Loader2,
   AlertTriangle
 } from "lucide-react"

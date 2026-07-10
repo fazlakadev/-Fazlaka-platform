@@ -27,7 +27,7 @@ interface ChatHistory {
 export default function ChatPage() {
   const { data: session } = useSession();
   const { language, isRTL } = useLanguage();
-  const router = useRouter();
+  const _router = useRouter();
   const searchParams = useSearchParams();
   
   const [chatHistory, setChatHistory] = useState<ChatHistory[]>([]);
@@ -46,7 +46,7 @@ export default function ChatPage() {
   const [showShareModal, setShowShareModal] = useState(false);
   const [shareLink, setShareLink] = useState('');
   const [isPublic, setIsPublic] = useState(false);
-  const [shareId, setShareId] = useState<string | null>(null);
+  const [_shareId, setShareId] = useState<string | null>(null);
   const [showNewChatAnimation, setShowNewChatAnimation] = useState(false);
   const [showLinkCopiedAnimation, setShowLinkCopiedAnimation] = useState(false);
   const [showLinkGeneratingAnimation, setShowLinkGeneratingAnimation] = useState(false);
@@ -193,6 +193,7 @@ export default function ChatPage() {
 
       processAndSend();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, isLoading]);
 
   useEffect(() => {

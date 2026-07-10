@@ -2,7 +2,7 @@
 
 import { useState, useRef, FormEvent, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { Upload, RefreshCw, Link as LinkIcon, Image as ImageIcon, Bold, Italic, List, ListOrdered, Quote, Heading1, Heading2, Heading3, Palette, Highlighter } from 'lucide-react';
+import { RefreshCw, Link as LinkIcon, Image as ImageIcon, Bold, Italic, List, ListOrdered, Quote, Heading1, Heading2, Heading3, Palette, Highlighter } from 'lucide-react';
 import Select, { StylesConfig } from 'react-select';
 import Image from 'next/image';
 
@@ -223,7 +223,7 @@ export default function EditArticlePage() {
         setMessage({ type: 'success', text: 'Updated!' });
         setTimeout(() => router.push('/admin/articles'), 2000);
       } else setMessage({ type: 'error', text: result.error || 'Failed' });
-    } catch (err) { setMessage({ type: 'error', text: 'Error' }); }
+    } catch (_err) { setMessage({ type: 'error', text: 'Error' }); }
     finally { setIsSubmitting(false); }
   };
 

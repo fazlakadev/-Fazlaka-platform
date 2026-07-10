@@ -38,7 +38,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     if (!ticket) return NextResponse.json({ error: "Ticket not found" }, { status: 404 });
     return NextResponse.json({ success: true, data: ticket });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Failed" }, { status: 500 });
   }
 }
