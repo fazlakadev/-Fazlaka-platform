@@ -254,13 +254,11 @@
   100% { background-position: 200% 0; }
 }
 
-/* Leaflet marker fix for Next.js */
+/* Leaflet fix for Next.js */
 .leaflet-container {
   font-family: inherit;
-  background: #e5e3df;
-}
-.dark .leaflet-container {
-  background: #1a1a2e;
+  width: 100%;
+  height: 100%;
 }
 .leaflet-container img {
   display: inline;

@@ -1,6 +1,5 @@
 // src/app/layout.tsx
 import './globals.css'
-import 'leaflet/dist/leaflet.css'
 import { Inter } from 'next/font/google'
 import { Toaster } from 'react-hot-toast'
 import { AuthProvider } from "@/components/AuthProvider/AuthProvider"
@@ -47,7 +46,7 @@ export default function RootLayout({ // تمت إزالة async لأنه لم ي
               <Toaster position="top-center" />
               <div className="flex flex-col min-h-screen">
                 <NavbarWrapper />
-                <main className="flex-1 relative">
+                <main className="flex-1 relative pt-20">
                   {children}
                 </main>
                 <FooterWrapper />
